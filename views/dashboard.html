@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Health & Sanitation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="bg-blue-800 text-white p-4">
+        <div class="flex justify-between items-center">
+            <span class="text-xl font-bold">Health & Sanitation Management</span>
+            <div>
+                <span id="userDisplay" class="mr-4"></span>
+                <button onclick="logout()" class="bg-red-600 px-4 py-2 rounded hover:bg-red-700">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex">
+        <div class="w-64 bg-white h-screen shadow-md p-4">
+            <h3 class="font-bold text-gray-700 mb-4">Modules</h3>
+            <div class="space-y-2">
+                <a href="#" onclick="showModule('health-center')" class="block p-2 hover:bg-blue-50 rounded">🏥 Health Center Services</a>
+                <a href="#" onclick="showModule('sanitation')" class="block p-2 hover:bg-blue-50 rounded">🔍 Sanitation Permit & Inspection</a>
+                <a href="#" onclick="showModule('immunization')" class="block p-2 hover:bg-blue-50 rounded">💉 Immunization & Nutrition Tracker</a>
+                <a href="#" onclick="showModule('wastewater')" class="block p-2 hover:bg-blue-50 rounded">🚰 Wastewater & Septic Services</a>
+                <a href="#" onclick="showModule('surveillance')" class="block p-2 hover:bg-blue-50 rounded">📈 Health Surveillance System</a>
+            </div>
+        </div>
+
+        <div class="flex-1 p-8">
+            <h2 class="text-2xl font-bold mb-6">Dashboard</h2>
+            <div class="grid grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="font-bold text-lg">Health Center</h3>
+                    <p class="text-3xl font-bold text-blue-600">--</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="font-bold text-lg">Sanitation</h3>
+                    <p class="text-3xl font-bold text-green-600">--</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="font-bold text-lg">Immunization</h3>
+                    <p class="text-3xl font-bold text-purple-600">--</p>
+                </div>
+            </div>
+            <div id="moduleContent" class="mt-6"></div>
+        </div>
+    </div>
+
+    <script>
+        const userData = JSON.parse(localStorage.getItem('user_data') || '{}');
+        if (!userData.username) {
+            window.location.href = 'login.html';
+        }
+
+        document.getElementById('userDisplay').textContent = 
+            'Welcome, ' + (userData.full_name || userData.username);
+
+        function showModule(module) {
+            const titles = {
+                'health-center': 'Health Center Services',
+                'sanitation': 'Sanitation Permit & Inspection',
+                'immunization': 'Immunization & Nutrition Tracker',
+                'wastewater': 'Wastewater & Septic Services',
+                'surveillance': 'Health Surveillance System'
+            };
+            document.getElementById('moduleContent').innerHTML = 
+                '<h3 class="text-xl font-bold">' + titles[module] + '</h3><p>Module content here</p>';
+        }
+
+        async function logout() {
+            try {
+                await fetch('../api/logout.php', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('session_token')
+                    }
+                });
+            } catch(e) {}
+            
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>
