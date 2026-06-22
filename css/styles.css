@@ -1,0 +1,78 @@
+/* Health & Sanitation Management System - Custom Styles */
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(100%); opacity: 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.95); }
+}
+
+.toast-enter { animation: slideIn 0.3s ease forwards; }
+.toast-exit { animation: slideOut 0.3s ease forwards; }
+
+.modal-open #modal-panel {
+  animation: fadeIn 0.2s ease forwards;
+}
+
+.modal-closing #modal-panel {
+  animation: fadeOut 0.2s ease forwards;
+}
+
+#sidebar.open { transform: translateX(0); }
+
+.nav-item.active {
+  background-color: rgb(37 99 235 / 0.1);
+  color: rgb(29 78 216);
+  font-weight: 600;
+}
+
+.dark .nav-item.active {
+  background-color: rgb(37 99 235 / 0.2);
+  color: rgb(147 197 253);
+}
+
+.progress-bar {
+  transition: width 0.6s ease;
+}
+
+.chart-bar {
+  transition: height 0.5s ease;
+}
+
+.timeline-dot {
+  box-shadow: 0 0 0 4px rgb(255 255 255);
+}
+
+.dark .timeline-dot {
+  box-shadow: 0 0 0 4px rgb(15 23 42);
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgb(203 213 225);
+  border-radius: 3px;
+}
+.dark ::-webkit-scrollbar-thumb { background: rgb(71 85 105); }
+
+@media (max-width: 1023px) {
+  #sidebar { transform: translateX(-100%); }
+  #sidebar.open { transform: translateX(0); }
+}
