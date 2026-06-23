@@ -1,3 +1,5 @@
+// added modules for admin panel --- children UI/UX
+
 import { icon } from '../utils/icons.js';
 import { state } from '../state.js';
 import { DATA } from '../data.js';

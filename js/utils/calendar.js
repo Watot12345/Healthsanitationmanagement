@@ -1,3 +1,5 @@
+// Uses FUllcalendar api for staff panel UI/UX
+
 export class Calendar {
   constructor(containerId, options = {}) {
     this.container = document.getElementById(containerId);

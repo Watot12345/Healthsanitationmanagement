@@ -1,3 +1,4 @@
+// Popup Notifications
 // ─── Toast System ────────────────────────────────────────────────────────────
 export function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');

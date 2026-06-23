@@ -1,3 +1,7 @@
+// ─── APPLICATION CONFIGURATION ────────────────────────────────────────────────
+// Navigation menus, role definitions, and page metadata
+// (Static configuration only - for mock data see data.js)
+
 // ─── Navigation Config ───────────────────────────────────────────────────────
 export const NAV = {
     admin: [

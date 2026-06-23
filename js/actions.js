@@ -1,3 +1,270 @@
+/**
+ * ============================================================================
+ * ACTION HANDLER SYSTEM (actions.js)
+ * ============================================================================
+ * 
+ * PURPOSE:
+ * Centralized event delegation handler that processes all user interactions
+ * across the application. Instead of attaching individual event listeners
+ * to every button, all clicks bubble up to a single handler that routes
+ * actions based on data-action attributes.
+ * 
+ * ARCHITECTURE:
+ * ┌─────────────────────────────────────────────────────────────────────┐
+ * │                         EVENT DELEGATION FLOW                        │
+ * │                                                                      │
+ * │  User clicks button                                                  │
+ * │  ↓                                                                    │
+ * │  <button data-action="approve-apt">Approve</button>                  │
+ * │  ↓                                                                    │
+ * │  Event listener in app.js captures click                             │
+ * │  ↓                                                                    │
+ * │  handleAction('approve-apt', target) called                          │
+ * │  ↓                                                                    │
+ * │  Looks up 'approve-apt' in actions object                            │
+ * │  ↓                                                                    │
+ * │  Executes: showToast('Appointment approved', 'success')              │
+ * └─────────────────────────────────────────────────────────────────────┘
+ * 
+ * ACTIONS CATEGORIES:
+ * 
+ * 1. MODAL ACTIONS (Open dialogs)
+ * 2. CONFIRMATION ACTIONS (Close modal + show toast)
+ * 3. NAVIGATION ACTIONS (Change views/routes)
+ * 4. TOAST-ONLY ACTIONS (Show feedback message)
+ * 5. STATE CHANGE ACTIONS (Switch role, mark read)
+ */
+
+// ============================================================================
+// ACTIONS REFERENCE GUIDE
+// ============================================================================
+
+/**
+ * ─── MODAL ACTIONS ────────────────────────────────────────────────────
+ * These open modal dialogs for data entry/editing
+ * 
+ * 'add-user'              → Opens Add User form modal
+ * 'edit-user'             → Opens Edit User form modal (pre-filled with user data)
+ * 'schedule-inspection'   → Opens Schedule Inspection form modal
+ * 'update-child'          → Opens Update Immunization Record modal
+ * 'add-child'             → Opens same modal as update-child (for adding new)
+ * 'view-checklist'        → Opens Inspection Checklist modal
+ * 'report-case'           → Opens Report New Case form modal
+ * 'show-notifications'    → Opens Notifications list modal
+ * 
+ * ─── CONFIRMATION ACTIONS ─────────────────────────────────────────────
+ * These close the current modal and show a success toast
+ * 
+ * 'confirm-add-user'      → Close modal + "User added successfully"
+ * 'confirm-edit-user'     → Close modal + "User updated successfully"
+ * 'confirm-schedule'      → Close modal + "Inspection scheduled successfully"
+ * 'confirm-update-child'  → Close modal + "Immunization record updated"
+ * 'confirm-report-case'   → Close modal + "Case report submitted"
+ * 'submit-checklist'      → Close modal + "Checklist submitted successfully"
+ * 
+ * ─── DIRECT TOAST ACTIONS ─────────────────────────────────────────────
+ * These show immediate feedback without opening modals
+ * 
+ * 'delete-user'           → "User deleted successfully" + re-render view
+ * 'run-report'            → "Report generated successfully" (success)
+ * 'system-backup'         → "System backup initiated" (info)
+ * 'save-settings'         → "Settings saved successfully" (success)
+ * 'reset-system'          → "System reset is disabled in demo mode" (error)
+ * 'clear-logs'            → "Log clearing requires admin confirmation" (error)
+ * 'approve-apt'           → "Appointment approved" (success)
+ * 'reject-apt'            → "Appointment rejected" (error)
+ * 'view-patient'          → "Patient record opened" (info)
+ * 'approve-permit'        → "Permit approved successfully" (success)
+ * 'reject-permit'         → "Permit application rejected" (error)
+ * 'add-patient'           → "Add patient form opened (demo)" (info)
+ * 'edit-profile'          → "Profile editing is UI-only in demo" (info)
+ * 'submit-appointment'    → "Appointment booked successfully!" (success)
+ * 'submit-permit'         → "Permit application submitted!" (success)
+ * 'submit-wastewater'     → "Service request submitted!" (success)
+ * 
+ * ─── NAVIGATION ACTIONS ───────────────────────────────────────────────
+ * These change the current view/route
+ * 
+ * 'nav-logs'              → Navigate to logs page
+ * 'nav-health-center'     → Switch to staff role + navigate to health-center
+ * 'nav-sanitation'        → Switch to staff role + navigate to sanitation
+ * 'nav-immunization'      → Switch to staff role + navigate to immunization
+ * 'nav-wastewater'        → Switch to staff role + navigate to wastewater
+ * 'new-appointment'       → User: navigate to book-appointment
+ *                           Staff: switch role then show guidance toast
+ * 'profile-view'          → User: navigate to profile
+ *                           Admin: show info toast
+ * 'profile-settings'      → Admin: navigate to settings
+ *                           User: show info toast
+ * 'view-all-activity'     → Admin: navigate to logs
+ *                           User: show info toast
+ * 
+ * ─── DROPDOWN/UI ACTIONS ──────────────────────────────────────────────
+ * 
+ * 'close-modal'           → Close any open modal
+ * 'mark-all-read'         → Mark all notifications as read + re-render panel
+ * 'profile-logout'        → Show logout toast (demo mode)
+ * 
+ * ─── ROLE-BASED BEHAVIOR ──────────────────────────────────────────────
+ * Some actions behave differently based on user role:
+ * 
+ * ACTION              ADMIN                   STAFF               USER
+ * ─────────────────────────────────────────────────────────────────────
+ * new-appointment     switch to staff         show guidance        navigate to book
+ * profile-view        show toast              show toast           navigate to profile
+ * profile-settings    navigate to settings    show toast           show toast
+ * view-all-activity   navigate to logs        show toast           show toast
+ */
+
+// ============================================================================
+// HOW IT CONNECTS TO YOUR RENDERERS (index.js)
+// ============================================================================
+
+/**
+ * Your renderers create buttons with data-action attributes:
+ * 
+ * FROM renderUsers():
+ *   <button data-action="edit-user" data-id="USR-001">Edit</button>
+ *   <button data-action="delete-user" data-id="USR-001">Delete</button>
+ *   <button data-action="add-user">+ Add User</button>
+ * 
+ * FROM renderHealthCenter():
+ *   <button data-action="approve-apt">Approve</button>
+ *   <button data-action="reject-apt">Reject</button>
+ *   <button data-action="view-patient" data-id="P-101">View</button>
+ * 
+ * FROM renderSanitation():
+ *   <button data-action="approve-permit">Approve</button>
+ *   <button data-action="reject-permit">Reject</button>
+ *   <button data-action="schedule-inspection">Schedule</button>
+ * 
+ * FROM renderImmunization():
+ *   <button data-action="update-child">Update</button>
+ *   <button data-action="add-child">+ Add Child Record</button>
+ * 
+ * FROM renderWastewater():
+ *   <button data-action="view-checklist">Checklist</button>
+ *   <button data-action="submit-checklist">Submit Checklist</button>
+ * 
+ * FROM renderSurveillance():
+ *   <button data-action="report-case">Report Case</button>
+ * 
+ * FROM renderSettings():
+ *   <button data-action="save-settings">Save Changes</button>
+ *   <button data-action="reset-system">Reset System Data</button>
+ *   <button data-action="clear-logs">Clear All Logs</button>
+ */
+
+// ============================================================================
+// DEPENDENCY INJECTION PATTERN
+// ============================================================================
+
+/**
+ * setCoreFunctions() uses a dependency injection pattern to avoid
+ * circular imports between app.js and actions.js:
+ * 
+ * app.js creates the core functions → calls setCoreFunctions()
+ * actions.js stores references → uses them when needed
+ * 
+ * This prevents:
+ *   app.js → imports actions.js
+ *   actions.js → imports app.js (CIRCULAR!)
+ * 
+ * Instead:
+ *   app.js → imports actions.js + calls setCoreFunctions()
+ *   actions.js → receives functions as parameters
+ */
+
+// ============================================================================
+// MODAL CONTENT FUNCTIONS
+// ============================================================================
+
+/**
+ * showAddUserModal()
+ * - Full Name, Email, Role fields
+ * - Cancel + Add User buttons
+ * - Used by: users page "Add User" button
+ */
+
+/**
+ * showEditUserModal(id)
+ * - Pre-fills form with existing user data
+ * - Full Name, Email, Role, Status fields
+ * - Looks up user by ID from DATA.users
+ * - Used by: users page edit buttons
+ */
+
+/**
+ * showUpdateChildModal()
+ * - Child Name, Vaccine selector, Date, Progress slider
+ * - Cancel + Update Record buttons
+ * - Used by: immunization page "Update" and "Add Child" buttons
+ */
+
+/**
+ * showScheduleInspectionModal()
+ * - Permit ID selector (shows only Pending permits)
+ * - Inspector selector, Date/Time pickers
+ * - Used by: sanitation page "Schedule Inspection" button
+ */
+
+/**
+ * showChecklistModal()
+ * - Pre-defined inspection checklist items
+ * - Some items pre-checked (demo data)
+ * - Cancel + Save Checklist buttons
+ * - Used by: wastewater page "Checklist" button
+ */
+
+/**
+ * showReportCaseModal()
+ * - Disease name, Number of cases, Barangay, Severity
+ * - Cancel + Submit Report buttons
+ * - Used by: surveillance page "Report Case" button
+ */
+
+/**
+ * showNotificationsModal()
+ * - Shows mock notifications with type badges
+ * - Close button only
+ * - Used by: header notification bell icon
+ */
+
+// ============================================================================
+// SUMMARY TABLE: WHICH ACTIONS ARE USED WHERE
+// ============================================================================
+
+/**
+ * USERS PAGE               HEALTH CENTER            SANITATION
+ * ─────────────            ─────────────            ──────────
+ * add-user                 approve-apt              approve-permit
+ * edit-user                reject-apt               reject-permit
+ * delete-user              view-patient             schedule-inspection
+ * confirm-add-user                                  confirm-schedule
+ * confirm-edit-user
+ * 
+ * IMMUNIZATION             WASTEWATER               SURVEILLANCE
+ * ────────────             ──────────               ────────────
+ * update-child             view-checklist           report-case
+ * add-child                submit-checklist         confirm-report-case
+ * confirm-update-child
+ * 
+ * HEADER/NAV               SETTINGS                 MODALS
+ * ──────────               ────────                 ──────
+ * show-notifications       save-settings            close-modal
+ * mark-all-read            reset-system
+ * profile-view             clear-logs
+ * profile-settings         system-backup
+ * profile-logout
+ * nav-health-center
+ * nav-sanitation
+ * nav-immunization
+ * nav-wastewater
+ * nav-logs
+ * new-appointment
+ * view-all-activity
+ */
+
 import { state } from './state.js';
 import { DATA } from './data.js';
 import { showToast } from './utils/toast.js';

@@ -1,3 +1,5 @@
+// Reporets for admin panel UI/UX generate report then export it
+
 import { card, icon, renderList } from '../utils/dom.js';
 // ─── Config ──────────────────────────────────────────────────────────────────
 

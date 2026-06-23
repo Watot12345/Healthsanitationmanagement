@@ -1,4 +1,4 @@
-// ─── Modal System ────────────────────────────────────────────────────────────
+// ─── OPEN/CLOSE Modals ────────────────────────────────────────────────────────────
 export function openModal(title, body, footer = '') {
     const overlay = document.getElementById('modal-overlay');
     if (!overlay) return;

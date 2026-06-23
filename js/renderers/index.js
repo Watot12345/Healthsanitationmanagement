@@ -1,3 +1,363 @@
+/**
+ * ============================================================================
+ * RENDERERS INDEX MODULE
+ * ============================================================================
+ * 
+ * PURPOSE:
+ * Central rendering engine for the Health & Sanitation Management System.
+ * Generates all HTML views using functional composition with reusable
+ * UI components from dom.js and mock data from data.js.
+ * 
+ * ARCHITECTURE:
+ * ┌─────────────────────────────────────────────────────────────────────┐
+ * │                        VIEW_RENDERERS (Export)                       │
+ * │  Route name → render function (called by router on navigation)      │
+ * ├─────────────────────────────────────────────────────────────────────┤
+ * │  ADMIN MODULES               │  USER MODULES                        │
+ * │  • dashboard                 │  • profile                           │
+ * │  • users                     │  • book-appointment                  │
+ * │  • logs (paginated+live)    │  • request-permit                     │
+ * │  • analytics (ApexCharts)   │  • my-immunization                    │
+ * │  • reports                   │  • request-wastewater                 │
+ * │  • compliance                │  • track-requests                    │
+ * │  • settings                  │                                       │
+ * │  • health-center (FullCal)  │                                       │
+ * │  • sanitation                │                                       │
+ * │  • immunization              │                                       │
+ * │  • wastewater                │                                       │
+ * │  • surveillance              │                                       │
+ * └─────────────────────────────────────────────────────────────────────┘
+ * 
+ * DEPENDENCIES:
+ *   state.js        → Global app state (role, current view)
+ *   data.js         → Mock data (DATA.kpis, DATA.logs, DATA.users, etc.)
+ *   utils/search.js → getSearchValue(), getSelectValue()
+ *   utils/dom.js    → UI helpers (card, badge, tableWrap, icon, etc.)
+ *   reports.js      → renderReports() for reports module
+ *   compliance.js   → renderCompliance() for compliance module
+ * 
+ * CONVENTIONS:
+ *   - All render functions return HTML strings (not DOM nodes)
+ *   - Filter values are read from DOM inputs on each render call
+ *   - Interactive elements use data-action / data-id for event delegation
+ *   - Search inputs have naming convention: {module}-search
+ *   - Filter selects have naming convention: {type}-filter
+ * 
+ * ============================================================================
+ * EXPORTED FUNCTIONS
+ * ============================================================================
+ */
+
+// ─── CORE VIEW RENDERERS (exported via VIEW_RENDERERS) ────────────────────
+
+/**
+ * renderDashboard()
+ * - Builds KPI cards from DATA.kpis using buildFromConfig()
+ * - Renders system status cards (uptime, active sessions, approvals)
+ * - Shows recent activity log (last 4 entries)
+ * - Displays role-based quick actions (admin gets extra options)
+ * - Includes recent updates feed from DATA.recentUpdates
+ */
+
+/**
+ * renderUsers(filter)
+ * - Searches/filters DATA.users by name, email, or role
+ * - Renders user table with edit/delete action buttons
+ * - Filter parameter comes from #user-search input
+ */
+
+/**
+ * renderLogs(filter) - PAGINATED WITH ADVANCED FEATURES
+ * - Client-side pagination (10 items/page) via logPagination state
+ * - Multi-filter support: severity, module, user, date range
+ * - Live log feed with configurable interval (toggle checkbox)
+ * - Statistics dashboard: today's logs, errors/warnings, active users
+ * - CSV export functionality
+ * - Filter chips UI for quick filtering
+ */
+
+/**
+ * renderAnalytics() - CHARTS DASHBOARD
+ * - Date range filter buttons (7d, 30d, 90d, 1y) + custom date picker
+ * - Static KPI cards (appointments, permits, inspections, cases)
+ * - Trend chart (service requests over time)
+ * - Disease surveillance chart (dengue, influenza, etc.)
+ * - Heatmap (weekly activity by day/hour)
+ * - Donut chart (service distribution)
+ * - Staff performance bar chart
+ * - Live activity feed
+ */
+
+/**
+ * renderSettings()
+ * - General settings form (system name, municipality, email)
+ * - Notification preferences (email alerts, SMS, daily reports)
+ * - Data management (audit log retention, session timeout, timezone)
+ * - Security settings (password length, login attempts, 2FA toggle)
+ * - Danger zone (reset data, clear logs, factory reset)
+ */
+
+/**
+ * renderHealthCenter(filter) - FULLCALENDAR INTEGRATION
+ * - Doctor availability cards with status dots
+ * - Appointment calendar (FullCalendar initialized in initHealthCenterCalendar)
+ * - Appointment queue table with triage badges and approve/reject actions
+ * - Patient records table with blood type, condition, last visit
+ * - Consultation history timeline for patient P-101
+ */
+
+/**
+ * renderSanitation(filter)
+ * - Permit workflow stepper (submitted → review → inspection → approved)
+ * - Application review table with approve/reject/schedule actions
+ * - Scheduled inspections table
+ * - Inspector assignment cards
+ * - Document upload status checklist
+ * - Inspection checklist with checkbox items
+ */
+
+/**
+ * renderImmunization()
+ * - Vaccine reminders with urgency badges
+ * - Child record cards with vaccination progress bars
+ * - Vaccination schedule timeline (BCG through booster)
+ * - Growth tracking chart placeholder
+ * - Nutrition risk indicators
+ */
+
+/**
+ * renderWastewater(filter)
+ * - Priority-sorted service request queue (Critical → Low)
+ * - Before/After inspection comparison cards
+ * - Technician assignment cards
+ * - Maintenance schedule mini calendar
+ * - Status timeline for request tracking
+ * - Inspection checklist with submit button
+ */
+
+/**
+ * renderSurveillance(filter, severityFilter)
+ * - Outbreak alert banner (conditional display)
+ * - Alert cards by severity (red/yellow/green)
+ * - Disease trend cards (rising/declining/stable)
+ * - Case reports table with barangay breakdown
+ * - Case density heatmap placeholder
+ * - Incident timeline feed
+ */
+
+/**
+ * renderProfile()
+ * - User profile card with avatar, contact details
+ * - Edit profile action button
+ * - Summary statistics (appointments, active requests, completed)
+ */
+
+/**
+ * renderBookAppointment()
+ * - Service type selector dropdown
+ * - Date/time picker form
+ * - Reason for visit textarea
+ * - Submit booking button
+ */
+
+/**
+ * renderRequestPermit()
+ * - Business name input
+ * - Permit type selector
+ * - Address field
+ * - Document upload dropzone
+ * - Submit application button
+ */
+
+/**
+ * renderMyImmunization()
+ * - Vaccination status banner (up to date / needs attention)
+ * - Immunization record table (vaccine, date, provider, status)
+ */
+
+/**
+ * renderRequestWastewater()
+ * - Service type selector (septic cleaning, installation, etc.)
+ * - Property address input
+ * - Preferred schedule date picker
+ * - Additional notes textarea
+ * - Submit request button
+ */
+
+/**
+ * renderTrackRequests()
+ * - Request status cards with progress bars
+ * - Request timeline visualization
+ * - Color-coded by status (pending/approved/completed/rejected)
+ */
+
+// ─── LOGS MODULE STATE & HELPERS ──────────────────────────────────────────
+
+/**
+ * logPagination {Object}
+ * - currentPage: Current page number (starts at 1)
+ * - perPage: Items per page (10)
+ * - totalPages: Calculated total pages
+ * - totalFiltered: Total items matching current filters
+ */
+
+/**
+ * getTodayLogCount()
+ * - Returns count of log entries with today's date
+ * - Falls back to 6 if no entries found (demo data)
+ */
+
+/**
+ * getErrorWarningCount()
+ * - Counts logs with level 'error' or 'warning'
+ * - Used for error statistics dashboard card
+ */
+
+/**
+ * getActiveUsers()
+ * - Returns count of unique users in log data
+ * - Uses Set for deduplication
+ */
+
+/**
+ * getUniqueUsers()
+ * - Returns array of unique user names from logs
+ * - Used to populate user filter dropdown
+ */
+
+/**
+ * exportLogsToCSV()
+ * - Generates CSV file from current log data
+ * - Creates Blob download with formatted filename
+ * - Includes timestamp, user, action, module, level columns
+ */
+
+/**
+ * renderPagination()
+ * - Generates pagination HTML with page numbers
+ * - Shows ellipsis for large page ranges
+ * - Includes first/last and prev/next buttons
+ * - Shows "Page X of Y (Z total logs)" info
+ */
+
+/**
+ * applyLogFilters()
+ * - Reads all active filter values from DOM elements
+ * - Filters DATA.logs based on severity, module, user, date range
+ * - Updates pagination state
+ * - Re-renders table body and pagination controls
+ */
+
+/**
+ * addNewLogEntry()
+ * - Simulates real-time log entry (for live feed mode)
+ * - Generates random log data with timestamp
+ * - Inserts new row at top of table with highlight animation
+ * - Removes last row if exceeding per-page limit
+ * - Highlight fades after 1 second
+ */
+
+// ─── INITIALIZATION FUNCTIONS (called after DOM render) ──────────────────
+
+/**
+ * initLogFilters()
+ * - Attaches change listeners to all filter dropdowns/inputs
+ * - Sets up pagination button click handlers
+ * - Wires up clear filters button
+ * - Initializes CSV export button
+ * - Sets up live log feed toggle with interval
+ * - Resets pagination to page 1 on init
+ */
+
+/**
+ * initAnalyticsCharts()
+ * - Initializes all ApexCharts instances:
+ *   → initTrendChart()      - Service requests area chart
+ *   → initDiseaseChart()    - Disease surveillance line chart
+ *   → initHeatmapChart()    - Weekly activity heatmap
+ *   → initDonutChart()      - Service distribution donut
+ *   → initStaffChart()      - Staff performance bar chart
+ */
+
+/**
+ * initHealthCenterCalendar()
+ * - Initializes FullCalendar instance in #appointment-calendar
+ * - Transforms DATA.appointments into FullCalendar events
+ * - Color-codes by status and triage priority
+ * - Configures views: month, week, day, list
+ * - Adds event click and date click handlers
+ * - Stores instance globally for cleanup
+ */
+
+// ─── HELPER/CONFIG FUNCTIONS ──────────────────────────────────────────────
+
+/**
+ * buildFromConfig(source, config)
+ * - Generic data mapper: transforms raw data using config array
+ * - Each config item has: label, getValue(source), icon, color
+ * - Used for KPI_CONFIG and STATUS_CONFIG
+ */
+
+/**
+ * getQuickActions()
+ * - Returns array of action buttons based on user role
+ * - Admin gets: Add User (primary) + base actions
+ * - Regular users get: New Appointment (primary) + base actions
+ * - Base actions: New Inspection, Add Patient, Report Case
+ */
+
+/**
+ * getDashboardModel()
+ * - Assembles complete dashboard data model
+ * - Combines KPIs, status, logs, updates, and quick actions
+ * - Returns object consumed by renderDashboard()
+ */
+
+// ─── STATIC CONTENT HELPERS (for analytics demo data) ────────────────────
+
+/**
+ * renderStaticKPICard(title, value, change, trend, color)
+ * - Renders KPI card with trend indicator arrow
+ * - Trend: 'up' (green arrow) or 'down' (red arrow)
+ * - Used for analytics dashboard summary cards
+ */
+
+/**
+ * renderStaticActivityFeed()
+ * - Generates mock activity feed entries
+ * - Color-coded by type: info, success, warning, error
+ * - Shows action, user, and relative time
+ */
+
+// ─── KPI/STATUS CONFIGURATIONS ───────────────────────────────────────────
+
+/**
+ * KPI_CONFIG
+ * - Defines dashboard KPI cards structure:
+ *   → Total Users (blue), Active Staff (green)
+ *   → Pending Requests (yellow), System Alerts (red)
+ */
+
+/**
+ * STATUS_CONFIG
+ * - Defines system status indicators:
+ *   → System Uptime (green), Active Sessions (blue)
+ *   → Pending Approvals (yellow)
+ */
+
+// ─── VIEW_RENDERERS EXPORT MAP ───────────────────────────────────────────
+
+/**
+ * VIEW_RENDERERS {Object}
+ * - Maps route/view names to their render functions
+ * - Used by router to dynamically call correct renderer
+ * - Some renderers accept filter params from search inputs
+ * - surveillance uses both search and severity filters
+ * 
+ * Example usage:
+ *   const html = VIEW_RENDERERS['dashboard']();
+ *   document.getElementById('content').innerHTML = html;
+ */
 import { state } from '../state.js';
 import { DATA } from '../data.js';
 import { getSearchValue, getSelectValue } from '../utils/search.js';
