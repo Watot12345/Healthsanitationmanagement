@@ -83,51 +83,36 @@ function renderDashboard() {
     </div>`)}
   </div>`;
 }
-
-function renderUsers(filter = '') {
-  const q = filter.toLowerCase();
-  const filtered = DATA.users.filter(u =>
-    !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.role.toLowerCase().includes(q)
-  );
-  const rows = filtered.map(u => `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-    <td class="px-4 py-3 text-sm font-medium">${u.name}</td>
-    <td class="px-4 py-3 text-sm text-slate-500">${u.email}</td>
-    <td class="px-4 py-3 text-sm">${badge(u.role)}</td>
-    <td class="px-4 py-3 text-sm">${badge(u.status)}</td>
-    <td class="px-4 py-3 text-sm text-slate-500">${u.joined}</td>
-    <td class="px-4 py-3 text-sm">
-      <div class="flex gap-1">
-        <button data-action="edit-user" data-id="${u.id}" class="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors" title="Edit">${icon('cog', 'h-4 w-4')}</button>
-        <button data-action="delete-user" data-id="${u.id}" class="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 transition-colors" title="Delete">
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
-        </button>
-      </div>
-    </td>
-  </tr>`).join('');
-
-  return `<div class="space-y-4">
-    <div class="flex flex-col sm:flex-row gap-3 justify-between">
-      ${searchInput('user-search', 'Search users...')}
-      ${btnPrimary('+ Add User', 'add-user')}
-    </div>
-    ${tableWrap(`<table class="w-full text-left"><thead class="bg-slate-50 dark:bg-slate-700/50"><tr>
-      <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Name</th>
-      <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Email</th>
-      <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Role</th>
-      <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Status</th>
-      <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Joined</th>
-      <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Actions</th>
-    </tr></thead><tbody class="divide-y divide-slate-200 dark:divide-slate-700">${rows || `<tr><td colspan="6">${emptyState('No users found')}</td></tr>`}</tbody></table>`)}
-  </div>`;
-}
-
 function renderLogs(filter = '') {
   const q = filter.toLowerCase();
-  const filtered = DATA.logs.filter(l =>
+  let filtered = DATA.logs.filter(l =>
     !q || l.action.toLowerCase().includes(q) || l.user.toLowerCase().includes(q) || l.module.toLowerCase().includes(q)
   );
   
-  const rows = filtered.map(l => `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+  // Apply current filters
+  const severityFilter = document.getElementById('severity-filter')?.value || '';
+  const moduleFilter = document.getElementById('module-filter')?.value || '';
+  const userFilter = document.getElementById('user-filter')?.value || '';
+  const dateFrom = document.getElementById('date-from-filter')?.value || '';
+  const dateTo = document.getElementById('date-to-filter')?.value || '';
+
+  if (severityFilter) filtered = filtered.filter(l => l.level === severityFilter);
+  if (moduleFilter) filtered = filtered.filter(l => l.module === moduleFilter);
+  if (userFilter) filtered = filtered.filter(l => l.user === userFilter);
+  if (dateFrom) filtered = filtered.filter(l => l.timestamp >= dateFrom);
+  if (dateTo) filtered = filtered.filter(l => l.timestamp <= dateTo + ' 23:59:59');
+  
+  // Pagination
+  logPagination.totalFiltered = filtered.length;
+  logPagination.totalPages = Math.ceil(filtered.length / logPagination.perPage);
+  if (logPagination.currentPage > logPagination.totalPages) {
+    logPagination.currentPage = Math.max(1, logPagination.totalPages);
+  }
+  
+  const start = (logPagination.currentPage - 1) * logPagination.perPage;
+  const paginatedLogs = filtered.slice(start, start + logPagination.perPage);
+  
+  const rows = paginatedLogs.map(l => `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
     <td class="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">${l.timestamp}</td>
     <td class="px-4 py-3 text-sm font-medium">${l.user}</td>
     <td class="px-4 py-3 text-sm">${l.action}</td>
@@ -249,8 +234,56 @@ function renderLogs(filter = '') {
         ${rows || `<tr><td colspan="5">${emptyState('No logs found')}</td></tr>`}
       </tbody>
     </table>`)}
+    
+    <!-- Pagination Container -->
+    <div id="pagination-container">
+      ${renderPagination()}
+    </div>
   </div>`;
 }
+function renderUsers(filter = '') {
+  const q = filter.toLowerCase();
+  const filtered = DATA.users.filter(u =>
+    !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.role.toLowerCase().includes(q)
+  );
+  const rows = filtered.map(u => `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+    <td class="px-4 py-3 text-sm font-medium">${u.name}</td>
+    <td class="px-4 py-3 text-sm text-slate-500">${u.email}</td>
+    <td class="px-4 py-3 text-sm">${badge(u.role)}</td>
+    <td class="px-4 py-3 text-sm">${badge(u.status)}</td>
+    <td class="px-4 py-3 text-sm text-slate-500">${u.joined}</td>
+    <td class="px-4 py-3 text-sm">
+      <div class="flex gap-1">
+        <button data-action="edit-user" data-id="${u.id}" class="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors" title="Edit">${icon('cog', 'h-4 w-4')}</button>
+        <button data-action="delete-user" data-id="${u.id}" class="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 transition-colors" title="Delete">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+        </button>
+      </div>
+    </td>
+  </tr>`).join('');
+
+  return `<div class="space-y-4">
+    <div class="flex flex-col sm:flex-row gap-3 justify-between">
+      ${searchInput('user-search', 'Search users...')}
+      ${btnPrimary('+ Add User', 'add-user')}
+    </div>
+    ${tableWrap(`<table class="w-full text-left"><thead class="bg-slate-50 dark:bg-slate-700/50"><tr>
+      <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Name</th>
+      <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Email</th>
+      <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Role</th>
+      <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Status</th>
+      <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Joined</th>
+      <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Actions</th>
+    </tr></thead><tbody class="divide-y divide-slate-200 dark:divide-slate-700">${rows || `<tr><td colspan="6">${emptyState('No users found')}</td></tr>`}</tbody></table>`)}
+  </div>`;
+}
+// Add this state at the top of the file (near other variables)
+let logPagination = {
+  currentPage: 1,
+  perPage: 10,
+  totalPages: 1,
+  totalFiltered: 0
+};
 
 // Helper functions for log statistics
 function getTodayLogCount() {
@@ -289,20 +322,73 @@ function exportLogsToCSV() {
   window.URL.revokeObjectURL(url);
 }
 
+// Generate pagination HTML
+function renderPagination() {
+  if (logPagination.totalPages <= 1) return '';
+  
+  const current = logPagination.currentPage;
+  const total = logPagination.totalPages;
+  
+  let pageNumbers = '';
+  for (let i = 1; i <= total; i++) {
+    if (i === 1 || i === total || (i >= current - 1 && i <= current + 1)) {
+      pageNumbers += `<button class="page-btn px-3 py-1.5 rounded-lg text-sm ${i === current ? 'bg-gov-600 text-white' : 'border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'}" data-page="${i}">${i}</button>`;
+    } else if (i === current - 2 || i === current + 2) {
+      pageNumbers += `<span class="px-1 text-slate-400">...</span>`;
+    }
+  }
+  
+  return `
+    <div class="flex items-center justify-between pt-2">
+      <div class="text-sm text-slate-500">
+        Page ${current} of ${total} (${logPagination.totalFiltered} total logs)
+      </div>
+      <div class="flex gap-1">
+        <button class="page-btn px-3 py-1.5 rounded-lg text-sm border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed" 
+          data-page="1" ${current === 1 ? 'disabled' : ''}>««</button>
+        <button class="page-btn px-3 py-1.5 rounded-lg text-sm border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed" 
+          data-page="${current - 1}" ${current === 1 ? 'disabled' : ''}>«</button>
+        ${pageNumbers}
+        <button class="page-btn px-3 py-1.5 rounded-lg text-sm border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed" 
+          data-page="${current + 1}" ${current === total ? 'disabled' : ''}>»</button>
+        <button class="page-btn px-3 py-1.5 rounded-lg text-sm border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed" 
+          data-page="${total}" ${current === total ? 'disabled' : ''}>»»</button>
+      </div>
+    </div>`;
+}
+
 // Initialize log filters and live feed
 export function initLogFilters() {
-  // Filter change handlers
+  // Reset pagination on init
+  logPagination.currentPage = 1;
+  
+  // Filter change handlers - reset to page 1
   ['severity-filter', 'module-filter', 'user-filter', 'date-from-filter', 'date-to-filter'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
-      el.addEventListener('change', applyLogFilters);
+      el.addEventListener('change', () => {
+        logPagination.currentPage = 1;
+        applyLogFilters();
+      });
     }
+  });
+  
+  // Pagination button handlers
+  document.querySelectorAll('.page-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const page = parseInt(e.target.dataset.page);
+      if (page && page >= 1 && page <= logPagination.totalPages) {
+        logPagination.currentPage = page;
+        applyLogFilters();
+      }
+    });
   });
   
   // Clear filters
   const clearBtn = document.getElementById('clear-filters-btn');
   if (clearBtn) {
     clearBtn.addEventListener('click', () => {
+      logPagination.currentPage = 1;
       ['severity-filter', 'module-filter', 'user-filter'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
@@ -331,7 +417,6 @@ export function initLogFilters() {
         liveStatus.textContent = 'Live';
         liveStatus.classList.add('text-green-500');
         liveInterval = setInterval(() => {
-          // Simulate new log entries
           addNewLogEntry();
         }, 5000);
       } else {
@@ -358,15 +443,43 @@ function applyLogFilters() {
   if (dateFrom) filtered = filtered.filter(l => l.timestamp >= dateFrom);
   if (dateTo) filtered = filtered.filter(l => l.timestamp <= dateTo + ' 23:59:59');
   
+  // Update pagination
+  logPagination.totalFiltered = filtered.length;
+  logPagination.totalPages = Math.ceil(filtered.length / logPagination.perPage);
+  if (logPagination.currentPage > logPagination.totalPages) {
+    logPagination.currentPage = Math.max(1, logPagination.totalPages);
+  }
+  
+  // Get current page data
+  const start = (logPagination.currentPage - 1) * logPagination.perPage;
+  const paginatedLogs = filtered.slice(start, start + logPagination.perPage);
+  
+  // Update table body
   const tbody = document.getElementById('logs-tbody');
   if (tbody) {
-    tbody.innerHTML = filtered.length ? filtered.map(l => `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+    tbody.innerHTML = paginatedLogs.length ? paginatedLogs.map(l => `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
       <td class="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">${l.timestamp}</td>
       <td class="px-4 py-3 text-sm font-medium">${l.user}</td>
       <td class="px-4 py-3 text-sm">${l.action}</td>
       <td class="px-4 py-3 text-sm text-slate-500">${l.module}</td>
       <td class="px-4 py-3 text-sm">${badge(l.level)}</td>
     </tr>`).join('') : `<tr><td colspan="5">${emptyState('No logs match your filters')}</td></tr>`;
+  }
+  
+  // Update pagination controls
+  const paginationContainer = document.getElementById('pagination-container');
+  if (paginationContainer) {
+    paginationContainer.innerHTML = renderPagination();
+    // Re-bind pagination buttons
+    paginationContainer.querySelectorAll('.page-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const page = parseInt(e.target.dataset.page);
+        if (page && page >= 1 && page <= logPagination.totalPages) {
+          logPagination.currentPage = page;
+          applyLogFilters();
+        }
+      });
+    });
   }
 }
 
@@ -395,12 +508,16 @@ function addNewLogEntry() {
   
   tbody.insertBefore(row, tbody.firstChild);
   
+  // Remove last row if exceeding per page limit
+  if (tbody.children.length > logPagination.perPage) {
+    tbody.removeChild(tbody.lastChild);
+  }
+  
   setTimeout(() => {
     row.style.transition = 'background-color 1s';
     row.style.backgroundColor = '';
   }, 1000);
 }
-
 // Replace your renderAnalytics function and related code in js/renderers/index.js
 
 function renderAnalytics() {
