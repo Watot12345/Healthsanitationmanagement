@@ -1,0 +1,271 @@
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Custom Fonts */
+.font-serif-custom {
+  font-family: 'Merriweather', serif;
+}
+
+.font-sans-custom {
+  font-family: 'Inter', sans-serif;
+}
+
+/* --- BASE STYLES --- */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #f8fafc;
+  font-family: 'Inter', sans-serif;
+}
+
+.container-panel {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
+/* Mobile form containers */
+.form-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2rem;
+  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+}
+
+.sign-in-container {
+  opacity: 1;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.container-panel.right-panel-active .sign-in-container {
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.sign-up-container {
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.container-panel.right-panel-active .sign-up-container {
+  opacity: 1;
+  z-index: 5;
+  pointer-events: auto;
+}
+
+.overlay-container {
+  display: none;
+}
+
+/* Premium Input Styling */
+.custom-input {
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+  transition: all 0.3s ease;
+}
+
+.custom-input:focus {
+  outline: none;
+  background-color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1), 0 2px 4px -1px rgba(37, 99, 235, 0.06);
+}
+
+/* Modern Checkbox */
+.custom-checkbox {
+  appearance: none;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.25rem;
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.custom-checkbox:checked {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+.custom-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 5px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* --- DESKTOP STYLES --- */
+@media (min-width: 768px) {
+  .form-container {
+    width: 50%;
+    opacity: 1 !important;
+    padding: 4rem;
+    pointer-events: auto !important;
+    overflow-y: visible;
+    background-color: #ffffff;
+  }
+
+  .sign-in-container {
+    left: 0;
+    z-index: 2;
+    transform: translateX(0);
+  }
+
+  .container-panel.right-panel-active .sign-in-container {
+    transform: translateX(100%);
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  .sign-up-container {
+    left: 0;
+    z-index: 1;
+    opacity: 0 !important;
+    transform: translateX(0);
+    pointer-events: none !important;
+  }
+
+  .container-panel.right-panel-active .sign-up-container {
+    transform: translateX(100%);
+    opacity: 1 !important;
+    z-index: 5;
+    pointer-events: auto !important;
+  }
+
+  /* Overlay Panel with smooth shadow */
+  .overlay-container {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 50%;
+    height: 100%;
+    overflow: hidden;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 100;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .container-panel.right-panel-active .overlay-container {
+    transform: translateX(-100%);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Gradient Overlay Base */
+  .overlay {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    color: #ffffff;
+    position: relative;
+    left: -100%;
+    height: 100%;
+    width: 200%;
+    transform: translateX(0);
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .container-panel.right-panel-active .overlay {
+    transform: translateX(50%);
+  }
+
+  /* --- ANIMATED GLASS SHAPES --- */
+  .shape {
+    position: absolute;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.01) 100%);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+    z-index: 1;
+    /* Nasa likod ng text */
+  }
+
+  .shape-1 {
+    width: 350px;
+    height: 350px;
+    top: -100px;
+    left: -50px;
+    animation: float 8s ease-in-out infinite alternate;
+  }
+
+  .shape-2 {
+    width: 200px;
+    height: 200px;
+    bottom: 50px;
+    right: 10%;
+    animation: float 10s ease-in-out infinite alternate-reverse;
+  }
+
+  .shape-3 {
+    width: 150px;
+    height: 150px;
+    top: 40%;
+    left: 40%;
+    animation: float 12s ease-in-out infinite alternate;
+  }
+
+  @keyframes float {
+    0% {
+      transform: translateY(0) scale(1);
+    }
+
+    100% {
+      transform: translateY(30px) scale(1.05);
+    }
+  }
+
+  /* Overlay content containers (Text & Buttons) */
+  .overlay-panel {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-direction: column;
+    padding: 0 40px 80px 40px;
+    text-align: right;
+    top: 0;
+    height: 100%;
+    width: 50%;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10;
+    /* Laging nasa harap ng shapes */
+  }
+
+  .overlay-left {
+    transform: translateX(-20%);
+  }
+
+  .container-panel.right-panel-active .overlay-left {
+    transform: translateX(0);
+  }
+
+  .overlay-right {
+    right: 0;
+    transform: translateX(0);
+  }
+
+  .container-panel.right-panel-active .overlay-right {
+    transform: translateX(20%);
+  }
+}
