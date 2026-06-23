@@ -136,3 +136,17 @@ export function searchInput(id, placeholder = 'Search...') {
 export function tableWrap(content) {
   return `<div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">${content}</div>`;
 }
+export function renderList(data, renderer) {
+  return data.map(renderer).join('');
+}
+
+export function filterData(dataArray, query, fields) {
+  const q = (query || '').toLowerCase().trim();
+  if (!q) return dataArray;
+  return dataArray.filter(item =>
+    fields.some(field => {
+      const value = item[field];
+      return value && String(value).toLowerCase().includes(q);
+    })
+  );
+}

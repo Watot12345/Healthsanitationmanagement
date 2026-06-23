@@ -1,5 +1,6 @@
 // ─── State ───────────────────────────────────────────────────────────────────
 export const state = {
+  
     role: 'admin',
     view: 'dashboard',
     darkMode: localStorage.getItem('hsms-dark') === 'true',

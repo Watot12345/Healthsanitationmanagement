@@ -9,6 +9,7 @@ import {
 } from './utils/dom.js';
 import { showToast } from './utils/toast.js';
 import { openModal, closeModal } from './utils/modal.js';
+import { initComplianceFilters } from './renderers/compliance.js';
 
 import { renderSidebar } from './ui/sidebar.js';
 import { updateHeader } from './ui/header.js';
@@ -95,6 +96,9 @@ function initCalendarIfNeeded() {
     }
     if (state.view === 'logs') {
         setTimeout(() => initLogFilters(), 100);
+    }
+    if (state.view === 'compliance') {
+  setTimeout(() => initComplianceFilters(), 100);
     }
 }
     
@@ -290,12 +294,22 @@ function initApp() {
         if (e.target === e.currentTarget) closeModal();
     });
 
-    // Global click handler
+        // Global click handler
     document.addEventListener('click', (e) => {
         if (!e.target.closest('#notif-dropdown-wrap') && 
             !e.target.closest('#profile-dropdown-wrap') && 
             !e.target.closest('#global-search-wrap')) {
             closeAllDropdowns();
+        }
+
+        // Sidebar collapsible toggle
+        const toggleBtn = e.target.closest('[data-toggle]');
+        if (toggleBtn) {
+            const id = toggleBtn.dataset.toggle;
+            import('./ui/sidebar.js').then(module => {
+                module.toggleExpanded(id);
+            });
+            return;
         }
 
         const navBtn = e.target.closest('[data-nav]');
