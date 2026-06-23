@@ -1,3 +1,5 @@
+// REUSABLE UI COMPONENT FOR CONSISTENT STYLING
+
 import { ICONS, icon } from './icons.js';
 
 // ─── Utilities ─────────────────────────────────────────────────────────────

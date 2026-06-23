@@ -1,3 +1,6 @@
+// ─── APPLICATION STATE ────────────────────────────────────────────────────────
+// Central state object - controls navigation, theme, UI toggles, and filters
+
 // ─── State ───────────────────────────────────────────────────────────────────
 export const state = {
   
