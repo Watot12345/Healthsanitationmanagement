@@ -5,84 +5,145 @@ import {
     badge, icon, card, cardHeader, emptyState, emptyStateIllustrated,
     skeletonCards, btnPrimary, btnSecondary, btnDanger, btnSuccess,
     searchInput, tableWrap, priorityBadge, doctorStatusDot, workflowStepper,
-    growthChartPlaceholder, heatmapPlaceholder, miniCalendar
+    growthChartPlaceholder, heatmapPlaceholder, miniCalendar,
+    renderList, filterData
 } from '../utils/dom.js';
+import { renderReports } from './reports.js';
+import { renderCompliance } from './compliance.js';
 
-// ─── View Renderers: Admin ───────────────────────────────────────────────────
-function renderDashboard() {
-  const k = DATA.kpis;
-  const ss = DATA.systemStatus;
-  const kpis = [
-    { label: 'Total Users', value: k.totalUsers.toLocaleString(), color: 'bg-blue-500', icon: 'users' },
-    { label: 'Active Staff', value: k.activeStaff, color: 'bg-green-500', icon: 'heart' },
-    { label: 'Pending Requests', value: k.pendingRequests, color: 'bg-yellow-500', icon: 'clipboard' },
-    { label: 'System Alerts', value: k.systemAlerts, color: 'bg-red-500', icon: 'alert' },
-  ];
-  const kpiCards = kpis.map(kpi => card(`
-    <div class="ui-card-body flex items-start justify-between">
-      <div><p class="text-sm text-slate-500 dark:text-slate-400">${kpi.label}</p><p class="text-3xl font-bold mt-1">${kpi.value}</p></div>
-      <div class="p-3 rounded-xl ${kpi.color} text-white opacity-90">${icon(kpi.icon)}</div>
-    </div>
-  `)).join('');
 
-  const statusCards = [
-    { label: 'System Uptime', value: ss.uptime, icon: '✓', color: 'text-green-600' },
-    { label: 'Active Sessions', value: ss.activeSessions, icon: '👤', color: 'text-blue-600' },
-    { label: 'Pending Approvals', value: ss.pendingApprovals, icon: '⏳', color: 'text-yellow-600' },
-  ].map(s => card(`<div class="ui-card-body flex items-center gap-4"><span class="text-2xl">${s.icon}</span><div><p class="text-xs text-slate-500 uppercase tracking-wider">${s.label}</p><p class="text-xl font-bold ${s.color}">${s.value}</p></div></div>`)).join('');
-
-  const recentLogs = DATA.logs.slice(0, 4).map(l => `
-    <div class="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700 last:border-0">
-      <div><p class="text-sm font-medium">${l.action}</p><p class="text-xs text-slate-500">${l.user} · ${l.timestamp}</p></div>
-      ${badge(l.level)}
-    </div>
-  `).join('');
-
-  const updatesFeed = DATA.recentUpdates.map(u => `
-    <div class="flex items-start gap-3 py-3 border-b border-slate-100 dark:border-slate-700 last:border-0">
-      <div class="mt-0.5">${badge(u.type)}</div>
-      <div class="flex-1 min-w-0"><p class="text-sm font-medium truncate">${u.title}</p><p class="text-xs text-slate-500">${u.module} · ${u.time}</p></div>
-    </div>
-  `).join('');
-
-  const quickActions = state.role === 'admin' ? [
-    { label: 'Add User', action: 'add-user', primary: true },
-    { label: 'New Inspection', action: 'schedule-inspection', primary: false },
-    { label: 'Add Patient', action: 'add-patient', primary: false },
-    { label: 'Report Case', action: 'report-case', primary: false },
-  ] : [
-    { label: 'New Appointment', action: 'new-appointment', primary: true },
-    { label: 'New Inspection', action: 'schedule-inspection', primary: false },
-    { label: 'Add Patient', action: 'add-patient', primary: false },
-    { label: 'Report Case', action: 'report-case', primary: false },
-  ];
-
-  return `<div class="space-y-6">
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">${kpiCards}</div>
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">${statusCards}</div>
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      ${card(`<div class="ui-card-body"><h3 class="ui-section-title">Recent Activity</h3>${recentLogs || emptyState('No recent activity')}</div>`)}
-      ${card(`<div class="ui-card-body"><h3 class="ui-section-title">Quick Actions</h3>
-        <div class="grid grid-cols-2 gap-3">
-          ${quickActions.map(a => a.primary ? btnPrimary(a.label, a.action, 'w-full justify-center') : btnSecondary(a.label, a.action, 'w-full justify-center')).join('')}
-        </div></div>`)}
-    </div>
-    ${card(`<div class="ui-card-body"><h3 class="ui-section-title">Recent Updates Feed</h3>${updatesFeed}</div>`)}
-    ${card(`<div class="ui-card-body">
-      <div class="flex items-center justify-between mb-4"><h3 class="ui-section-title mb-0">System Alerts</h3>${badge('High')}</div>
-      <div class="space-y-3">
-        <div class="flex items-start gap-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-          ${icon('alert', 'h-5 w-5 text-red-500 shrink-0 mt-0.5')}
-          <div><p class="text-sm font-medium text-red-800 dark:text-red-300">Influenza outbreak detected in 3 barangays</p><p class="text-xs text-red-600 dark:text-red-400 mt-1">Requires immediate staff mobilization</p></div>
-        </div>
-        <div class="flex items-start gap-3 p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
-          ${icon('alert', 'h-5 w-5 text-yellow-500 shrink-0 mt-0.5')}
-          <div><p class="text-sm font-medium text-yellow-800 dark:text-yellow-300">87 pending requests awaiting review</p><p class="text-xs text-yellow-600 dark:text-yellow-400 mt-1">Average wait time: 2.3 days</p></div>
-        </div>
-      </div>
-    </div>`)}
-  </div>`;
+function buildFromConfig(source, config) {
+  return config.map(c => ({
+    label: c.label,
+    value: c.getValue(source),
+    icon: c.icon,
+    color: c.color,
+  }));
 }
+const KPI_CONFIG = [
+  { label: 'Total Users', icon: 'users', color: 'bg-blue-500', getValue: k => k.totalUsers.toLocaleString() },
+  { label: 'Active Staff', icon: 'heart', color: 'bg-green-500', getValue: k => k.activeStaff },
+  { label: 'Pending Requests', icon: 'clipboard', color: 'bg-yellow-500', getValue: k => k.pendingRequests },
+  { label: 'System Alerts', icon: 'alert', color: 'bg-red-500', getValue: k => k.systemAlerts },
+];
+const STATUS_CONFIG = [
+  { label: 'System Uptime', icon: '✓', color: 'text-green-600', getValue: s => s.uptime },
+  { label: 'Active Sessions', icon: '👤', color: 'text-blue-600', getValue: s => s.activeSessions },
+  { label: 'Pending Approvals', icon: '⏳', color: 'text-yellow-600', getValue: s => s.pendingApprovals },
+];
+function getQuickActions() {
+  const base = [
+    { label: 'New Inspection', action: 'schedule-inspection', primary: false },
+    { label: 'Add Patient', action: 'add-patient', primary: false },
+    { label: 'Report Case', action: 'report-case', primary: false },
+  ];
+
+  return state.role === 'admin'
+    ? [{ label: 'Add User', action: 'add-user', primary: true }, ...base]
+    : [{ label: 'New Appointment', action: 'new-appointment', primary: true }, ...base];
+}
+const KpiCard = kpi => card(`
+  <div class="ui-card-body flex items-start justify-between">
+    <div>
+      <p class="text-sm text-slate-500 dark:text-slate-400">${kpi.label}</p>
+      <p class="text-3xl font-bold mt-1">${kpi.value}</p>
+    </div>
+    <div class="p-3 rounded-xl ${kpi.color} text-white opacity-90">
+      ${icon(kpi.icon)}
+    </div>
+  </div>
+`);
+
+const StatusCard = s => card(`
+  <div class="ui-card-body flex items-center gap-4">
+    <span class="text-2xl">${s.icon}</span>
+    <div>
+      <p class="text-xs text-slate-500 uppercase tracking-wider">${s.label}</p>
+      <p class="text-xl font-bold ${s.color}">${s.value}</p>
+    </div>
+  </div>
+`);
+
+const LogItem = l => `
+  <div class="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700 last:border-0">
+    <div>
+      <p class="text-sm font-medium">${l.action}</p>
+      <p class="text-xs text-slate-500">${l.user} · ${l.timestamp}</p>
+    </div>
+    ${badge(l.level)}
+  </div>
+`;
+
+const UpdateItem = u => `
+  <div class="flex items-start gap-3 py-3 border-b border-slate-100 dark:border-slate-700 last:border-0">
+    <div class="mt-0.5">${badge(u.type)}</div>
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-medium truncate">${u.title}</p>
+      <p class="text-xs text-slate-500">${u.module} · ${u.time}</p>
+    </div>
+  </div>
+`;
+
+const QuickActionButton = a =>
+  a.primary
+    ? btnPrimary(a.label, a.action, 'w-full justify-center')
+    : btnSecondary(a.label, a.action, 'w-full justify-center');
+function getDashboardModel() {
+  return {
+    kpis: buildFromConfig(DATA.kpis, KPI_CONFIG),
+    status: buildFromConfig(DATA.systemStatus, STATUS_CONFIG),
+    logs: DATA.logs.slice(0, 4),
+    updates: DATA.recentUpdates,
+    quickActions: getQuickActions(),
+  };
+}
+function renderDashboard() {
+  const m = getDashboardModel();
+
+  return `
+    <div class="space-y-6">
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        ${renderList(m.kpis, KpiCard)}
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        ${renderList(m.status, StatusCard)}
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        ${card(`
+          <div class="ui-card-body">
+            <h3 class="ui-section-title">Recent Activity</h3>
+            ${renderList(m.logs, LogItem) || emptyState('No recent activity')}
+          </div>
+        `)}
+
+        ${card(`
+          <div class="ui-card-body">
+            <h3 class="ui-section-title">Quick Actions</h3>
+            <div class="grid grid-cols-2 gap-3">
+              ${renderList(m.quickActions, QuickActionButton)}
+            </div>
+          </div>
+        `)}
+
+      </div>
+
+      ${card(`
+        <div class="ui-card-body">
+          <h3 class="ui-section-title">Recent Updates Feed</h3>
+          ${renderList(m.updates, UpdateItem)}
+        </div>
+      `)}
+
+    </div>
+  `;
+}
+
+
+
 function renderLogs(filter = '') {
   const q = filter.toLowerCase();
   let filtered = DATA.logs.filter(l =>
@@ -819,9 +880,6 @@ function renderSummaryCards() {
     </div>
   `)).join('');
 }
-
-
-
 function renderSettings() {
   return `<div class="max-w-2xl space-y-6">
     ${card(`<div class="p-5"><h3 class="font-semibold mb-4">General Settings</h3>
@@ -834,14 +892,50 @@ function renderSettings() {
           <input type="email" value="health@sanjoce.gov.ph" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
         ${btnPrimary('Save Changes', 'save-settings')}
       </form></div>`)}
+
     ${card(`<div class="p-5"><h3 class="font-semibold mb-4">Notification Settings</h3>
       <div class="space-y-3">
         ${['Email alerts for system errors','SMS notifications for outbreaks','Daily summary reports'].map((t,i)=>`
           <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" ${i<2?'checked':''} class="rounded border-slate-300 text-gov-600 focus:ring-gov-500"><span class="text-sm">${t}</span></label>`).join('')}
       </div></div>`)}
+
+    ${card(`<div class="p-5"><h3 class="font-semibold mb-4">Data Management</h3>
+      <div class="space-y-4">
+        <div><label class="block text-sm font-medium mb-1">Audit Log Retention</label>
+          <select class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
+            <option>30 days</option><option>90 days</option><option selected>1 year</option><option>Indefinite</option>
+          </select></div>
+        <div><label class="block text-sm font-medium mb-1">Session Timeout</label>
+          <select class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
+            <option>15 minutes</option><option selected>30 minutes</option><option>1 hour</option><option>4 hours</option>
+          </select></div>
+        <div><label class="block text-sm font-medium mb-1">Time Zone</label>
+          <select class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
+            <option selected>Philippine Standard Time (UTC+8)</option><option>UTC+7</option><option>UTC+9</option>
+          </select></div>
+        ${btnPrimary('Save Data Settings', 'save-settings')}
+      </div></div>`)}
+
+    ${card(`<div class="p-5"><h3 class="font-semibold mb-4">Security</h3>
+      <div class="space-y-4">
+        <div><label class="block text-sm font-medium mb-1">Password Minimum Length</label>
+          <input type="number" value="8" min="6" max="32" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
+        <div><label class="block text-sm font-medium mb-1">Login Attempt Limit</label>
+          <input type="number" value="5" min="1" max="10" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
+        <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="rounded border-slate-300 text-gov-600 focus:ring-gov-500"><span class="text-sm">Require password complexity (uppercase, number, symbol)</span></label>
+        <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="rounded border-slate-300 text-gov-600 focus:ring-gov-500"><span class="text-sm">Enable two-factor authentication (2FA)</span></label>
+        ${btnPrimary('Save Security Settings', 'save-settings')}
+      </div></div>`)}
+
     ${card(`<div class="p-5"><h3 class="font-semibold mb-4 text-red-600">Danger Zone</h3>
-      <p class="text-sm text-slate-500 mb-3">These actions cannot be undone.</p>
-      <div class="flex gap-2">${btnDanger('Reset System Data', 'reset-system')} ${btnDanger('Clear All Logs', 'clear-logs')}</div></div>`)}
+      <p class="text-sm text-slate-500 mb-3">These actions cannot be undone. Type confirmation to proceed.</p>
+      <div class="space-y-4">
+        <div class="flex items-center gap-3">
+          <input type="text" id="reset-confirm" placeholder='Type "DELETE" to confirm' class="px-3 py-2 rounded-lg border border-red-200 dark:border-red-800 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none w-48">
+          ${btnDanger('Reset System Data', 'reset-system')}
+        </div>
+        <div class="flex gap-2">${btnDanger('Clear All Logs', 'clear-logs')} ${btnDanger('Reset to Default Settings', 'reset-settings')}</div>
+      </div></div>`)}
   </div>`;
 }
 
@@ -1352,6 +1446,8 @@ function renderHealthCenter(filter = '') {
     users: () => renderUsers(getSearchValue('user-search')),
     logs: () => renderLogs(getSearchValue('log-search')),
     analytics: () => renderAnalytics(),
+     reports: () => renderReports(),
+     compliance: () => renderCompliance(),
     settings: () => renderSettings(),
     'health-center': () => renderHealthCenter(getSearchValue('apt-search')),
     sanitation: () => renderSanitation(getSearchValue('permit-search')),
