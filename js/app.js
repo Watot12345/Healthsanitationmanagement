@@ -15,7 +15,7 @@ import { updateHeader } from './ui/header.js';
 import { renderNotificationPanel } from './ui/notification.js';
 import { getSearchValue, getSelectValue } from './utils/search.js';
 import { handleAction, setCoreFunctions } from './actions.js';
-import { VIEW_RENDERERS, initHealthCenterCalendar, initAnalyticsCharts } from './renderers/index.js'; // ← Add initHealthCenterCalendar import
+import { VIEW_RENDERERS, initHealthCenterCalendar, initAnalyticsCharts, initLogFilters } from './renderers/index.js'; // ← Add initHealthCenterCalendar import
 
 // Make utilities available globally for inline usage
 window.badge = badge;
@@ -92,6 +92,9 @@ function initCalendarIfNeeded() {
         }, 100);
     } if (state.view === 'analytics') {
         setTimeout(() => initAnalyticsCharts(), 150);
+    }
+    if (state.view === 'logs') {
+        setTimeout(() => initLogFilters(), 100);
     }
 }
     
