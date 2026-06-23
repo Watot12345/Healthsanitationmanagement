@@ -3,47 +3,415 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Health & Sanitation - Login</title>
+    <title>Health & Sanitation - Premium Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        /* Custom Fonts */
+        .font-serif-custom { font-family: 'Merriweather', serif; }
+        .font-sans-custom { font-family: 'Inter', sans-serif; }
+
+        /* --- BASE STYLES --- */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f8fafc; 
+            font-family: 'Inter', sans-serif;
+        }
+
+        .container-panel {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+            overflow: hidden;
+            background-color: #ffffff; 
+        }
+
+        /* Mobile form containers */
+        .form-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 2rem;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto; 
+        }
+
+        .sign-in-container {
+            opacity: 1;
+            z-index: 2;
+            pointer-events: auto;
+        }
+
+        .container-panel.right-panel-active .sign-in-container {
+            opacity: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .sign-up-container {
+            opacity: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .container-panel.right-panel-active .sign-up-container {
+            opacity: 1;
+            z-index: 5;
+            pointer-events: auto;
+        }
+
+        .overlay-container { display: none; }
+
+        /* Premium Input Styling */
+        .custom-input {
+            background-color: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            color: #1e293b;
+            transition: all 0.3s ease;
+        }
+        .custom-input:focus {
+            outline: none;
+            background-color: #ffffff;
+            border-color: #2563eb;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1), 0 2px 4px -1px rgba(37, 99, 235, 0.06);
+        }
+
+        /* Modern Checkbox */
+        .custom-checkbox {
+            appearance: none;
+            background-color: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.25rem;
+            display: inline-block;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .custom-checkbox:checked {
+            background-color: #2563eb;
+            border-color: #2563eb;
+        }
+        .custom-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 5px;
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        /* --- DESKTOP STYLES --- */
+        @media (min-width: 768px) {
+            .form-container {
+                width: 50%;
+                opacity: 1 !important; 
+                padding: 4rem;
+                pointer-events: auto !important;
+                overflow-y: visible;
+                background-color: #ffffff;
+            }
+
+            .sign-in-container {
+                left: 0;
+                z-index: 2;
+                transform: translateX(0);
+            }
+
+            .container-panel.right-panel-active .sign-in-container {
+                transform: translateX(100%);
+                opacity: 0 !important;
+                pointer-events: none !important;
+            }
+
+            .sign-up-container {
+                left: 0;
+                z-index: 1;
+                opacity: 0 !important;
+                transform: translateX(0);
+                pointer-events: none !important;
+            }
+
+            .container-panel.right-panel-active .sign-up-container {
+                transform: translateX(100%);
+                opacity: 1 !important;
+                z-index: 5;
+                pointer-events: auto !important;
+            }
+
+            /* Overlay Panel with smooth shadow */
+            .overlay-container {
+                display: block;
+                position: absolute;
+                top: 0;
+                left: 50%;
+                width: 50%;
+                height: 100%;
+                overflow: hidden;
+                transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+                z-index: 100;
+                box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+            }
+
+            .container-panel.right-panel-active .overlay-container {
+                transform: translateX(-100%);
+                box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+            }
+
+            /* Gradient Overlay Base */
+            .overlay {
+                background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); 
+                color: #ffffff;
+                position: relative;
+                left: -100%;
+                height: 100%;
+                width: 200%;
+                transform: translateX(0);
+                transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .container-panel.right-panel-active .overlay {
+                transform: translateX(50%);
+            }
+
+            /* --- ANIMATED GLASS SHAPES --- */
+            .shape {
+                position: absolute;
+                border-radius: 50%;
+                background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.01) 100%);
+                backdrop-filter: blur(8px);
+                border: 1px solid rgba(255,255,255,0.1);
+                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+                z-index: 1; /* Nasa likod ng text */
+            }
+
+            .shape-1 {
+                width: 350px; height: 350px;
+                top: -100px; left: -50px;
+                animation: float 8s ease-in-out infinite alternate;
+            }
+
+            .shape-2 {
+                width: 200px; height: 200px;
+                bottom: 50px; right: 10%;
+                animation: float 10s ease-in-out infinite alternate-reverse;
+            }
+
+            .shape-3 {
+                width: 150px; height: 150px;
+                top: 40%; left: 40%;
+                animation: float 12s ease-in-out infinite alternate;
+            }
+
+            @keyframes float {
+                0% { transform: translateY(0) scale(1); }
+                100% { transform: translateY(30px) scale(1.05); }
+            }
+
+            /* Overlay content containers (Text & Buttons) */
+            .overlay-panel {
+                position: absolute;
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                flex-direction: column;
+                padding: 0 40px 80px 40px;
+                text-align: right;
+                top: 0;
+                height: 100%;
+                width: 50%;
+                transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+                z-index: 10; /* Laging nasa harap ng shapes */
+            }
+
+            .overlay-left { transform: translateX(-20%); }
+            .container-panel.right-panel-active .overlay-left { transform: translateX(0); }
+
+            .overlay-right {
+                right: 0;
+                transform: translateX(0);
+            }
+            .container-panel.right-panel-active .overlay-right { transform: translateX(20%); }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
-    <div class="max-w-md w-full mx-4">
-        <div class="text-center mb-8">
-            <h1 class="text-2xl font-bold text-gray-800">Health & Sanitation Management</h1>
-            <p class="text-gray-600 mt-2">System Login</p>
-        </div>
+<body>
 
-        <div class="bg-white rounded-lg shadow-md p-8">
-            <div id="errorMessage" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"></div>
-            <div id="successMessage" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4"></div>
+    <div class="container-panel" id="mainContainer">
 
-            <form id="loginForm" class="space-y-4">
+        <div class="form-container sign-up-container max-w-lg mx-auto md:max-w-none justify-center">
+            <div class="text-center mb-8 transition-opacity duration-500 mt-8 md:mt-0">
+                <h1 class="text-3xl md:text-4xl font-serif-custom text-gray-900 leading-tight">Health & Sanitation</h1>
+                <h1 class="text-3xl md:text-4xl font-serif-custom text-gray-900 mb-3 leading-tight">Management</h1>
+                <p class="text-sm font-bold text-blue-600 tracking-widest uppercase">Create an Account</p>
+            </div>
+
+            <form id="signUpForm" class="space-y-4 max-w-sm mx-auto w-full pb-8 md:pb-0">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Username or Email</label>
-                    <input type="text" id="username" required
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                           placeholder="Enter username or email">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Full Name</label>
+                    <input type="text" required class="custom-input w-full px-4 py-3.5 text-base rounded-xl" placeholder="John Doe">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Email Address</label>
+                    <input type="email" required class="custom-input w-full px-4 py-3.5 text-base rounded-xl" placeholder="name@example.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Phone Number</label>
+                    <input type="text" required class="custom-input w-full px-4 py-3.5 text-base rounded-xl" placeholder="+63 900 000 0000">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Password</label>
+                    <input type="password" required class="custom-input w-full px-4 py-3.5 text-base rounded-xl" placeholder="••••••••">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Confirm Password</label>
+                    <input type="password" required class="custom-input w-full px-4 py-3.5 text-base rounded-xl" placeholder="••••••••">
+                </div>
+                
+                <div class="flex items-start mt-5 mb-6">
+                    <input type="checkbox" class="custom-checkbox mt-1 w-5 h-5 mr-3 flex-shrink-0" required>
+                    <p class="text-sm text-gray-500 leading-relaxed">
+                        I agree to the <a href="#" class="text-blue-600 hover:underline">terms</a>, <a href="#" class="text-blue-600 hover:underline">conditions</a> and system usage privacy policies.
+                    </p>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                    <input type="password" id="password" required
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                           placeholder="Enter password">
-                </div>
-
-                <button type="submit" id="loginButton"
-                        class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors">
-                    Sign In
+                <button type="submit" id="actualSignUpBtn" class="w-full bg-gray-900 text-white font-bold py-3.5 text-base rounded-xl shadow-lg hover:bg-blue-700 hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200">
+                    SIGN UP NOW
                 </button>
+
+                <div class="text-center mt-8 md:hidden">
+                    <p class="text-sm text-gray-500">Already have an account? <br>
+                        <button type="button" class="text-blue-600 font-bold hover:underline inline-block mt-2 toggle-to-login">Sign in to your account</button>
+                    </p>
+                </div>
             </form>
         </div>
+
+
+        <div class="form-container sign-in-container max-w-lg mx-auto md:max-w-none justify-center">
+            <div class="text-center mb-10 transition-opacity duration-500 mt-8 md:mt-0">
+                <h1 class="text-3xl md:text-4xl font-serif-custom text-gray-900 leading-tight">Health & Sanitation</h1>
+                <h1 class="text-3xl md:text-4xl font-serif-custom text-gray-900 mb-3 leading-tight">Management</h1>
+                <p class="text-sm font-bold text-blue-600 tracking-widest uppercase">Welcome Back</p>
+            </div>
+
+            <div id="errorMessage" class="hidden bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded shadow-sm mb-6 text-sm max-w-sm mx-auto w-full font-medium"></div>
+            <div id="successMessage" class="hidden bg-green-50 border-l-4 border-green-500 text-green-700 px-4 py-3 rounded shadow-sm mb-6 text-sm max-w-sm mx-auto w-full font-medium"></div>
+
+            <form id="loginForm" class="space-y-6 max-w-sm mx-auto w-full pb-8 md:pb-0">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Email Address</label>
+                    <input type="text" id="username" required class="custom-input w-full px-4 py-3.5 rounded-xl text-base" placeholder="name@example.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Password</label>
+                    <input type="password" id="password" required class="custom-input w-full px-4 py-3.5 rounded-xl text-base" placeholder="••••••••">
+                </div>
+
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm gap-4 mt-2">
+                    <label class="flex items-center text-gray-600 cursor-pointer font-medium hover:text-gray-900 transition-colors">
+                        <input type="checkbox" class="custom-checkbox w-5 h-5 mr-2">
+                        Remember me
+                    </label>
+                    <a href="#" class="text-blue-600 hover:text-blue-800 hover:underline font-semibold text-center sm:text-right transition-colors">Forgot Password?</a>
+                </div>
+
+                <button type="submit" id="loginButton" class="w-full bg-gray-900 text-white font-bold py-3.5 text-base rounded-xl shadow-lg hover:bg-blue-700 hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 mt-6">
+                    SIGN IN
+                </button>
+
+                <div class="text-center mt-10 md:hidden">
+                    <p class="text-sm text-gray-500">Don't have an account yet? <br>
+                        <button type="button" class="text-blue-600 font-bold hover:underline inline-block mt-2 toggle-to-signup">Create an account here</button>
+                    </p>
+                </div>
+            </form>
+        </div>
+
+
+        <div class="overlay-container">
+            <div class="overlay">
+                
+                <div class="shape shape-1"></div>
+                <div class="shape shape-2"></div>
+                <div class="shape shape-3"></div>
+                
+                <div class="overlay-panel overlay-left">
+                    <div class="absolute top-10 left-12 flex items-center space-x-8 text-sm font-bold tracking-wider">
+                        <button id="signInBtnNav" class="bg-white text-blue-800 px-8 py-2.5 rounded-full hover:bg-gray-100 hover:shadow-lg transform hover:-translate-y-0.5 transition-all">LOGIN</button>
+                        <a href="#" class="text-blue-50 hover:text-white hover:underline transition-all">ABOUT</a>
+                        <a href="#" class="text-blue-50 hover:text-white hover:underline transition-all">CONTACT</a>
+                        <a href="#" class="text-blue-50 hover:text-white hover:underline transition-all">DOWNLOAD</a>
+                    </div>
+                    
+                    <div class="text-left w-full pl-12 pr-8 pb-16">
+                        <h2 class="text-5xl lg:text-6xl font-serif-custom mb-6 tracking-wide drop-shadow-md">HELLO, <br>FRIEND!</h2>
+                        <p class="text-sm lg:text-base leading-relaxed text-blue-100 max-w-md font-light">
+                            Enter your personal details and start your journey with us. We are committed to maintaining the highest standards of health and sanitation for everyone.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="overlay-panel overlay-right">
+                    <div class="absolute top-10 right-12 flex items-center space-x-8 text-sm font-bold tracking-wider">
+                        <a href="#" class="text-blue-50 hover:text-white hover:underline transition-all">ABOUT</a>
+                        <a href="#" class="text-blue-50 hover:text-white hover:underline transition-all">CONTACT</a>
+                        <a href="#" class="text-blue-50 hover:text-white hover:underline transition-all">DOWNLOAD</a>
+                        <button id="signUpBtnNav" class="bg-white text-blue-800 px-8 py-2.5 rounded-full hover:bg-gray-100 hover:shadow-lg transform hover:-translate-y-0.5 transition-all">SIGN UP</button>
+                    </div>
+
+                    <div class="text-right w-full pr-12 pl-8 pb-16">
+                        <h2 class="text-5xl lg:text-6xl font-serif-custom mb-6 tracking-wide drop-shadow-md">WELCOME <br>BACK!</h2>
+                        <p class="text-sm lg:text-base leading-relaxed text-blue-100 max-w-md ml-auto font-light">
+                            To keep connected with us please login with your personal info. Access your dashboard to monitor health and sanitation metrics securely.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
+        const container = document.getElementById('mainContainer');
+        const signUpDesktop = document.getElementById('signUpBtnNav');
+        const signInDesktop = document.getElementById('signInBtnNav');
+
+        // Desktop Event Listeners
+        if(signUpDesktop && signInDesktop) {
+            signUpDesktop.addEventListener('click', () => container.classList.add('right-panel-active'));
+            signInDesktop.addEventListener('click', () => container.classList.remove('right-panel-active'));
+        }
+
+        // Mobile Event Listeners
+        document.querySelectorAll('.toggle-to-signup').forEach(btn => {
+            btn.addEventListener('click', () => {
+                container.classList.add('right-panel-active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+        document.querySelectorAll('.toggle-to-login').forEach(btn => {
+            btn.addEventListener('click', () => {
+                container.classList.remove('right-panel-active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+
+        // Original Login Logic
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const loginButton = document.getElementById('loginButton');
@@ -53,42 +421,25 @@
             errorDiv.classList.add('hidden');
             successDiv.classList.add('hidden');
 
-            if (!username || !password) {
-                errorDiv.textContent = 'Please fill in all fields.';
-                errorDiv.classList.remove('hidden');
-                return;
-            }
-
             loginButton.disabled = true;
             loginButton.innerHTML = 'Signing in...';
 
             try {
-                // Path to API folder
                 const response = await fetch('../api/login.php', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
-
                 const data = await response.json();
 
                 if (data.success) {
                     localStorage.setItem('session_token', data.session_token);
                     localStorage.setItem('user_data', JSON.stringify({
-                        id: data.user_id,
-                        username: data.username,
-                        role: data.role,
-                        full_name: data.full_name
+                        id: data.user_id, username: data.username, role: data.role, full_name: data.full_name
                     }));
-
                     successDiv.textContent = 'Login successful! Redirecting...';
                     successDiv.classList.remove('hidden');
-
-                    setTimeout(function() {
-                        window.location.href = 'dashboard.html';
-                    }, 1000);
+                    setTimeout(() => window.location.href = 'dashboard.html', 1000);
                 } else {
                     errorDiv.textContent = data.message || 'Login failed.';
                     errorDiv.classList.remove('hidden');
@@ -98,8 +449,25 @@
                 errorDiv.classList.remove('hidden');
             } finally {
                 loginButton.disabled = false;
-                loginButton.innerHTML = 'Sign In';
+                loginButton.innerHTML = 'SIGN IN';
             }
+        });
+
+        // Sign Up Auto-Slide back to Login page
+        document.getElementById('signUpForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('actualSignUpBtn');
+            btn.innerHTML = 'Creating account...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                alert('Sign Up Successful! Auto-sliding back to Login page...');
+                btn.innerHTML = 'SIGN UP NOW';
+                btn.disabled = false;
+                this.reset();
+                container.classList.remove('right-panel-active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 1200);
         });
     </script>
 </body>
