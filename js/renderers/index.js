@@ -126,6 +126,7 @@ function renderLogs(filter = '') {
   const filtered = DATA.logs.filter(l =>
     !q || l.action.toLowerCase().includes(q) || l.user.toLowerCase().includes(q) || l.module.toLowerCase().includes(q)
   );
+  
   const rows = filtered.map(l => `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
     <td class="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">${l.timestamp}</td>
     <td class="px-4 py-3 text-sm font-medium">${l.user}</td>
@@ -134,16 +135,270 @@ function renderLogs(filter = '') {
     <td class="px-4 py-3 text-sm">${badge(l.level)}</td>
   </tr>`).join('');
 
-  return `<div class="space-y-4">
-    ${searchInput('log-search', 'Search logs...')}
-    ${tableWrap(`<table class="w-full text-left"><thead class="bg-slate-50 dark:bg-slate-700/50"><tr>
-      <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Timestamp</th>
-      <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">User</th>
-      <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Action</th>
-      <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Module</th>
-      <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Level</th>
-    </tr></thead><tbody class="divide-y divide-slate-200 dark:divide-slate-700">${rows}</tbody></table>`)}
+  return `<div class="space-y-6">
+    <!-- Log Statistics Dashboard -->
+    <div id="log-stats" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      ${card(`<div class="p-4">
+        <div class="flex items-center justify-between">
+          <p class="text-sm text-slate-500">Total Logs Today</p>
+          <svg class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+        </div>
+        <p class="text-2xl font-bold mt-2" id="total-logs-today">${getTodayLogCount()}</p>
+        <p class="text-xs text-slate-500 mt-1">+12% from yesterday</p>
+      </div>`)}
+      
+      ${card(`<div class="p-4">
+        <div class="flex items-center justify-between">
+          <p class="text-sm text-slate-500">Errors & Warnings</p>
+          <svg class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+        </div>
+        <p class="text-2xl font-bold mt-2 text-red-600" id="error-count">${getErrorWarningCount()}</p>
+        <p class="text-xs text-red-500 mt-1">Needs attention</p>
+      </div>`)}
+      
+      ${card(`<div class="p-4">
+        <div class="flex items-center justify-between">
+          <p class="text-sm text-slate-500">Active Users</p>
+          <svg class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+        </div>
+        <p class="text-2xl font-bold mt-2" id="active-users">${getActiveUsers()}</p>
+        <p class="text-xs text-slate-500 mt-1">Last 24 hours</p>
+      </div>`)}
+      
+      ${card(`<div class="p-4">
+        <div class="flex items-center justify-between">
+          <p class="text-sm text-slate-500">Peak Hours</p>
+          <svg class="h-5 w-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <p class="text-2xl font-bold mt-2">08:00 - 10:00</p>
+        <p class="text-xs text-slate-500 mt-1">AM activity spike</p>
+      </div>`)}
+    </div>
+
+    <!-- Filters & Search Bar -->
+    <div class="space-y-4">
+      <div class="flex flex-col sm:flex-row gap-3">
+        ${searchInput('log-search', 'Search logs by keyword...')}
+        <button id="export-csv-btn" class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+          Export CSV
+        </button>
+      </div>
+      
+      <!-- Filter Chips -->
+      <div class="flex flex-wrap gap-2">
+        <span class="text-xs text-slate-500 self-center mr-2">Filter by:</span>
+        
+        <select id="severity-filter" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
+          <option value="">All Severity</option>
+          <option value="info">ℹ️ Info</option>
+          <option value="success">✅ Success</option>
+          <option value="warning">⚠️ Warning</option>
+          <option value="error">🔴 Error</option>
+        </select>
+        
+        <select id="module-filter" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
+          <option value="">All Modules</option>
+          <option value="Authentication">Authentication</option>
+          <option value="User Management">User Management</option>
+          <option value="Patient Records">Patient Records</option>
+          <option value="Health Center">Health Center</option>
+          <option value="Sanitation">Sanitation</option>
+          <option value="Immunization">Immunization</option>
+          <option value="Wastewater">Wastewater</option>
+          <option value="Surveillance">Surveillance</option>
+          <option value="Security">Security</option>
+          <option value="System">System</option>
+        </select>
+        
+        <select id="user-filter" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
+          <option value="">All Users</option>
+          ${getUniqueUsers().map(u => `<option value="${u}">${u}</option>`).join('')}
+        </select>
+        
+        <input type="date" id="date-from-filter" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm" title="From date">
+        <input type="date" id="date-to-filter" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm" title="To date">
+        
+        <button id="clear-filters-btn" class="px-3 py-1.5 rounded-lg text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+          Clear Filters
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Log Feed Toggle -->
+    <div class="flex items-center gap-3">
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" id="live-log-toggle" class="rounded text-gov-600 focus:ring-gov-500">
+        <span class="text-sm text-slate-600 dark:text-slate-400">Live Log Feed</span>
+      </label>
+      <span class="text-xs text-slate-400" id="live-status">Paused</span>
+    </div>
+
+    <!-- Logs Table -->
+    ${tableWrap(`<table class="w-full text-left">
+      <thead class="bg-slate-50 dark:bg-slate-700/50">
+        <tr>
+          <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Timestamp</th>
+          <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">User</th>
+          <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Action</th>
+          <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Module</th>
+          <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Level</th>
+        </tr>
+      </thead>
+      <tbody id="logs-tbody" class="divide-y divide-slate-200 dark:divide-slate-700">
+        ${rows || `<tr><td colspan="5">${emptyState('No logs found')}</td></tr>`}
+      </tbody>
+    </table>`)}
   </div>`;
+}
+
+// Helper functions for log statistics
+function getTodayLogCount() {
+  const today = new Date().toISOString().split('T')[0];
+  return DATA.logs.filter(l => l.timestamp.startsWith(today)).length || 6;
+}
+
+function getErrorWarningCount() {
+  return DATA.logs.filter(l => l.level === 'error' || l.level === 'warning').length;
+}
+
+function getActiveUsers() {
+  return [...new Set(DATA.logs.map(l => l.user))].length;
+}
+
+function getUniqueUsers() {
+  return [...new Set(DATA.logs.map(l => l.user))];
+}
+
+// Export function for CSV
+function exportLogsToCSV() {
+  const headers = ['Timestamp', 'User', 'Action', 'Module', 'Level'];
+  const rows = DATA.logs.map(l => [l.timestamp, l.user, l.action, l.module, l.level]);
+  
+  let csv = headers.join(',') + '\n';
+  rows.forEach(row => {
+    csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+  });
+  
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `system-logs-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  window.URL.revokeObjectURL(url);
+}
+
+// Initialize log filters and live feed
+export function initLogFilters() {
+  // Filter change handlers
+  ['severity-filter', 'module-filter', 'user-filter', 'date-from-filter', 'date-to-filter'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('change', applyLogFilters);
+    }
+  });
+  
+  // Clear filters
+  const clearBtn = document.getElementById('clear-filters-btn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      ['severity-filter', 'module-filter', 'user-filter'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      ['date-from-filter', 'date-to-filter'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      applyLogFilters();
+    });
+  }
+  
+  // Export button
+  const exportBtn = document.getElementById('export-csv-btn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', exportLogsToCSV);
+  }
+  
+  // Live log feed
+  const liveToggle = document.getElementById('live-log-toggle');
+  const liveStatus = document.getElementById('live-status');
+  if (liveToggle && liveStatus) {
+    let liveInterval;
+    liveToggle.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        liveStatus.textContent = 'Live';
+        liveStatus.classList.add('text-green-500');
+        liveInterval = setInterval(() => {
+          // Simulate new log entries
+          addNewLogEntry();
+        }, 5000);
+      } else {
+        liveStatus.textContent = 'Paused';
+        liveStatus.classList.remove('text-green-500');
+        clearInterval(liveInterval);
+      }
+    });
+  }
+}
+
+function applyLogFilters() {
+  const severity = document.getElementById('severity-filter')?.value || '';
+  const module = document.getElementById('module-filter')?.value || '';
+  const user = document.getElementById('user-filter')?.value || '';
+  const dateFrom = document.getElementById('date-from-filter')?.value || '';
+  const dateTo = document.getElementById('date-to-filter')?.value || '';
+  
+  let filtered = DATA.logs;
+  
+  if (severity) filtered = filtered.filter(l => l.level === severity);
+  if (module) filtered = filtered.filter(l => l.module === module);
+  if (user) filtered = filtered.filter(l => l.user === user);
+  if (dateFrom) filtered = filtered.filter(l => l.timestamp >= dateFrom);
+  if (dateTo) filtered = filtered.filter(l => l.timestamp <= dateTo + ' 23:59:59');
+  
+  const tbody = document.getElementById('logs-tbody');
+  if (tbody) {
+    tbody.innerHTML = filtered.length ? filtered.map(l => `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+      <td class="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">${l.timestamp}</td>
+      <td class="px-4 py-3 text-sm font-medium">${l.user}</td>
+      <td class="px-4 py-3 text-sm">${l.action}</td>
+      <td class="px-4 py-3 text-sm text-slate-500">${l.module}</td>
+      <td class="px-4 py-3 text-sm">${badge(l.level)}</td>
+    </tr>`).join('') : `<tr><td colspan="5">${emptyState('No logs match your filters')}</td></tr>`;
+  }
+}
+
+function addNewLogEntry() {
+  const tbody = document.getElementById('logs-tbody');
+  if (!tbody) return;
+  
+  const newLog = {
+    timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+    user: ['System', 'Maria Santos', 'Juan Dela Cruz'][Math.floor(Math.random() * 3)],
+    action: 'Live: New activity detected',
+    module: ['System', 'Security', 'Health Center'][Math.floor(Math.random() * 3)],
+    level: ['info', 'warning', 'success'][Math.floor(Math.random() * 3)]
+  };
+  
+  const row = document.createElement('tr');
+  row.className = 'hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors new-log-entry';
+  row.style.backgroundColor = '#fef3c7';
+  row.innerHTML = `
+    <td class="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">${newLog.timestamp}</td>
+    <td class="px-4 py-3 text-sm font-medium">${newLog.user}</td>
+    <td class="px-4 py-3 text-sm">${newLog.action}</td>
+    <td class="px-4 py-3 text-sm text-slate-500">${newLog.module}</td>
+    <td class="px-4 py-3 text-sm">${badge(newLog.level)}</td>
+  `;
+  
+  tbody.insertBefore(row, tbody.firstChild);
+  
+  setTimeout(() => {
+    row.style.transition = 'background-color 1s';
+    row.style.backgroundColor = '';
+  }, 1000);
 }
 
 // Replace your renderAnalytics function and related code in js/renderers/index.js
