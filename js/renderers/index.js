@@ -146,44 +146,309 @@ function renderLogs(filter = '') {
   </div>`;
 }
 
+// Replace your renderAnalytics function and related code in js/renderers/index.js
+
 function renderAnalytics() {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-  const values = [65, 78, 90, 81, 95, 88];
-  const max = Math.max(...values);
-  const bars = values.map((v, i) => `
-    <div class="flex flex-col items-center gap-2 flex-1">
-      <div class="w-full flex items-end justify-center h-40 bg-slate-50 dark:bg-slate-700/30 rounded-lg p-2">
-        <div class="chart-bar w-8 sm:w-12 rounded-t-md bg-gov-500 hover:bg-gov-600 transition-colors" style="height:${(v / max) * 100}%"></div>
-      </div>
-      <span class="text-xs text-slate-500">${months[i]}</span>
-    </div>
-  `).join('');
-
-  const summaries = [
-    { title: 'Appointments', value: '342', change: '+12%', color: 'text-green-600' },
-    { title: 'Permits Issued', value: '89', change: '+5%', color: 'text-green-600' },
-    { title: 'Inspections', value: '156', change: '+8%', color: 'text-green-600' },
-    { title: 'Cases Reported', value: '48', change: '-3%', color: 'text-red-600' },
-  ].map(s => card(`<div class="p-4"><p class="text-sm text-slate-500">${s.title}</p><p class="text-2xl font-bold mt-1">${s.value}</p><p class="text-xs ${s.color} mt-1">${s.change} vs last month</p></div>`)).join('');
-
   return `<div class="space-y-6">
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">${summaries}</div>
-    ${card(`<div class="p-5"><h3 class="font-semibold mb-6">Monthly Service Requests</h3><div class="flex gap-2 sm:gap-4">${bars}</div></div>`)}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      ${card(`<div class="p-5"><h3 class="font-semibold mb-4">Service Distribution</h3>
-        <div class="space-y-3">
-          ${[{l:'Health Center',p:35,c:'bg-blue-500'},{l:'Sanitation',p:25,c:'bg-green-500'},{l:'Immunization',p:20,c:'bg-yellow-500'},{l:'Wastewater',p:20,c:'bg-purple-500'}].map(i=>`
-            <div><div class="flex justify-between text-sm mb-1"><span>${i.l}</span><span class="font-medium">${i.p}%</span></div>
-            <div class="h-2 rounded-full bg-slate-100 dark:bg-slate-700"><div class="h-2 rounded-full ${i.c} progress-bar" style="width:${i.p}%"></div></div></div>`).join('')}
-        </div></div>`)}
-      ${card(`<div class="p-5"><h3 class="font-semibold mb-4">Staff Performance</h3>
-        <div class="space-y-3">
-          ${['Juan Dela Cruz - 94%','Ana Reyes - 91%','Carlos Tan - 88%','Elena Santos - 85%'].map(n=>`
-            <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50"><span class="text-sm">${n.split(' - ')[0]}</span><span class="text-sm font-semibold text-gov-600">${n.split(' - ')[1]}</span></div>`).join('')}
-        </div></div>`)}
+    <!-- Date Range Filter -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <div class="flex gap-2 flex-wrap">
+        <button class="date-filter-btn px-3 py-1.5 rounded-lg text-sm font-medium bg-gov-600 text-white" data-range="7d">7 Days</button>
+        <button class="date-filter-btn px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600" data-range="30d">30 Days</button>
+        <button class="date-filter-btn px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600" data-range="90d">90 Days</button>
+        <button class="date-filter-btn px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600" data-range="1y">1 Year</button>
+      </div>
+      <div class="flex gap-2 items-center text-sm">
+        <input type="date" id="dateFrom" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
+        <span class="text-slate-500">to</span>
+        <input type="date" id="dateTo" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
+        <button id="refresh-analytics-btn" class="px-4 py-1.5 rounded-lg bg-gov-600 text-white text-sm font-medium hover:bg-gov-700">Apply</button>
+      </div>
     </div>
+
+    <!-- KPI Cards -->
+    <div id="kpi-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      ${renderStaticKPICard('Appointments', '342', '+12%', 'up', '#3b82f6')}
+      ${renderStaticKPICard('Permits Issued', '89', '+5%', 'up', '#22c55e')}
+      ${renderStaticKPICard('Inspections', '156', '+8%', 'up', '#eab308')}
+      ${renderStaticKPICard('Cases Reported', '48', '-3%', 'down', '#ef4444')}
+    </div>
+    
+    <!-- Main Trend Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      ${card(`<div class="p-5">
+        <h3 class="font-semibold mb-4">Service Requests Trend</h3>
+        <div id="trendChart" style="min-height: 350px;"></div>
+      </div>`)}
+      
+      ${card(`<div class="p-5">
+        <h3 class="font-semibold mb-4">Disease Surveillance</h3>
+        <div id="diseaseTrendChart" style="min-height: 350px;"></div>
+      </div>`)}
+    </div>
+    
+    <!-- Heatmap & Distribution -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      ${card(`<div class="p-5 lg:col-span-2">
+        <h3 class="font-semibold mb-4">Weekly Activity Heatmap</h3>
+        <div id="heatmapChart" style="min-height: 350px;"></div>
+      </div>`)}
+      
+      ${card(`<div class="p-5">
+        <h3 class="font-semibold mb-4">Service Distribution</h3>
+        <div id="donutChart" style="min-height: 320px;"></div>
+      </div>`)}
+    </div>
+    
+    <!-- Staff Performance -->
+    ${card(`<div class="p-5">
+      <h3 class="font-semibold mb-4">Staff Performance</h3>
+      <div id="staffChart" style="min-height: 300px;"></div>
+    </div>`)}
+    
+    <!-- Live Activity Feed -->
+    ${card(`<div class="p-5">
+      <h3 class="font-semibold mb-4">Recent Activity</h3>
+      <div id="live-feed" class="space-y-2 max-h-64 overflow-y-auto">
+        ${renderStaticActivityFeed()}
+      </div>
+    </div>`)}
   </div>`;
 }
+
+function renderStaticKPICard(title, value, change, trend, color) {
+  const trendIcon = trend === 'up' 
+    ? '<svg class="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/></svg>'
+    : '<svg class="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6L9 12.75l4.286-4.286a11.948 11.948 0 014.306 6.43l.776 2.898m0 0l3.182-5.511m-3.182 5.51l-5.511-3.181"/></svg>';
+  
+  const changeColor = trend === 'up' ? 'text-green-600' : 'text-red-600';
+  
+  return `
+    <div class="rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm p-4 hover:shadow-md transition-shadow">
+      <div class="flex items-center justify-between mb-3">
+        <p class="text-sm text-slate-500 dark:text-slate-400">${title}</p>
+        <span class="p-2 rounded-lg" style="background-color: ${color}20;">
+          <svg class="h-4 w-4" style="color: ${color}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75z"/></svg>
+        </span>
+      </div>
+      <p class="text-2xl font-bold text-slate-900 dark:text-white">${value}</p>
+      <div class="flex items-center gap-1 mt-2">
+        ${trendIcon}
+        <span class="text-xs font-medium ${changeColor}">${change}</span>
+        <span class="text-xs text-slate-400 ml-1">vs last month</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderStaticActivityFeed() {
+  const activities = [
+    { action: 'New appointment booked', user: 'Pedro Garcia', time: '2 min ago', type: 'info' },
+    { action: 'Permit SP-1042 approved', user: 'Juan Dela Cruz', time: '15 min ago', type: 'success' },
+    { action: 'Inspection scheduled', user: 'Ana Reyes', time: '1 hour ago', type: 'warning' },
+    { action: 'Dengue case reported', user: 'System', time: '2 hours ago', type: 'error' },
+    { action: 'Vaccine record updated', user: 'Maria Santos', time: '3 hours ago', type: 'info' },
+  ];
+  
+  const typeColors = {
+    info: 'border-blue-400 bg-blue-50 dark:bg-blue-900/20',
+    success: 'border-green-400 bg-green-50 dark:bg-green-900/20',
+    warning: 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20',
+    error: 'border-red-400 bg-red-50 dark:bg-red-900/20',
+  };
+  
+  return activities.map(a => `
+    <div class="flex items-start gap-3 p-3 rounded-lg border-l-4 ${typeColors[a.type]}">
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-slate-700 dark:text-slate-300">${a.action}</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">${a.user} · ${a.time}</p>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Static charts initialization
+export function initAnalyticsCharts() {
+  initTrendChart();
+  initDiseaseChart();
+  initHeatmapChart();
+  initDonutChart();
+  initStaffChart();
+}
+
+function initTrendChart() {
+  const el = document.querySelector('#trendChart');
+  if (!el) return;
+  
+  new ApexCharts(el, {
+    series: [
+      { name: 'Appointments', data: [45, 52, 38, 65, 42, 58] },
+      { name: 'Permits', data: [15, 22, 18, 25, 20, 19] },
+      { name: 'Inspections', data: [30, 35, 28, 40, 32, 38] }
+    ],
+    chart: {
+      type: 'area',
+      height: 350,
+      toolbar: { show: true },
+      animations: { enabled: true, speed: 800 }
+    },
+    dataLabels: { enabled: false },
+    stroke: { curve: 'smooth', width: 2 },
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shadeIntensity: 1,
+        opacityFrom: 0.3,
+        opacityTo: 0.05
+      }
+    },
+    xaxis: {
+      categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
+    },
+    yaxis: {
+      title: { text: 'Number of Requests' }
+    },
+    tooltip: { shared: true },
+    legend: { position: 'top' },
+    colors: ['#3b82f6', '#22c55e', '#eab308']
+  }).render();
+}
+
+function initDiseaseChart() {
+  const el = document.querySelector('#diseaseTrendChart');
+  if (!el) return;
+  
+  new ApexCharts(el, {
+    series: [
+      { name: 'Dengue', data: [5, 8, 12, 10, 15, 12] },
+      { name: 'Influenza', data: [10, 15, 20, 18, 25, 28] },
+      { name: 'Food Poisoning', data: [2, 3, 5, 4, 3, 3] },
+      { name: 'Leptospirosis', data: [0, 1, 2, 3, 5, 4] }
+    ],
+    chart: { type: 'line', height: 350, animations: { enabled: true } },
+    stroke: { width: [3, 3, 3, 2], curve: 'smooth' },
+    markers: { size: 4 },
+    xaxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] },
+    yaxis: { title: { text: 'Number of Cases' } },
+    tooltip: { shared: true },
+    colors: ['#ef4444', '#eab308', '#22c55e', '#a855f7']
+  }).render();
+}
+
+function initHeatmapChart() {
+  const el = document.querySelector('#heatmapChart');
+  if (!el) return;
+  
+  // Generate fake heatmap data
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+  const hours = ['8AM', '9AM', '10AM', '11AM', '12PM', '1PM', '2PM', '3PM', '4PM', '5PM'];
+  const series = days.map(day => ({
+    name: day,
+    data: hours.map(hour => ({
+      x: hour,
+      y: Math.floor(Math.random() * 30)
+    }))
+  }));
+  
+  new ApexCharts(el, {
+    series: series,
+    chart: { type: 'heatmap', height: 350 },
+    plotOptions: {
+      heatmap: {
+        shadeIntensity: 0.5,
+        colorScale: {
+          ranges: [
+            { from: 0, to: 5, color: '#e5e7eb' },
+            { from: 6, to: 10, color: '#bbf7d0' },
+            { from: 11, to: 20, color: '#86efac' },
+            { from: 21, to: 30, color: '#22c55e' }
+          ]
+        }
+      }
+    },
+    dataLabels: { enabled: false },
+    title: { text: 'Activity by Day & Hour' }
+  }).render();
+}
+
+function initDonutChart() {
+  const el = document.querySelector('#donutChart');
+  if (!el) return;
+  
+  new ApexCharts(el, {
+    series: [35, 25, 20, 20],
+    labels: ['Health Center', 'Sanitation', 'Immunization', 'Wastewater'],
+    chart: { type: 'donut', height: 320 },
+    plotOptions: {
+      pie: {
+        donut: {
+          labels: {
+            show: true,
+            total: { show: true, label: 'Total Services', formatter: () => '100%' }
+          }
+        }
+      }
+    },
+    legend: { position: 'bottom' },
+    colors: ['#3b82f6', '#22c55e', '#eab308', '#a855f7']
+  }).render();
+}
+
+function initStaffChart() {
+  const el = document.querySelector('#staffChart');
+  if (!el) return;
+  
+  new ApexCharts(el, {
+    series: [{
+      name: 'Performance Score',
+      data: [94, 91, 88, 85, 82, 78]
+    }],
+    chart: {
+      type: 'bar',
+      height: 300,
+      animations: { enabled: true }
+    },
+    plotOptions: {
+      bar: {
+        borderRadius: 8,
+        horizontal: true,
+        dataLabels: { position: 'top' }
+      }
+    },
+    dataLabels: {
+      enabled: true,
+      formatter: (val) => val + '%',
+      style: { fontSize: '12px', fontWeight: 'bold' }
+    },
+    xaxis: {
+      categories: ['Juan Dela Cruz', 'Ana Reyes', 'Carlos Tan', 'Elena Santos', 'Roberto Silva', 'Jose Mendoza'],
+      max: 100
+    },
+    colors: ['#3b82f6']
+  }).render();
+}
+
+function renderSummaryCards() {
+  const summaries = [
+    { title: 'Appointments', value: '342', change: '+12%', color: 'text-green-600', icon: 'calendar' },
+    { title: 'Permits Issued', value: '89', change: '+5%', color: 'text-green-600', icon: 'clipboard' },
+    { title: 'Inspections', value: '156', change: '+8%', color: 'text-green-600', icon: 'shield' },
+    { title: 'Cases Reported', value: '48', change: '-3%', color: 'text-red-600', icon: 'alert' },
+  ];
+  
+  return summaries.map(s => card(`
+    <div class="p-4">
+      <div class="flex items-center justify-between">
+        <p class="text-sm text-slate-500">${s.title}</p>
+        ${icon(s.icon, 'h-5 w-5 text-slate-400')}
+      </div>
+      <p class="text-2xl font-bold mt-1">${s.value}</p>
+      <p class="text-xs ${s.color} mt-1">${s.change} vs last month</p>
+    </div>
+  `)).join('');
+}
+
+
 
 function renderSettings() {
   return `<div class="max-w-2xl space-y-6">
