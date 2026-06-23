@@ -15,7 +15,7 @@ import { updateHeader } from './ui/header.js';
 import { renderNotificationPanel } from './ui/notification.js';
 import { getSearchValue, getSelectValue } from './utils/search.js';
 import { handleAction, setCoreFunctions } from './actions.js';
-import { VIEW_RENDERERS, initHealthCenterCalendar } from './renderers/index.js'; // ← Add initHealthCenterCalendar import
+import { VIEW_RENDERERS, initHealthCenterCalendar, initAnalyticsCharts } from './renderers/index.js'; // ← Add initHealthCenterCalendar import
 
 // Make utilities available globally for inline usage
 window.badge = badge;
@@ -90,8 +90,12 @@ function initCalendarIfNeeded() {
         setTimeout(() => {
             initHealthCenterCalendar();
         }, 100);
+    } if (state.view === 'analytics') {
+        setTimeout(() => initAnalyticsCharts(), 150);
     }
 }
+    
+
 
 function restoreSearchValues() {
     Object.entries(state.searchFilters).forEach(([id, val]) => {
