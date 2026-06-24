@@ -269,8 +269,9 @@ import { state } from './state.js';
 import { DATA } from './data.js';
 import { showToast } from './utils/toast.js';
 import { closeModal } from './utils/modal.js';
-
-// Import these from app.js to avoid circular dependencies
+import { showPatientDetail, showRegisterPatient } from './renderers/HealthServices/patients.js';
+import { showConsultationDetail, showNewConsultation } from './renderers/HealthServices/consultations.js';
+import { showRecordDetail } from './renderers/HealthServices/medicalRecords.js';
 let navigateTo, switchRole, renderView, renderNotificationPanel, closeAllDropdowns;
 
 export function setCoreFunctions(functions) {
@@ -283,7 +284,6 @@ export function setCoreFunctions(functions) {
 
 export function handleAction(action, target) {
   const actions = {
-    'close-modal': () => closeModal(),
     'add-user': () => showAddUserModal(),
     'confirm-add-user': () => { closeModal(); showToast('User added successfully', 'success'); },
     'edit-user': () => showEditUserModal(Number(target.dataset.id)),
@@ -325,8 +325,23 @@ export function handleAction(action, target) {
     'submit-appointment': () => showToast('Appointment booked successfully!', 'success'),
     'submit-permit': () => showToast('Permit application submitted!', 'success'),
     'submit-wastewater': () => showToast('Service request submitted!', 'success'),
+    'register-patient': () => { import('./renderers/HealthServices/patients.js').then(m => m.showRegisterPatient()); },
+'view-patient-detail': (target) => showPatientDetail(target.dataset.id),
+'confirm-register-patient': () => { closeModal(); showToast('Patient registered successfully', 'success'); },
+'edit-patient': () => { closeModal(); showToast('Patient updated successfully', 'success'); },
+'view-document': () => showToast('Document preview (demo)', 'info'),
+'upload-document': () => showToast('Upload available in backend version', 'info'),
+'new-consultation': () => showNewConsultation(),
+'view-consultation': (target) => showConsultationDetail(target.dataset.id),
+'confirm-consultation': () => { closeModal(); showToast('Consultation saved successfully', 'success'); },
+'add-record': () => showToast('Add record form (demo)', 'info'),
+'view-record': (target) => showRecordDetail(target.dataset.id),
+'download-record': () => showToast('Download started (demo)', 'success'),
+'close-modal': () => closeModal(),
+    'add-user': () => showAddUserModal(),
   };
-  if (actions[action]) actions[action]();
+  
+ if (actions[action]) actions[action](target);
 }
 
 function showAddUserModal() {

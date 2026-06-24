@@ -682,6 +682,7 @@ function initApp() {
     // Modal close on overlay click
     document.getElementById('modal-overlay').addEventListener('click', (e) => {
         if (e.target === e.currentTarget) closeModal();
+        if (e.target.closest('[data-action="close-modal"]')) closeModal();
     });
 
         // Global click handler
