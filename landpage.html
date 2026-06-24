@@ -176,22 +176,6 @@
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased overflow-x-hidden opacity-0 transition-opacity duration-700" onload="document.body.classList.remove('opacity-0')">
-    <!-- 1. Emergency Operations Advisory Banner -->
-    <div id="alert-banner" class="bg-rose-800 text-white py-2.5 px-4 shadow-sm relative z-[100] border-b border-rose-900 border-t border-rose-600">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <div class="flex items-center space-x-3 text-xs md:text-sm font-semibold tracking-wide">
-                <span class="flex h-2 w-2 relative">
-                    <span class="radar-pulse absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                </span>
-                <span class="uppercase bg-rose-950 text-white text-[10px] px-2 py-0.5 rounded font-extrabold tracking-wider">Operations Alert</span>
-                <span>Water Quality audits are active in District C. Residents can view operational modules statistics in real-time.</span>
-            </div>
-            <button onclick="document.getElementById('alert-banner').classList.add('hidden')" class="hover:bg-rose-900 rounded-full p-1.5 transition-colors ml-4 focus:outline-none" aria-label="Close Advisory">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-        </div>
-    </div>
     <!-- Official Top Bar -->
     <header class="w-full relative z-50">
         <div class="bg-gov-900 text-slate-400 text-[11px] py-2 px-4 border-b border-gov-800 select-none">
