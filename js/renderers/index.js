@@ -373,7 +373,12 @@ import { renderCompliance } from './compliance.js';
 import { renderPatients } from './HealthServices/patients.js';
 import { renderConsultations, showConsultationDetail, showNewConsultation } from './HealthServices/consultations.js';
 import { renderMedicalRecords } from './HealthServices/medicalRecords.js';
-
+import { renderSanitationApplications, showNewApplication } from './sanitationPermits/applications.js';
+import { renderInspections } from './sanitationPermits/inspections.js';
+import { renderPermitRecords } from './sanitationPermits/permitRecords.js';
+import { renderChildRecords } from './immunization/childRecords.js';
+import { renderVaccinationTracking } from './immunization/vaccinationTracking.js';
+import { renderGrowthCharts, initGrowthCharts } from './immunization/growthCharts.js';
 
 
 function buildFromConfig(source, config) {
@@ -1814,7 +1819,13 @@ function renderHealthCenter(filter = '') {
      patients: () => renderPatients(),
      consultations: () => renderConsultations(),
     settings: () => renderSettings(),
+    'immunization-growth': () => renderGrowthCharts(),
+    'immunization-tracking': () => renderVaccinationTracking(),
+    'immunization-records': () => renderChildRecords(),
+    'sanitation-records': () => renderPermitRecords(),
+    'sanitation-inspections': () => renderInspections(),
     'medical-records': () => renderMedicalRecords(),
+    'sanitation-applications': () => renderSanitationApplications(),
     'health-center': () => renderHealthCenter(getSearchValue('apt-search')),
     sanitation: () => renderSanitation(getSearchValue('permit-search')),
     immunization: () => renderImmunization(),
