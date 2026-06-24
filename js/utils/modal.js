@@ -13,6 +13,7 @@ export function openModal(title, body, footer = '') {
   }
   
   export function closeModal() {
+     console.log('closeModal called');
     const overlay = document.getElementById('modal-overlay');
     if (!overlay) return;
     

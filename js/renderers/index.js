@@ -370,6 +370,10 @@ import {
 } from '../utils/dom.js';
 import { renderReports } from './reports.js';
 import { renderCompliance } from './compliance.js';
+import { renderPatients } from './HealthServices/patients.js';
+import { renderConsultations, showConsultationDetail, showNewConsultation } from './HealthServices/consultations.js';
+import { renderMedicalRecords } from './HealthServices/medicalRecords.js';
+
 
 
 function buildFromConfig(source, config) {
@@ -939,7 +943,6 @@ function addNewLogEntry() {
     row.style.backgroundColor = '';
   }, 1000);
 }
-// Replace your renderAnalytics function and related code in js/renderers/index.js
 
 function renderAnalytics() {
   return `<div class="space-y-6">
@@ -1808,7 +1811,10 @@ function renderHealthCenter(filter = '') {
     analytics: () => renderAnalytics(),
      reports: () => renderReports(),
      compliance: () => renderCompliance(),
+     patients: () => renderPatients(),
+     consultations: () => renderConsultations(),
     settings: () => renderSettings(),
+    'medical-records': () => renderMedicalRecords(),
     'health-center': () => renderHealthCenter(getSearchValue('apt-search')),
     sanitation: () => renderSanitation(getSearchValue('permit-search')),
     immunization: () => renderImmunization(),
