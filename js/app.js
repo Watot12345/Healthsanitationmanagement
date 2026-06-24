@@ -407,7 +407,7 @@ import { renderNotificationPanel } from './ui/notification.js';
 import { getSearchValue, getSelectValue } from './utils/search.js';
 import { handleAction, setCoreFunctions } from './actions.js';
 import { VIEW_RENDERERS, initHealthCenterCalendar, initAnalyticsCharts, initLogFilters } from './renderers/index.js'; // ← Add initHealthCenterCalendar import
-
+import { initGrowthCharts } from './renderers/immunization/growthCharts.js';
 // Make utilities available globally for inline usage
 window.badge = badge;
 window.icon = icon;
@@ -490,6 +490,9 @@ function initCalendarIfNeeded() {
     if (state.view === 'compliance') {
   setTimeout(() => initComplianceFilters(), 100);
     }
+    if (state.view === 'immunization-growth') {
+  setTimeout(() => initGrowthCharts(), 150);
+}
 }
     
 

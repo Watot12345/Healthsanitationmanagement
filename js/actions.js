@@ -272,8 +272,13 @@ import { closeModal } from './utils/modal.js';
 import { showPatientDetail, showRegisterPatient } from './renderers/HealthServices/patients.js';
 import { showConsultationDetail, showNewConsultation } from './renderers/HealthServices/consultations.js';
 import { showRecordDetail } from './renderers/HealthServices/medicalRecords.js';
-let navigateTo, switchRole, renderView, renderNotificationPanel, closeAllDropdowns;
+import { showApplicationDetail, showNewApplication } from './renderers/sanitationPermits/applications.js';
+import { showInspectionDetail } from './renderers/sanitationPermits/inspections.js';
+import { showPermitDetail } from './renderers/sanitationPermits/permitRecords.js';
+import { showChildDetail, showRegisterChild } from './renderers/immunization/childRecords.js';
+import { showRecordVaccination, showUpdateVaccine } from './renderers/immunization/vaccinationTracking.js';
 
+let navigateTo, switchRole, renderView, renderNotificationPanel, closeAllDropdowns;
 export function setCoreFunctions(functions) {
   navigateTo = functions.navigateTo;
   switchRole = functions.switchRole;
@@ -339,6 +344,30 @@ export function handleAction(action, target) {
 'download-record': () => showToast('Download started (demo)', 'success'),
 'close-modal': () => closeModal(),
     'add-user': () => showAddUserModal(),
+    'view-application': (target) => showApplicationDetail(target.dataset.id),
+'approve-application': () => { closeModal(); showToast('Application approved', 'success'); },
+'reject-application': () => { closeModal(); showToast('Application rejected', 'error'); },
+'request-docs': () => showToast('Missing document request sent to applicant', 'warning'),
+'forward-inspection': () => { closeModal(); showToast('Application forwarded to inspection team', 'success'); },
+'new-application': () => showToast('New application form (demo)', 'info'),
+'new-application': () => showNewApplication(),
+'confirm-application': () => { closeModal(); showToast('Application submitted successfully', 'success'); },
+'view-inspection': (target) => showInspectionDetail(target.dataset.id),
+'pass-inspection': () => { closeModal(); showToast('Inspection marked as passed', 'success'); },
+'fail-inspection': () => { closeModal(); showToast('Inspection marked as failed', 'error'); },
+'record-violation': () => showToast('Violation recorded', 'warning'),
+'upload-photo': () => showToast('Photo upload (demo)', 'info'),
+'view-permit': (target) => showPermitDetail(target.dataset.id),
+'download-permit': () => showToast('Certificate downloaded (demo)', 'success'),
+'register-child': () => showRegisterChild(),
+'view-child': (target) => showChildDetail(target.dataset.id),
+'edit-child': () => { closeModal(); showToast('Child profile updated', 'success'); },
+'confirm-register-child': () => { closeModal(); showToast('Child registered successfully', 'success'); },
+'record-vaccination': () => showRecordVaccination(),
+'update-vaccine': (target) => showUpdateVaccine(target.dataset.id),
+'confirm-vaccination': () => { closeModal(); showToast('Vaccination recorded', 'success'); },
+'confirm-update-vaccine': () => { closeModal(); showToast('Vaccine status updated', 'success'); },
+'flag-vaccine': () => showToast('Overdue vaccine flagged for follow-up', 'warning'),
   };
   
  if (actions[action]) actions[action](target);
