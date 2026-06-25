@@ -268,7 +268,7 @@
 import { state } from './state.js';
 import { DATA } from './data.js';
 import { showToast } from './utils/toast.js';
-import { closeModal } from './utils/modal.js';
+import { openModal, closeModal } from './utils/modal.js';
 import { showPatientDetail, showRegisterPatient } from './renderers/HealthServices/patients.js';
 import { showConsultationDetail, showNewConsultation } from './renderers/HealthServices/consultations.js';
 import { showRecordDetail } from './renderers/HealthServices/medicalRecords.js';
@@ -294,7 +294,22 @@ export function setCoreFunctions(functions) {
 
 export function handleAction(action, target) {
   const actions = {
-    'add-user': () => showAddUserModal(),
+    'confirm-add-user': async () => {
+    const name = document.querySelector('#modal-body input[type="text"]').value;
+    const email = document.querySelector('#modal-body input[type="email"]').value;
+    const role = document.querySelector('#modal-body select').value;
+    
+    const response = await fetch('api/admin/addUser.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, role, password: 'Default123!' })
+    });
+    
+    const data = await response.json();
+    closeModal();
+    showToast({ type: data.success ? 'success' : 'error', title: data.success ? 'Success' : 'Error', message: data.message });
+    if (data.success) renderView();
+},
     'confirm-add-user': () => { closeModal(); showToast('User added successfully', 'success'); },
     'edit-user': () => showEditUserModal(Number(target.dataset.id)),
     'confirm-edit-user': () => { closeModal(); showToast('User updated successfully', 'success'); },
@@ -401,24 +416,29 @@ export function handleAction(action, target) {
 'set-alert-warning': () => { closeModal(); showToast('Alert escalated to Warning', 'warning'); },
 'declare-outbreak': () => { closeModal(); showToast('⚠ Outbreak declared! Staff notified.', 'error'); },
 'notify-staff': () => { closeModal(); showToast('Notification sent to all health center staff', 'info'); },
+
   };
   
  if (actions[action]) actions[action](target);
 }
 
 function showAddUserModal() {
-  openModal('Add New User', `
-    <form class="space-y-4" onsubmit="return false">
-      <div><label class="block text-sm font-medium mb-1">Full Name</label>
-        <input type="text" placeholder="Enter full name" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
-      <div><label class="block text-sm font-medium mb-1">Email</label>
-        <input type="email" placeholder="email@municipal.gov" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
-      <div><label class="block text-sm font-medium mb-1">Role</label>
-        <select class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
-          <option>Admin</option><option>Staff</option><option>User</option>
-        </select></div>
-    </form>`,
-    `${btnSecondary('Cancel', 'close-modal')} ${btnPrimary('Add User', 'confirm-add-user')}`
+  openModal(
+    'Add New User',
+    `
+      <form class="space-y-4" onsubmit="return false">
+        <div><label class="block text-sm font-medium mb-1">Full Name</label>
+          <input type="text" placeholder="Enter full name" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+        <div><label class="block text-sm font-medium mb-1">Email</label>
+          <input type="email" placeholder="email@municipal.gov" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+        <div><label class="block text-sm font-medium mb-1">Role</label>
+          <select class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
+            <option>Admin</option><option>Staff</option><option>User</option>
+          </select></div>
+      </form>
+    `,
+    `<button data-action="close-modal" class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600">Cancel</button>
+     <button data-action="confirm-add-user" class="px-4 py-2 rounded-lg bg-gov-600 text-white hover:bg-gov-700">Add User</button>`
   );
 }
 
