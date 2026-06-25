@@ -283,7 +283,6 @@ import { showServiceRequestDetail, showNewServiceRequest } from './renderers/was
 import { showCaseDetail as showSurvCaseDetail, showReportCaseModal as showSurvReportModal } from './renderers/surveillance/caseReports.js';
 import { showManageAlert } from './renderers/surveillance/outbreakDetection.js';
 
-
 let navigateTo, switchRole, renderView, renderNotificationPanel, closeAllDropdowns;
 export function setCoreFunctions(functions) {
   navigateTo = functions.navigateTo;
@@ -338,7 +337,7 @@ export function handleAction(action, target) {
     'submit-wastewater': () => showToast('Service request submitted!', 'success'),
     'register-patient': () => { import('./renderers/HealthServices/patients.js').then(m => m.showRegisterPatient()); },
 'view-patient-detail': (target) => showPatientDetail(target.dataset.id),
-'confirm-register-patient': () => { closeModal(); showToast('Patient registered successfully', 'success'); },
+'confirm-register-patient': () => { closeModal();  showToast({ type: 'success', title: 'Success', message: 'Patient registered successfully' }); },
 'edit-patient': () => { closeModal(); showToast('Patient updated successfully', 'success'); },
 'view-document': () => showToast('Document preview (demo)', 'info'),
 'upload-document': () => showToast('Upload available in backend version', 'info'),
