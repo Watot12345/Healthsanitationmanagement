@@ -655,28 +655,37 @@ async function loadDashboardData() {
 }
 async function checkAuth() {
     try {
+        console.log('Step 1: Fetching checkRole.php');
         const response = await fetch('api/auth/checkRole.php');
+        console.log('Step 2: Response status:', response.status);
         
         if (response.status === 401) {
+            console.log('Step 3: 401 - Not authenticated');
             showToast({ type: 'warning', title: 'Not Authenticated', message: 'Please log in to continue' });
             setTimeout(() => { window.location.href = 'login.php'; }, 1500);
             return;
         }
         
         const data = await response.json();
+        console.log('Step 4: Data received:', data);
+        
         state.role = data.role;
-        await loadDashboardData();
-        await loadSystemStatus();
-        // Update profile display
-        document.getElementById('profile-name').textContent = data.userName;
+        console.log('Step 5: Role set to:', state.role);
+        
+        // Update profile
+        const profileName = document.getElementById('profile-name');
+        console.log('Step 6: Profile element found:', profileName);
+        if (profileName) {
+            profileName.textContent = data.userName;
+            console.log('Step 7: Profile updated to:', data.userName);
+        }
+        
         document.getElementById('profile-email').textContent = data.email;
         document.getElementById('profile-avatar').textContent = data.userName.charAt(0);
-        document.getElementById('current-user-name').textContent = data.userName;
-        document.getElementById('current-user-role').textContent = data.role === 'admin' ? 'Administrator' : data.role === 'staff' ? 'Health Officer' : 'Citizen';
         
         renderView();
     } catch (error) {
-        showToast({ type: 'error', title: 'Connection Failed', message: 'Unable to reach the server' });
+        console.error('ERROR:', error);
     }
 }
 
@@ -787,9 +796,8 @@ function initApp() {
     // Initial render
         renderNotificationPanel();
     
-    // Load real data first, then render
-    loadDashboardData().then(() => {
-        renderView();
+   checkAuth().then(() => {
+        loadSystemStatus();
     });
 }
 
