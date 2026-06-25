@@ -111,9 +111,9 @@
                 <div class="overlay-panel overlay-left">
                     <div class="absolute top-10 left-12 flex items-center space-x-8 text-sm font-bold tracking-wider">
                         <button id="signInBtnNav" class="bg-white text-blue-800 px-8 py-2.5 rounded-full hover:bg-gray-100 hover:shadow-lg transform hover:-translate-y-0.5 transition-all">LOGIN</button>
-                        <a href="index.php" class="text-blue-50 hover:text-white hover:underline transition-all">ABOUT</a>
-                        <a href="contact.php" class="text-blue-50 hover:text-white hover:underline transition-all">CONTACT</a>
-                        <a href="download.php" class="text-blue-50 hover:text-white hover:underline transition-all">DOWNLOAD</a>
+                        <a href="/index.php" class="text-blue-50 hover:text-white hover:underline transition-all">ABOUT</a>
+                        <a href="/contact.php" class="text-blue-50 hover:text-white hover:underline transition-all">CONTACT</a>
+                        <a href="/download.php" class="text-blue-50 hover:text-white hover:underline transition-all">DOWNLOAD</a>
                     </div>
                     
                     <div class="text-left w-full pl-12 pr-8 pb-16">
@@ -126,9 +126,9 @@
 
                 <div class="overlay-panel overlay-right">
                     <div class="absolute top-10 right-12 flex items-center space-x-8 text-sm font-bold tracking-wider">
-                        <a href="index.php" class="text-blue-50 hover:text-white hover:underline transition-all">ABOUT</a>
-                        <a href="contact.php" class="text-blue-50 hover:text-white hover:underline transition-all">CONTACT</a>
-                        <a href="download.php" class="text-blue-50 hover:text-white hover:underline transition-all">DOWNLOAD</a>
+                        <a href="/index.php" class="text-blue-50 hover:text-white hover:underline transition-all">ABOUT</a>
+                        <a href="/contact.php" class="text-blue-50 hover:text-white hover:underline transition-all">CONTACT</a>
+                        <a href="/download.php" class="text-blue-50 hover:text-white hover:underline transition-all">DOWNLOAD</a>
                         <button id="signUpBtnNav" class="bg-white text-blue-800 px-8 py-2.5 rounded-full hover:bg-gray-100 hover:shadow-lg transform hover:-translate-y-0.5 transition-all">SIGN UP</button>
                     </div>
 
