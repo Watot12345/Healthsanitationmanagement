@@ -80,6 +80,33 @@ export function renderMedicalRecords(filter = '') {
   `;
 }
 
+export function showAddRecord() {
+  openModal(
+    'Add Medical Record',
+    `
+      <form class="space-y-4" onsubmit="return false">
+        <div><label class="block text-sm font-medium mb-1">Patient</label>
+          <select class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
+            ${DATA.patients.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
+          </select></div>
+        <div><label class="block text-sm font-medium mb-1">Record Type</label>
+          <select class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
+            <option>Lab Result</option><option>Imaging</option><option>Prescription</option><option>Doctor Note</option>
+          </select></div>
+        <div><label class="block text-sm font-medium mb-1">Title</label><input type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+        <div><label class="block text-sm font-medium mb-1">Date</label><input type="date" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+        <div><label class="block text-sm font-medium mb-1">Doctor</label>
+          <select class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
+            ${DATA.doctors.map(d => `<option>${d.name}</option>`).join('')}
+          </select></div>
+        <div><label class="block text-sm font-medium mb-1">Summary</label><textarea rows="3" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm resize-none"></textarea></div>
+      </form>
+    `,
+    `<button data-action="close-modal" class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600">Cancel</button>
+     <button data-action="confirm-add-record" class="px-4 py-2 rounded-lg bg-gov-600 text-white hover:bg-gov-700">Save Record</button>`
+  );
+}
+
 // ─── Detail Modal ────────────────────────────────────────────────────────────
 
 export function showRecordDetail(id) {
