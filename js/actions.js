@@ -323,7 +323,7 @@ export function handleAction(action, target) {
     'mark-all-read': () => { DATA.notifications.forEach(n => n.read = true); renderNotificationPanel(); showToast('All notifications marked as read', 'success'); },
     'profile-view': () => { closeAllDropdowns(); if (state.role === 'user') navigateTo('profile'); else showToast('Profile view opened', 'info'); },
     'profile-settings': () => { closeAllDropdowns(); if (state.role === 'admin') navigateTo('settings'); else showToast('Settings opened', 'info'); },
-    'profile-logout': () => { closeAllDropdowns(); showToast('Logged out successfully (demo)', 'info'); },
+    'profile-logout': async () => {   closeAllDropdowns();try { const response = await fetch('api/auth/logout.php', { method: 'POST' });const data = await response.json();if (data.success) { window.location.href = 'index.php';}} catch (error) {showToast({ type: 'error', title: 'Error', message: 'Logout failed' });}},
     'view-all-activity': () => { if (state.role === 'admin') navigateTo('logs'); else showToast('Activity log opened', 'info'); },
     'new-appointment': () => { if (state.role === 'user') navigateTo('book-appointment'); else { switchRole('staff'); setTimeout(() => showToast('Navigate to Health Center to manage appointments', 'info'), 400); } },
     'add-patient': () => showToast('Add patient form opened (demo)', 'info'),

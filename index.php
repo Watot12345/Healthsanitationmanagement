@@ -234,8 +234,8 @@
                     </div>
                     <!-- Actions -->
                     <div class="flex items-center space-x-4">
-                        <a href="views/login.html" class="text-gov-900 hover:text-blue-600 font-bold text-sm hover-underline">Portal Sign In</a>
-                        <a href="views/login.html" class="ripple-btn bg-gov-900 text-white px-5 py-2.5 rounded-lg hover:bg-gov-800 transition-all font-bold text-sm shadow-sm hover:shadow active:scale-98">
+                        <a href="views/login.php" class="text-gov-900 hover:text-blue-600 font-bold text-sm hover-underline">Portal Sign In</a>
+                        <a href="views/login.php" class="ripple-btn bg-gov-900 text-white px-5 py-2.5 rounded-lg hover:bg-gov-800 transition-all font-bold text-sm shadow-sm hover:shadow active:scale-98">
                             Access Portal
                         </a>
                     </div>

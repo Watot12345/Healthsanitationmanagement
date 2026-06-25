@@ -500,11 +500,14 @@ const QuickActionButton = a =>
     ? btnPrimary(a.label, a.action, 'w-full justify-center')
     : btnSecondary(a.label, a.action, 'w-full justify-center');
 function getDashboardModel() {
+  const k = DATA.kpis || { totalUsers: 0, activeStaff: 0, pendingRequests: 0, systemAlerts: 0 };
+  const ss = DATA.systemStatus || { uptime: '99.8%', activeSessions: 0, pendingApprovals: 0 };
+
   return {
-    kpis: buildFromConfig(DATA.kpis, KPI_CONFIG),
-    status: buildFromConfig(DATA.systemStatus, STATUS_CONFIG),
-    logs: DATA.logs.slice(0, 4),
-    updates: DATA.recentUpdates,
+    kpis: buildFromConfig(k, KPI_CONFIG),
+    status: buildFromConfig(ss, STATUS_CONFIG),
+    logs: DATA.logs?.slice(0, 4) || [],
+    updates: DATA.recentUpdates || [],
     quickActions: getQuickActions(),
   };
 }
