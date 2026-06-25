@@ -19,9 +19,23 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 try {
    
    require_once __DIR__ . '/auth.php';  // Most reliable way
-    $data = json_decode(file_get_contents('php://input'), true);
+    $rawInput = file_get_contents('php://input');
+    $data = [];
+
+    if (!empty($rawInput)) {
+        $decoded = json_decode($rawInput, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            $data = $decoded;
+        } else {
+            parse_str($rawInput, $data);
+        }
+    }
+
+    if (empty($data)) {
+        $data = $_POST;
+    }
     
-    $username = $data['username'] ?? '';
+    $username = $data['username'] ?? $data['email'] ?? '';
     $password = $data['password'] ?? '';
     $ip_address = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'; // Add IP address
     

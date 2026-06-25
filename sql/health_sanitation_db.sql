@@ -2,8 +2,8 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: localhost
--- Generation Time: Jun 25, 2026 at 05:07 PM
+-- Host: 127.0.0.1
+-- Generation Time: Jun 25, 2026 at 07:11 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -193,9 +193,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `role`, `full_name`, `department`, `is_active`, `last_login`, `created_at`) VALUES
-(1, 'admin', 'admin@123', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5OEv/veCF4ki', 'admin', 'System Administrator', 'IT Department', 1, '2026-06-25 22:21:35', '2026-06-22 05:38:55'),
-(2, 'staff@123', 'staff@123', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5OEv/veCF4ki', 'staff', 'staff', 'HR', 1, '2026-06-25 21:46:43', '2026-06-25 13:14:39'),
-(3, 'user', 'user@123', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5OEv/veCF4ki', 'user', 'user@123', 'NONE', 1, '2026-06-25 21:39:48', '2026-06-25 13:15:35');
+(1, 'admin', 'admin@123', '$2y$10$fSIhoN8QDR/z6kosAVsyZu76rwnDM81qMgno4gudKbaEnqCjWbw36', 'admin', 'System Administrator', 'IT Department', 1, '2026-06-26 01:04:53', '2026-06-22 05:38:55'),
+(2, 'staff@123', 'staff@123', '$2y$10$0iH6XC6EY4AzlKHP.uSGXevJe4eQsGAnM.gtfUb2vIE1eIU.Hvwwm', 'staff', 'staff', 'HR', 1, '2026-06-26 01:04:35', '2026-06-25 13:14:39'),
+(3, 'user', 'user@123', '$2y$10$VPl8XIjNXAllCfCyuGjsyOgDjg5g75zVd84DcU.PYYwm/IMy6bpQy', 'user', 'user@123', 'NONE', 1, '2026-06-26 01:05:18', '2026-06-25 13:15:35');
 
 -- --------------------------------------------------------
 
@@ -210,6 +210,21 @@ CREATE TABLE `user_sessions` (
   `expires_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `user_sessions`
+--
+
+INSERT INTO `user_sessions` (`id`, `user_id`, `token`, `expires_at`, `created_at`) VALUES
+(1, 1, 'a86fa4fbc140d6f25af74927ce6d23bbbfc63b36f7d35747f21efbd336ee6416', '2026-06-26 10:04:46', '2026-06-25 16:04:46'),
+(2, 1, '83acb935b2dbb5ec2f1d578545f127b07d3b3f1153a7b3a4252878925185e514', '2026-06-26 10:06:21', '2026-06-25 16:06:21'),
+(3, 3, '5e3aec7f2449f30df3bcf2b6e96f59a585e241c93dc5ce478f48a859d9921654', '2026-06-26 10:08:57', '2026-06-25 16:08:57'),
+(4, 2, 'b84a28f245ee01d7eef94dc463bddca0ea1071c83878fa0dad97793f7c097683', '2026-06-26 10:11:11', '2026-06-25 16:11:11'),
+(5, 1, 'd339339a250b22cbb79e243f140781d0f71f6070869c1ba8f5ba6bc8aa4689b2', '2026-06-26 11:01:20', '2026-06-25 17:01:20'),
+(6, 1, 'b363a1de8ed6577b573fc87b79f598ac7301f0349e5b24546958c5b4544b2dc3', '2026-06-26 11:03:10', '2026-06-25 17:03:10'),
+(7, 2, '9e395583f3ea0ed1c7a1b777fd462f5370511cc0f28b73afe948aa744ac1a886', '2026-06-26 11:04:35', '2026-06-25 17:04:35'),
+(8, 1, '11783d7e703c2d6cf1ec13cf38686d3e1d2d366b7960bfe07c1f5c8e216a38c9', '2026-06-26 11:04:53', '2026-06-25 17:04:53'),
+(9, 3, 'd2a44c1a67447c6edbe9c928a2d7b0e2640cf7010d7c3cfbc88e7ef332c39151', '2026-06-26 11:05:18', '2026-06-25 17:05:18');
 
 -- --------------------------------------------------------
 
@@ -366,7 +381,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `user_sessions`
 --
 ALTER TABLE `user_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `wastewater_requests`

@@ -38,12 +38,26 @@ document.getElementById('loginForm').addEventListener('submit', async function (
   loginButton.innerHTML = 'Signing in...';
 
   try {
-    const response = await fetch('/Healthsanitationmanagement/api/auth/login.php', {
+    const params = new URLSearchParams();
+    params.append('username', username);
+    params.append('password', password);
+
+    const response = await fetch('/api/auth/login.php', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      body: params.toString()
     });
-    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
+    }
+
+    let data = null;
+    try {
+      data = await response.json();
+    } catch (e) {
+      data = { success: false, message: 'Invalid server response.' };
+    }
 
     if (data.success) {
       localStorage.setItem('session_token', data.session_token);

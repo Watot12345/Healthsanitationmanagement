@@ -10,7 +10,7 @@ class Auth {
         $this->conn = $database->getConnection();
     }
 
-    public function login($username, $password) {
+    public function login($username, $password, $ip_address = '127.0.0.1') {
     if (!$this->conn) {
         return ['success' => false, 'message' => 'Database connection failed'];
     }
@@ -44,6 +44,7 @@ class Auth {
                 'username' => $user['username'],
                 'role' => $user['role'],
                 'full_name' => $user['full_name'],
+                'session_token' => $token,
                 'message' => 'Login successful'
             ];
         }
