@@ -42,7 +42,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
     params.append('username', username);
     params.append('password', password);
 
-    const response = await fetch('/api/auth/login.php', {
+    const response = await fetch('../api/auth/login.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
       body: params.toString()
