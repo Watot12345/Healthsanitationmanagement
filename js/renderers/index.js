@@ -630,7 +630,7 @@ function renderLogs(filter = '') {
           <p class="text-sm text-slate-500">Peak Hours</p>
           <svg class="h-5 w-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         </div>
-        <p class="text-2xl font-bold mt-2">08:00 - 10:00</p>
+        <p class="text-2xl font-bold mt-2">${getPeakHours()}</p>
         <p class="text-xs text-slate-500 mt-1">AM activity spike</p>
       </div>`)}
     </div>
@@ -761,9 +761,36 @@ let logPagination = {
 };
 
 // Helper functions for log statistics
+function getPeakHours() {
+  const hours = DATA.logs.map(l => {
+    const time = l.timestamp.split(' ')[1];
+    return parseInt(time.split(':')[0]);
+  });
+  
+  if (!hours.length) return 'No data';
+  
+  // Count logs per hour
+  const counts = {};
+  hours.forEach(h => counts[h] = (counts[h] || 0) + 1);
+  
+  // Find peak hour
+  let peak = 0, max = 0;
+  for (const [hour, count] of Object.entries(counts)) {
+    if (count > max) { max = count; peak = parseInt(hour); }
+  }
+  
+  const start = peak;
+  const end = start + 2;
+  const ampm = start >= 12 ? 'PM' : 'AM';
+  return `${start}:00 - ${end}:00 ${ampm}`;
+}
 function getTodayLogCount() {
   const today = new Date().toISOString().split('T')[0];
-  return DATA.logs.filter(l => l.timestamp.startsWith(today)).length || 6;
+  const count = DATA.logs.filter(l => {
+    const logDate = l.timestamp.split(' ')[0];
+    return logDate === today;
+  }).length;
+  return count || DATA.logs.length; // Fallback: show total if no today match
 }
 
 function getErrorWarningCount() {
