@@ -2,13 +2,8 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
-<<<<<<< HEAD:sql/health_sanitation_db.sql
 -- Host: 127.0.0.1
 -- Generation Time: Jun 25, 2026 at 07:11 PM
-=======
--- Host: localhost
--- Generation Time: Jun 25, 2026 at 07:38 PM
->>>>>>> e4a9cd37b74019061a7971eed7e64c34d9aaf2f3:sql/health_sanitation_db(2).sql
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
