@@ -45,12 +45,43 @@ export const NAV = {
       },
     ],
     staff: [
-      { id: 'health-center', label: 'Health Center', icon: 'heart' },
-      { id: 'sanitation', label: 'Sanitation Permits', icon: 'clipboard' },
-      { id: 'immunization', label: 'Immunization', icon: 'shield' },
-      { id: 'wastewater', label: 'Wastewater Services', icon: 'water' },
-      { id: 'surveillance', label: 'Health Surveillance', icon: 'alert' },
-    ],
+  { id: 'staff-dashboard', label: 'Staff Dashboard', icon: 'chart' },
+  { id: 'health-center', label: 'Health Center', icon: 'heart', section: 'Health Services', divider: true,
+    children: [
+      { id: 'patients', label: 'Patients', icon: 'users' },
+      { id: 'consultations', label: 'Consultations', icon: 'calendar' },
+      { id: 'medical-records', label: 'Medical Records', icon: 'document' },
+    ]
+  },
+  { id: 'immunization', label: 'Immunization', icon: 'shield', section: 'Health Services',
+    children: [
+      { id: 'immunization-records', label: 'Child Records', icon: 'users' },
+      { id: 'immunization-tracking', label: 'Vaccination Tracking', icon: 'shield' },
+      { id: 'immunization-growth', label: 'Growth Charts', icon: 'analytics' },
+    ]
+  },
+  { id: 'surveillance', label: 'Surveillance', icon: 'alert', section: 'Health Services',
+    children: [
+      { id: 'surveillance-cases', label: 'Case Reports', icon: 'document' },
+      { id: 'surveillance-mapping', label: 'Mapping', icon: 'analytics' },
+      { id: 'surveillance-alerts', label: 'Outbreak Alerts', icon: 'alert' },
+    ]
+  },
+  { id: 'sanitation', label: 'Sanitation', icon: 'clipboard', section: 'Environmental Health', divider: true,
+    children: [
+      { id: 'sanitation-applications', label: 'Applications', icon: 'document' },
+      { id: 'sanitation-inspections', label: 'Inspections', icon: 'shield' },
+      { id: 'sanitation-records', label: 'Permit Records', icon: 'document' },
+    ]
+  },
+  { id: 'wastewater', label: 'Wastewater', icon: 'water', section: 'Environmental Health',
+    children: [
+      { id: 'wastewater-registry', label: 'Septic Registry', icon: 'document' },
+      { id: 'wastewater-schedule', label: 'Maintenance', icon: 'calendar' },
+      { id: 'wastewater-requests', label: 'Service Requests', icon: 'clipboard' },
+    ]
+  },
+],
     user: [
       { id: 'profile', label: 'My Health Profile', icon: 'user' },
       { id: 'book-appointment', label: 'Book Appointment', icon: 'calendar' },

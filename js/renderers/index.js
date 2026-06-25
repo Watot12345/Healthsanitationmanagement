@@ -387,7 +387,40 @@ import { renderMappingClustering, initMappingClustering } from './surveillance/m
 import { renderOutbreakDetection } from './surveillance/outbreakDetection.js';
 
 
+function renderStaffDashboard() {
+  return `
+    <div class="space-y-6">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        ${KpiCard({ label: 'My Patients Today', value: '12', color: 'bg-blue-500', icon: 'users' })}
+        ${KpiCard({ label: 'Pending Tasks', value: '5', color: 'bg-yellow-500', icon: 'clipboard' })}
+        ${KpiCard({ label: 'Upcoming Inspections', value: '3', color: 'bg-gov-500', icon: 'shield' })}
+        ${KpiCard({ label: 'Alerts', value: '2', color: 'bg-red-500', icon: 'alert' })}
+      </div>
 
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        ${card(`
+          <div class="ui-card-body">
+            <h3 class="ui-section-title">Today's Schedule</h3>
+            <!-- appointments/consultations assigned to this staff -->
+          </div>
+        `)}
+        ${card(`
+          <div class="ui-card-body">
+            <h3 class="ui-section-title">My Tasks</h3>
+            <!-- pending inspections, reports to file, follow-ups -->
+          </div>
+        `)}
+      </div>
+
+      ${card(`
+        <div class="ui-card-body">
+          <h3 class="ui-section-title">Recent Activity</h3>
+          <!-- staff's own recent actions -->
+        </div>
+      `)}
+    </div>
+  `;
+}
 
 
 function buildFromConfig(source, config) {
@@ -1828,6 +1861,7 @@ function renderHealthCenter(filter = '') {
      patients: () => renderPatients(),
      consultations: () => renderConsultations(),
     settings: () => renderSettings(),
+    'staff-dashboard': () => renderStaffDashboard(),
     'surveillance-alerts': () => renderOutbreakDetection(),
     'surveillance-mapping': () => renderMappingClustering(),
     'surveillance-cases': () => renderCaseReports(),
