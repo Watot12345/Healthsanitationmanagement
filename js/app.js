@@ -682,8 +682,6 @@ async function checkAuth() {
         
         document.getElementById('profile-email').textContent = data.email;
         document.getElementById('profile-avatar').textContent = data.userName.charAt(0);
-        
-        renderView();
     } catch (error) {
         console.error('ERROR:', error);
     }
@@ -698,7 +696,55 @@ async function loadSystemStatus() {
         }
     } catch (e) {}
 }
-
+async function loadRecentActivity() {
+    try {
+        const response = await fetch('api/admin/recentActivity.php');
+        if (response.ok) {
+            const data = await response.json();
+            if (data.length > 0) {
+                DATA.logs = data.map((item, i) => ({
+                    id: i + 1,
+                    timestamp: item.timestamp,
+                    user: item.user_name,
+                    action: item.action,
+                    module: 'System',
+                    level: item.level
+                }));
+            }
+        }
+    } catch (e) {}
+}
+async function loadRecentUpdates() {
+    try {
+        const response = await fetch('api/admin/recentUpdates.php');
+        if (response.ok) {
+            const data = await response.json();
+            if (data.length > 0) {
+                DATA.recentUpdates = data;
+            }
+        }
+    } catch (e) {}
+}
+async function loadUsers() {
+    try {
+        const response = await fetch('api/admin/getUsers.php');
+        if (response.ok) {
+            const data = await response.json();
+            DATA.users = data;
+        }
+    } catch (e) {}
+}
+async function loadLogs() {
+    try {
+        const response = await fetch('api/admin/getLogs.php');
+        if (response.ok) {
+            const data = await response.json();
+            console.log('API logs count:', data.length); // Should say 4
+            DATA.logs = data;
+            console.log('DATA.logs count:', DATA.logs.length); // Should say 4
+        }
+    } catch (e) {}
+}
 // Initialize app
 function initApp() {
     // Set core functions for actions.js to avoid circular dependencies
@@ -796,9 +842,15 @@ function initApp() {
     // Initial render
         renderNotificationPanel();
     
-   checkAuth().then(() => {
-        loadSystemStatus();
-    });
+   checkAuth().then(async () => {
+    await loadDashboardData();
+    await loadSystemStatus();
+    await loadRecentActivity();
+    await loadRecentUpdates();
+    await loadUsers();
+    await loadLogs();
+    renderView();
+});
 }
 
 document.addEventListener('DOMContentLoaded', initApp);

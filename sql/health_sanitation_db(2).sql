@@ -2,8 +2,13 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
+<<<<<<< HEAD:sql/health_sanitation_db.sql
 -- Host: 127.0.0.1
 -- Generation Time: Jun 25, 2026 at 07:11 PM
+=======
+-- Host: localhost
+-- Generation Time: Jun 25, 2026 at 07:38 PM
+>>>>>>> e4a9cd37b74019061a7971eed7e64c34d9aaf2f3:sql/health_sanitation_db(2).sql
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -36,6 +41,32 @@ CREATE TABLE `active_sessions` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `expires_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `activity_logs`
+--
+
+CREATE TABLE `activity_logs` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `user_name` varchar(100) DEFAULT NULL,
+  `action` varchar(255) DEFAULT NULL,
+  `module` varchar(100) DEFAULT NULL,
+  `level` enum('info','success','warning','error') DEFAULT 'info',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `activity_logs`
+--
+
+INSERT INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `module`, `level`, `created_at`) VALUES
+(1, NULL, 'Maria Santo', 'User role updated for Carlos Lim', 'User Management', 'info', '2026-06-25 17:03:13'),
+(2, NULL, 'Juan Dela Cruz', 'Permit approved #SP-1042', 'Sanitation', 'success', '2026-06-25 17:03:13'),
+(3, NULL, 'System', 'Database backup completed successfully', 'System', 'success', '2026-06-25 17:03:13'),
+(4, NULL, 'Ana Reyes', 'Outbreak alert triggered - Influenza cluster', 'Surveillance', 'error', '2026-06-25 17:03:13');
 
 -- --------------------------------------------------------
 
@@ -193,9 +224,15 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `role`, `full_name`, `department`, `is_active`, `last_login`, `created_at`) VALUES
+<<<<<<< HEAD:sql/health_sanitation_db.sql
 (1, 'admin', 'admin@123', '$2y$10$fSIhoN8QDR/z6kosAVsyZu76rwnDM81qMgno4gudKbaEnqCjWbw36', 'admin', 'System Administrator', 'IT Department', 1, '2026-06-26 01:04:53', '2026-06-22 05:38:55'),
 (2, 'staff@123', 'staff@123', '$2y$10$0iH6XC6EY4AzlKHP.uSGXevJe4eQsGAnM.gtfUb2vIE1eIU.Hvwwm', 'staff', 'staff', 'HR', 1, '2026-06-26 01:04:35', '2026-06-25 13:14:39'),
 (3, 'user', 'user@123', '$2y$10$VPl8XIjNXAllCfCyuGjsyOgDjg5g75zVd84DcU.PYYwm/IMy6bpQy', 'user', 'user@123', 'NONE', 1, '2026-06-26 01:05:18', '2026-06-25 13:15:35');
+=======
+(1, 'admin', 'admin@123', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5OEv/veCF4ki', 'admin', 'System Administrator', 'IT Department', 1, '2026-06-26 01:33:52', '2026-06-22 05:38:55'),
+(2, 'staff@123', 'staff@123', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5OEv/veCF4ki', 'staff', 'staff', 'HR', 1, '2026-06-25 21:46:43', '2026-06-25 13:14:39'),
+(3, 'user', 'user@123', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5OEv/veCF4ki', 'user', 'user@123', 'NONE', 1, '2026-06-25 21:39:48', '2026-06-25 13:15:35');
+>>>>>>> e4a9cd37b74019061a7971eed7e64c34d9aaf2f3:sql/health_sanitation_db(2).sql
 
 -- --------------------------------------------------------
 
@@ -216,6 +253,7 @@ CREATE TABLE `user_sessions` (
 --
 
 INSERT INTO `user_sessions` (`id`, `user_id`, `token`, `expires_at`, `created_at`) VALUES
+<<<<<<< HEAD:sql/health_sanitation_db.sql
 (1, 1, 'a86fa4fbc140d6f25af74927ce6d23bbbfc63b36f7d35747f21efbd336ee6416', '2026-06-26 10:04:46', '2026-06-25 16:04:46'),
 (2, 1, '83acb935b2dbb5ec2f1d578545f127b07d3b3f1153a7b3a4252878925185e514', '2026-06-26 10:06:21', '2026-06-25 16:06:21'),
 (3, 3, '5e3aec7f2449f30df3bcf2b6e96f59a585e241c93dc5ce478f48a859d9921654', '2026-06-26 10:08:57', '2026-06-25 16:08:57'),
@@ -225,6 +263,14 @@ INSERT INTO `user_sessions` (`id`, `user_id`, `token`, `expires_at`, `created_at
 (7, 2, '9e395583f3ea0ed1c7a1b777fd462f5370511cc0f28b73afe948aa744ac1a886', '2026-06-26 11:04:35', '2026-06-25 17:04:35'),
 (8, 1, '11783d7e703c2d6cf1ec13cf38686d3e1d2d366b7960bfe07c1f5c8e216a38c9', '2026-06-26 11:04:53', '2026-06-25 17:04:53'),
 (9, 3, 'd2a44c1a67447c6edbe9c928a2d7b0e2640cf7010d7c3cfbc88e7ef332c39151', '2026-06-26 11:05:18', '2026-06-25 17:05:18');
+=======
+(1, 1, '18cc082725199c033872cc61ffa61cf71c842fbd10658f16dda74803a14803a2', '2026-06-26 09:12:04', '2026-06-25 15:12:04'),
+(2, 1, '2b7dcfee41d56e730e98ec826516493a1d7e625ef3420b7c8512c4ecedc8bae1', '2026-06-26 09:14:14', '2026-06-25 15:14:14'),
+(3, 1, '627e9b334e44635fe157b03188c3ed2abdbc59a2e02a61775456c6b5754c749b', '2026-06-26 09:18:20', '2026-06-25 15:18:20'),
+(4, 1, 'b03417b61433efa188e96eeb64b1f2d0a2a0b2a5a9f1d65981064b30d7067f11', '2026-06-26 09:19:03', '2026-06-25 15:19:03'),
+(5, 1, '1ebe51e3c212fa0a6924a666367a96ea482ae0cd1e0b7c49915ba37befc965c1', '2026-06-26 10:17:56', '2026-06-25 16:17:56'),
+(6, 1, '8a51e8efd3acbf519eda942ba19745f71a0c43cd2410a62018a23e4654b1c9cb', '2026-06-26 11:33:52', '2026-06-25 17:33:52');
+>>>>>>> e4a9cd37b74019061a7971eed7e64c34d9aaf2f3:sql/health_sanitation_db(2).sql
 
 -- --------------------------------------------------------
 
@@ -253,6 +299,12 @@ ALTER TABLE `active_sessions`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `session_token` (`session_token`),
   ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `alerts`
@@ -330,6 +382,12 @@ ALTER TABLE `active_sessions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
 -- AUTO_INCREMENT for table `alerts`
 --
 ALTER TABLE `alerts`
@@ -381,7 +439,11 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `user_sessions`
 --
 ALTER TABLE `user_sessions`
+<<<<<<< HEAD:sql/health_sanitation_db.sql
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+=======
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+>>>>>>> e4a9cd37b74019061a7971eed7e64c34d9aaf2f3:sql/health_sanitation_db(2).sql
 
 --
 -- AUTO_INCREMENT for table `wastewater_requests`
