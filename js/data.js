@@ -1,3 +1,8 @@
+export async function fetchDashboardData() {
+    const response = await fetch('api/dashboard/adminStats.php');
+    return await response.json();
+}
+
 // ─── Fake Data ───────────────────────────────────────────────────────────────
 export const DATA = {
     users: [
@@ -87,12 +92,6 @@ export const DATA = {
       { vaccine: 'Tetanus', date: '2024-06-12', provider: 'Barangay Clinic', status: 'Completed' },
       { vaccine: 'Hepatitis B', date: '—', provider: '—', status: 'Due' },
     ],
-    kpis: {
-      totalUsers: 1248,
-      activeStaff: 42,
-      pendingRequests: 87,
-      systemAlerts: 5,
-    },
     doctors: [
       { name: 'Dr. Elena Santos', specialty: 'General Medicine', status: 'Available' },
       { name: 'Dr. Miguel Reyes', specialty: 'Pediatrics', status: 'Busy' },
@@ -113,7 +112,6 @@ export const DATA = {
       { title: 'MMR booster due for Sofia Garcia', module: 'Immunization', time: '2 hours ago', type: 'info' },
       { title: 'User role updated for Carlos Lim', module: 'Admin', time: '3 hours ago', type: 'info' },
     ],
-    systemStatus: { uptime: '99.8%', activeSessions: 24, pendingApprovals: 87 },
     technicians: [
       { name: 'Roberto Silva', status: 'On Site', assignment: 'WW-202' },
       { name: 'Jose Mendoza', status: 'Available', assignment: 'Unassigned' },

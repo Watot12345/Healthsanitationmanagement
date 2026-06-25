@@ -107,17 +107,6 @@
           </div>
 
           <div class="flex items-center gap-2 sm:gap-3 shrink-0">
-            <div class="relative hidden sm:block">
-              <label for="role-switcher" class="sr-only">Switch role</label>
-              <select id="role-switcher" class="appearance-none rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 pl-3 pr-8 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gov-500 cursor-pointer transition-shadow hover:shadow-md">
-                <option value="admin">Admin Panel</option>
-                <option value="staff">Staff Panel</option>
-                <option value="user">End User Portal</option>
-              </select>
-              <svg class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
-              </svg>
-            </div>
 
             <button id="dark-mode-toggle" type="button" class="p-2 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all hover:shadow-md" aria-label="Toggle dark mode">
               <svg id="icon-sun" class="h-5 w-5 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -179,13 +168,13 @@
         </div>
 
         <!-- Mobile role switcher -->
-        <div class="sm:hidden">
+       <!-- <div class="sm:hidden">
           <select id="role-switcher-mobile" class="w-full appearance-none rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 pl-3 pr-8 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gov-500">
             <option value="admin">Admin Panel</option>
             <option value="staff">Staff Panel</option>
             <option value="user">End User Portal</option>
           </select>
-        </div>
+        </div> -->
       </div>
     </header>
 

@@ -38,7 +38,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
   loginButton.innerHTML = 'Signing in...';
 
   try {
-    const response = await fetch('../api/login.php', {
+    const response = await fetch('/Healthsanitationmanagement/api/auth/login.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
@@ -52,7 +52,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
       }));
       successDiv.textContent = 'Login successful! Redirecting...';
       successDiv.classList.remove('hidden');
-      setTimeout(() => window.location.href = 'dashboard.html', 1000);
+      setTimeout(() => window.location.href = '../dashboard.php', 1000);
     } else {
       errorDiv.textContent = data.message || 'Login failed.';
       errorDiv.classList.remove('hidden');

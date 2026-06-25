@@ -538,15 +538,9 @@ export function switchRole(role) {
     state.view = NAV[role][0].id;
     state.searchFilters = {};
     state.showLoading = true;
-    
-    document.getElementById('role-switcher').value = role;
-    const mobileSwitcher = document.getElementById('role-switcher-mobile');
-    if (mobileSwitcher) mobileSwitcher.value = role;
-    
     closeSidebarMobile();
     closeAllDropdowns();
     renderView();
-    showToast(`Switched to ${ROLE_META[role].label}`, 'info');
 }
 
 // Dark mode
@@ -647,13 +641,60 @@ function handleSearchInput(e) {
         renderViewPreserveScroll();
     }
 }
+async function loadDashboardData() {
+    try {
+        const response = await fetch('api/admin/adminStats.php');
+        if (response.ok) {
+            const apiData = await response.json();
+            DATA.kpis = apiData.kpis;
+            DATA.systemStatus = apiData.systemStatus;
+        }
+    } catch (e) {
+        // Keep static defaults from data.js
+    }
+}
+async function checkAuth() {
+    try {
+        const response = await fetch('api/auth/checkRole.php');
+        
+        if (response.status === 401) {
+            showToast({ type: 'warning', title: 'Not Authenticated', message: 'Please log in to continue' });
+            setTimeout(() => { window.location.href = 'login.php'; }, 1500);
+            return;
+        }
+        
+        const data = await response.json();
+        state.role = data.role;
+        await loadDashboardData();
+        await loadSystemStatus();
+        // Update profile display
+        document.getElementById('profile-name').textContent = data.userName;
+        document.getElementById('profile-email').textContent = data.email;
+        document.getElementById('profile-avatar').textContent = data.userName.charAt(0);
+        document.getElementById('current-user-name').textContent = data.userName;
+        document.getElementById('current-user-role').textContent = data.role === 'admin' ? 'Administrator' : data.role === 'staff' ? 'Health Officer' : 'Citizen';
+        
+        renderView();
+    } catch (error) {
+        showToast({ type: 'error', title: 'Connection Failed', message: 'Unable to reach the server' });
+    }
+}
+
+async function loadSystemStatus() {
+    try {
+        const response = await fetch('api/admin/systemStatus.php');
+        if (response.ok) {
+            const data = await response.json();
+            DATA.systemStatus = data;
+        }
+    } catch (e) {}
+}
 
 // Initialize app
 function initApp() {
     // Set core functions for actions.js to avoid circular dependencies
     setCoreFunctions({
         navigateTo,
-        switchRole,
         renderView,
         renderNotificationPanel,
         closeAllDropdowns
@@ -661,10 +702,7 @@ function initApp() {
 
     if (state.darkMode) document.documentElement.classList.add('dark');
 
-    // Role switchers
-    document.getElementById('role-switcher').addEventListener('change', (e) => switchRole(e.target.value));
-    const mobileSwitcher = document.getElementById('role-switcher-mobile');
-    if (mobileSwitcher) mobileSwitcher.addEventListener('change', (e) => switchRole(e.target.value));
+   
 
     // Dark mode toggle
     document.getElementById('dark-mode-toggle').addEventListener('click', toggleDarkMode);
@@ -729,7 +767,7 @@ function initApp() {
             handleAction(actionEl.dataset.action, actionEl);
         }
     });
-
+      
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') { 
@@ -747,8 +785,12 @@ function initApp() {
     document.getElementById('main-content').addEventListener('change', handleSearchInput);
 
     // Initial render
-    renderNotificationPanel();
-    renderView();
+        renderNotificationPanel();
+    
+    // Load real data first, then render
+    loadDashboardData().then(() => {
+        renderView();
+    });
 }
 
 document.addEventListener('DOMContentLoaded', initApp);
