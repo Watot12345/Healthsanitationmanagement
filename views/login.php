@@ -126,6 +126,7 @@
 
                 <div class="overlay-panel overlay-right">
                     <div class="absolute top-10 right-12 flex items-center space-x-8 text-sm font-bold tracking-wider">
+<!--binago-->
                         <a href="/Healthsanitationmanagement/index.php">ABOUT</a>
                         <a href="/contact.php" class="text-blue-50 hover:text-white hover:underline transition-all">CONTACT</a>
                         <a href="/download.php" class="text-blue-50 hover:text-white hover:underline transition-all">DOWNLOAD</a>
