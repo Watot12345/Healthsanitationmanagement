@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Jun 22, 2026 at 08:35 AM
+-- Generation Time: Jun 25, 2026 at 05:07 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -40,6 +40,43 @@ CREATE TABLE `active_sessions` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `alerts`
+--
+
+CREATE TABLE `alerts` (
+  `id` int(11) NOT NULL,
+  `disease` varchar(100) DEFAULT NULL,
+  `barangay` varchar(100) DEFAULT NULL,
+  `cases` int(11) DEFAULT 0,
+  `threshold` int(11) DEFAULT 10,
+  `level` enum('normal','warning','outbreak') DEFAULT 'normal',
+  `status` enum('Active','Monitoring','Resolved') DEFAULT 'Active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appointments`
+--
+
+CREATE TABLE `appointments` (
+  `id` int(11) NOT NULL,
+  `patient_id` int(11) DEFAULT NULL,
+  `patient_name` varchar(100) DEFAULT NULL,
+  `service` varchar(100) DEFAULT NULL,
+  `appointment_date` date DEFAULT NULL,
+  `appointment_time` time DEFAULT NULL,
+  `status` enum('Pending','Approved','Completed','Rejected') DEFAULT 'Pending',
+  `triage` enum('Low','Medium','High','Critical') DEFAULT 'Low',
+  `notes` text DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `login_attempts`
 --
 
@@ -63,6 +100,21 @@ CREATE TABLE `password_resets` (
   `token` varchar(100) DEFAULT NULL,
   `expires_at` datetime DEFAULT NULL,
   `used` tinyint(1) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `permits`
+--
+
+CREATE TABLE `permits` (
+  `id` int(11) NOT NULL,
+  `applicant` varchar(100) DEFAULT NULL,
+  `type` varchar(100) DEFAULT NULL,
+  `status` enum('Pending','Approved','Rejected') DEFAULT 'Pending',
+  `inspector` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -101,6 +153,25 @@ INSERT INTO `role_permissions` (`id`, `role`, `module`, `can_view`, `can_create`
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `system_status`
+--
+
+CREATE TABLE `system_status` (
+  `id` int(11) NOT NULL,
+  `uptime` varchar(10) DEFAULT '99.8%',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `system_status`
+--
+
+INSERT INTO `system_status` (`id`, `uptime`, `created_at`) VALUES
+(1, '99.8%', '2026-06-25 14:59:04');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 
@@ -109,7 +180,7 @@ CREATE TABLE `users` (
   `username` varchar(50) NOT NULL,
   `email` varchar(100) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
-  `role` enum('admin','health_officer','sanitation_inspector','nurse','staff') NOT NULL,
+  `role` enum('admin','staff','user') NOT NULL,
   `full_name` varchar(100) NOT NULL,
   `department` varchar(50) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
@@ -122,7 +193,39 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `role`, `full_name`, `department`, `is_active`, `last_login`, `created_at`) VALUES
-(1, 'admin', 'admin@123', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5OEv/veCF4ki', 'admin', 'System Administrator', 'IT Department', 1, '2026-06-22 14:32:51', '2026-06-22 05:38:55');
+(1, 'admin', 'admin@123', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5OEv/veCF4ki', 'admin', 'System Administrator', 'IT Department', 1, '2026-06-25 22:21:35', '2026-06-22 05:38:55'),
+(2, 'staff@123', 'staff@123', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5OEv/veCF4ki', 'staff', 'staff', 'HR', 1, '2026-06-25 21:46:43', '2026-06-25 13:14:39'),
+(3, 'user', 'user@123', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5OEv/veCF4ki', 'user', 'user@123', 'NONE', 1, '2026-06-25 21:39:48', '2026-06-25 13:15:35');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_sessions`
+--
+
+CREATE TABLE `user_sessions` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `token` varchar(255) DEFAULT NULL,
+  `expires_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `wastewater_requests`
+--
+
+CREATE TABLE `wastewater_requests` (
+  `id` int(11) NOT NULL,
+  `requester` varchar(100) DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `type` varchar(100) DEFAULT NULL,
+  `status` enum('Pending','Approved','In Progress','Completed') DEFAULT 'Pending',
+  `priority` enum('Low','Medium','High','Critical') DEFAULT 'Medium',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Indexes for dumped tables
@@ -135,6 +238,18 @@ ALTER TABLE `active_sessions`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `session_token` (`session_token`),
   ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `alerts`
+--
+ALTER TABLE `alerts`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `appointments`
+--
+ALTER TABLE `appointments`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `login_attempts`
@@ -152,9 +267,21 @@ ALTER TABLE `password_resets`
   ADD KEY `user_id` (`user_id`);
 
 --
+-- Indexes for table `permits`
+--
+ALTER TABLE `permits`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `role_permissions`
 --
 ALTER TABLE `role_permissions`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `system_status`
+--
+ALTER TABLE `system_status`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -166,6 +293,18 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `email` (`email`);
 
 --
+-- Indexes for table `user_sessions`
+--
+ALTER TABLE `user_sessions`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `wastewater_requests`
+--
+ALTER TABLE `wastewater_requests`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -173,6 +312,18 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `active_sessions`
 --
 ALTER TABLE `active_sessions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `alerts`
+--
+ALTER TABLE `alerts`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `appointments`
+--
+ALTER TABLE `appointments`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -188,16 +339,40 @@ ALTER TABLE `password_resets`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `permits`
+--
+ALTER TABLE `permits`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `role_permissions`
 --
 ALTER TABLE `role_permissions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
+-- AUTO_INCREMENT for table `system_status`
+--
+ALTER TABLE `system_status`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `user_sessions`
+--
+ALTER TABLE `user_sessions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `wastewater_requests`
+--
+ALTER TABLE `wastewater_requests`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Constraints for dumped tables
