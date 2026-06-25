@@ -408,6 +408,11 @@ import { getSearchValue, getSelectValue } from './utils/search.js';
 import { handleAction, setCoreFunctions } from './actions.js';
 import { VIEW_RENDERERS, initHealthCenterCalendar, initAnalyticsCharts, initLogFilters } from './renderers/index.js'; // ← Add initHealthCenterCalendar import
 import { initGrowthCharts } from './renderers/immunization/growthCharts.js';
+import { initMaintenanceCalendar } from './renderers/wastewater/maintenanceSchedule.js';
+import { initMappingClustering } from './renderers/surveillance/mappingClustering.js';
+
+
+
 // Make utilities available globally for inline usage
 window.badge = badge;
 window.icon = icon;
@@ -492,6 +497,12 @@ function initCalendarIfNeeded() {
     }
     if (state.view === 'immunization-growth') {
   setTimeout(() => initGrowthCharts(), 150);
+}
+    if (state.view === 'wastewater-schedule') {
+  setTimeout(() => initMaintenanceCalendar(), 150);
+}
+if (state.view === 'surveillance-mapping') {
+  setTimeout(() => initMappingClustering(), 150);
 }
 }
     

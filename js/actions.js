@@ -277,6 +277,12 @@ import { showInspectionDetail } from './renderers/sanitationPermits/inspections.
 import { showPermitDetail } from './renderers/sanitationPermits/permitRecords.js';
 import { showChildDetail, showRegisterChild } from './renderers/immunization/childRecords.js';
 import { showRecordVaccination, showUpdateVaccine } from './renderers/immunization/vaccinationTracking.js';
+import { showSepticDetail, showRegisterSeptic, showScheduleSeptic } from './renderers/wastewater/septicRegistry.js';
+import { showCreateSchedule, showReschedule } from './renderers/wastewater/maintenanceSchedule.js';
+import { showServiceRequestDetail, showNewServiceRequest } from './renderers/wastewater/serviceRequests.js';
+import { showCaseDetail as showSurvCaseDetail, showReportCaseModal as showSurvReportModal } from './renderers/surveillance/caseReports.js';
+import { showManageAlert } from './renderers/surveillance/outbreakDetection.js';
+
 
 let navigateTo, switchRole, renderView, renderNotificationPanel, closeAllDropdowns;
 export function setCoreFunctions(functions) {
@@ -368,6 +374,33 @@ export function handleAction(action, target) {
 'confirm-vaccination': () => { closeModal(); showToast('Vaccination recorded', 'success'); },
 'confirm-update-vaccine': () => { closeModal(); showToast('Vaccine status updated', 'success'); },
 'flag-vaccine': () => showToast('Overdue vaccine flagged for follow-up', 'warning'),
+'register-septic': () => showRegisterSeptic(),
+'view-septic': (target) => showSepticDetail(target.dataset.id),
+'edit-septic': () => { closeModal(); showToast('Record updated', 'success'); },
+'schedule-septic': (target) => showScheduleSeptic(target.dataset.id),
+'confirm-register-septic': () => { closeModal(); showToast('Septic system registered', 'success'); },
+'confirm-schedule-septic': () => { closeModal(); showToast('Maintenance scheduled', 'success'); },
+'create-schedule': () => showCreateSchedule(),
+'reschedule-maintenance': (target) => showReschedule(target.dataset.id),
+'confirm-create-schedule': () => { closeModal(); showToast('Schedule created', 'success'); },
+'confirm-reschedule': () => { closeModal(); showToast('Schedule updated', 'success'); },
+'new-service-request': () => showNewServiceRequest(),
+'view-service-request': (target) => showServiceRequestDetail(target.dataset.id),
+'approve-service-request': () => { closeModal(); showToast('Request approved', 'success'); },
+'reject-service-request': () => { closeModal(); showToast('Request rejected', 'error'); },
+'complete-service-request': () => { closeModal(); showToast('Marked as completed', 'success'); },
+'assign-schedule': () => showToast('Assign to schedule (demo)', 'info'),
+'confirm-service-request': () => { closeModal(); showToast('Request submitted', 'success'); },
+'report-case': () => showSurvReportModal(),
+'view-case': (target) => showSurvCaseDetail(target.dataset.id),
+'confirm-case': () => { closeModal(); showToast('Case confirmed', 'success'); },
+'reject-case': () => { closeModal(); showToast('Case marked negative', 'error'); },
+'update-case-status': () => { closeModal(); showToast('Status updated', 'success'); },
+'manage-alert': (target) => showManageAlert(target.dataset.id),
+'set-alert-normal': () => { closeModal(); showToast('Alert level set to Normal', 'success'); },
+'set-alert-warning': () => { closeModal(); showToast('Alert escalated to Warning', 'warning'); },
+'declare-outbreak': () => { closeModal(); showToast('⚠ Outbreak declared! Staff notified.', 'error'); },
+'notify-staff': () => { closeModal(); showToast('Notification sent to all health center staff', 'info'); },
   };
   
  if (actions[action]) actions[action](target);

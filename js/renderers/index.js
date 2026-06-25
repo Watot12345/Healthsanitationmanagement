@@ -379,6 +379,15 @@ import { renderPermitRecords } from './sanitationPermits/permitRecords.js';
 import { renderChildRecords } from './immunization/childRecords.js';
 import { renderVaccinationTracking } from './immunization/vaccinationTracking.js';
 import { renderGrowthCharts, initGrowthCharts } from './immunization/growthCharts.js';
+import { renderSepticRegistry } from './wastewater/septicRegistry.js';
+import { renderMaintenanceSchedule, initMaintenanceCalendar } from './wastewater/maintenanceSchedule.js';
+import { renderServiceRequests } from './wastewater/serviceRequests.js';
+import { renderCaseReports } from './surveillance/caseReports.js';
+import { renderMappingClustering, initMappingClustering } from './surveillance/mappingClustering.js';
+import { renderOutbreakDetection } from './surveillance/outbreakDetection.js';
+
+
+
 
 
 function buildFromConfig(source, config) {
@@ -1819,6 +1828,12 @@ function renderHealthCenter(filter = '') {
      patients: () => renderPatients(),
      consultations: () => renderConsultations(),
     settings: () => renderSettings(),
+    'surveillance-alerts': () => renderOutbreakDetection(),
+    'surveillance-mapping': () => renderMappingClustering(),
+    'surveillance-cases': () => renderCaseReports(),
+    'wastewater-requests': () => renderServiceRequests(),
+    'wastewater-schedule': () => renderMaintenanceSchedule(),
+    'wastewater-registry': () => renderSepticRegistry(),
     'immunization-growth': () => renderGrowthCharts(),
     'immunization-tracking': () => renderVaccinationTracking(),
     'immunization-records': () => renderChildRecords(),
