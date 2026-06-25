@@ -53,14 +53,41 @@
             100% { opacity: 0; transform: translateY(-12px) scale(0.96); }
         }
         .toast-icon {
-            width: 38px; height: 38px; min-width: 38px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 16px; font-weight: 700;
-        }
-        .toast-success .toast-icon { background: rgba(34,197,94,0.18); color: #22c55e; animation: iconPulse 2.5s ease-in-out infinite; }
-        .toast-error .toast-icon { background: rgba(239,68,68,0.18); color: #ef4444; animation: iconPulse 2.5s ease-in-out infinite; }
-        .toast-info .toast-icon { background: rgba(59,130,246,0.18); color: #3b82f6; animation: iconPulse 2.5s ease-in-out infinite; }
-        .toast-warning .toast-icon { background: rgba(245,158,11,0.18); color: #f59e0b; animation: iconPulse 2.5s ease-in-out infinite; }
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.toast-icon svg {
+    width: 24px;
+    height: 24px;
+}
+        .toast-success .toast-icon {
+    background: rgba(34,197,94,.12);
+    box-shadow: 0 0 20px rgba(34,197,94,.25);
+    animation: iconPulse 2s infinite;
+}
+
+.toast-error .toast-icon {
+    background: rgba(239,68,68,.12);
+    box-shadow: 0 0 20px rgba(239,68,68,.25);
+    animation: iconPulse 2s infinite;
+}
+
+.toast-info .toast-icon {
+    background: rgba(59,130,246,.12);
+    box-shadow: 0 0 20px rgba(59,130,246,.25);
+    animation: iconPulse 2s infinite;
+}
+
+.toast-warning .toast-icon {
+    background: rgba(245,158,11,.12);
+    box-shadow: 0 0 20px rgba(245,158,11,.25);
+    animation: iconPulse 2s infinite;
+}
         @keyframes iconPulse {
             0%,100% { box-shadow: 0 0 0 0 currentColor; }
             50% { box-shadow: 0 0 0 10px transparent; }
@@ -94,7 +121,48 @@
         document.body.appendChild(container);
     }
 
-    const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+   const icons = {
+    success: `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" fill="#22c55e"/>
+        <path d="M8 12.5L10.8 15.3L16.5 9.5"
+              stroke="white"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"/>
+    </svg>
+    `,
+
+    error: `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" fill="#ef4444"/>
+        <path d="M9 9L15 15M15 9L9 15"
+              stroke="white"
+              stroke-width="2.5"
+              stroke-linecap="round"/>
+    </svg>
+    `,
+
+    info: `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" fill="#3b82f6"/>
+        <path d="M12 11V16M12 8H12.01"
+              stroke="white"
+              stroke-width="2.5"
+              stroke-linecap="round"/>
+    </svg>
+    `,
+
+    warning: `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M12 3L22 20H2L12 3Z" fill="#f59e0b"/>
+        <path d="M12 9V13M12 17H12.01"
+              stroke="white"
+              stroke-width="2.5"
+              stroke-linecap="round"/>
+    </svg>
+    `
+};
 
     function removeToast(toast) {
         if (toast._removing) return;
