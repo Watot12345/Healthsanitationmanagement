@@ -107,18 +107,18 @@ export function showRegisterSeptic() {
     'Register Septic System',
     `
       <form class="space-y-4" onsubmit="return false">
-        <div><label class="block text-sm font-medium mb-1">Owner Name</label><input type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
-        <div><label class="block text-sm font-medium mb-1">Address</label><input type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+        <div><label class="block text-sm font-medium mb-1">Owner Name</label><input id="septic-owner" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+        <div><label class="block text-sm font-medium mb-1">Address</label><input id="septic-address" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
         <div class="grid grid-cols-2 gap-3">
           <div><label class="block text-sm font-medium mb-1">Tank Type</label>
-            <select class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
+            <select id="septic-type" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
               <option>Concrete Septic Tank</option><option>Plastic Septic Tank</option><option>Commercial Septic System</option>
             </select></div>
-          <div><label class="block text-sm font-medium mb-1">Capacity (L)</label><input type="number" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+          <div><label class="block text-sm font-medium mb-1">Capacity (L)</label><input id="septic-capacity" type="number" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
         </div>
         <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-sm font-medium mb-1">Installation Date</label><input type="date" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
-          <div><label class="block text-sm font-medium mb-1">Household Size</label><input type="number" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+          <div><label class="block text-sm font-medium mb-1">Installation Date</label><input id="septic-install" type="date" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+          <div><label class="block text-sm font-medium mb-1">Household Size</label><input id="septic-household" type="number" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
         </div>
       </form>
     `,

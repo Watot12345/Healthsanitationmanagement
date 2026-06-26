@@ -125,20 +125,20 @@ export function showCreateSchedule() {
     'Create Maintenance Schedule',
     `
       <form class="space-y-4" onsubmit="return false">
-        <div><label class="block text-sm font-medium mb-1">Owner/Household</label><input type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+        <div><label class="block text-sm font-medium mb-1">Owner/Household</label><input id="maint-owner" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
         <div class="grid grid-cols-2 gap-3">
           <div><label class="block text-sm font-medium mb-1">Service Type</label>
-            <select class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
+            <select id="maint-type" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
               <option>Desludging</option><option>Inspection</option><option>Cleaning</option><option>Repair</option>
             </select></div>
           <div><label class="block text-sm font-medium mb-1">Zone</label>
-            <select class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
+            <select id="maint-zone" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
               <option>San Jose</option><option>Poblacion</option><option>Riverside</option>
             </select></div>
         </div>
-        <div><label class="block text-sm font-medium mb-1">Scheduled Date</label><input type="date" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+        <div><label class="block text-sm font-medium mb-1">Scheduled Date</label><input id="maint-date" type="date" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
         <div><label class="block text-sm font-medium mb-1">Assign Technician</label>
-          <select class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
+          <select id="maint-tech" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
             <option>Roberto Silva</option><option>Jose Mendoza</option><option>Luis Torres</option>
           </select></div>
       </form>

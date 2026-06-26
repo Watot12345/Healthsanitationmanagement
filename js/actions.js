@@ -269,6 +269,7 @@ import { state } from './state.js';
 import { DATA } from './data.js';
 import { showToast } from './utils/toast.js';
 import { openModal, closeModal } from './utils/modal.js';
+import { btnPrimary, btnSecondary } from './utils/dom.js';
 import { showPatientDetail, showRegisterPatient } from './renderers/HealthServices/patients.js';
 import { showConsultationDetail, showNewConsultation } from './renderers/HealthServices/consultations.js';
 import { showRecordDetail } from './renderers/HealthServices/medicalRecords.js';
@@ -282,7 +283,6 @@ import { showCreateSchedule, showReschedule } from './renderers/wastewater/maint
 import { showServiceRequestDetail, showNewServiceRequest } from './renderers/wastewater/serviceRequests.js';
 import { showCaseDetail as showSurvCaseDetail, showReportCaseModal as showSurvReportModal } from './renderers/surveillance/caseReports.js';
 import { showManageAlert } from './renderers/surveillance/outbreakDetection.js';
-
 let navigateTo, switchRole, renderView, renderNotificationPanel, closeAllDropdowns;
 export function setCoreFunctions(functions) {
   navigateTo = functions.navigateTo;
@@ -403,7 +403,7 @@ export function handleAction(action, target) {
     renderView();
 },
 'view-violation': (target) => {
-    import('./renderers/compliance.js').then(m => m.showViolationDetail(target.dataset.id));
+    showViolationDetailModal(target.dataset.id);
 },
 'close-modal': () => closeModal(),
     'add-user': () => showAddUserModal(),
@@ -470,12 +470,12 @@ function showAddUserModal() {
     `
       <form class="space-y-4" onsubmit="return false">
         <div><label class="block text-sm font-medium mb-1">Full Name</label>
-          <input type="text" placeholder="Enter full name" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+          <input id="admin-user-name" type="text" placeholder="Enter full name" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
         <div><label class="block text-sm font-medium mb-1">Email</label>
-          <input type="email" placeholder="email@municipal.gov" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+          <input id="admin-user-email" type="email" placeholder="email@municipal.gov" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
         <div><label class="block text-sm font-medium mb-1">Role</label>
-          <select class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
-            <option>Admin</option><option>Staff</option><option>User</option>
+          <select id="admin-user-role" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
+            <option value="Admin">Admin</option><option value="Staff">Staff</option><option value="User">User</option>
           </select></div>
       </form>
     `,
@@ -509,6 +509,23 @@ function showEditUserModal(id) {
   );
 }
 
+function showViolationDetailModal(id) {
+  const violation = DATA.violations?.find(v => String(v.id) === String(id)) || null;
+  openModal('Manage Violation', `
+    <form class="space-y-4" onsubmit="return false">
+      <div><label class="block text-sm font-medium mb-1">Violation</label>
+        <input id="admin-violation-title" type="text" value="${violation?.violation || 'Sanitation Violation'}" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+      <div><label class="block text-sm font-medium mb-1">Severity</label>
+        <select id="admin-violation-severity" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
+          <option value="Low">Low</option><option value="Moderate">Moderate</option><option value="High">High</option><option value="Critical">Critical</option>
+        </select></div>
+      <div><label class="block text-sm font-medium mb-1">Recommended Action</label>
+        <textarea id="admin-violation-action" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">Inspect facility, document findings, and assign follow-up</textarea></div>
+    </form>`,
+    `${btnSecondary('Cancel', 'close-modal')} ${btnPrimary('Save', 'resolve-violation')}`
+  );
+}
+
 function showUpdateChildModal() {
   openModal('Update Immunization Record', `
     <form class="space-y-4" onsubmit="return false">
@@ -531,18 +548,18 @@ function showScheduleInspectionModal() {
   openModal('Schedule Inspection', `
     <form class="space-y-4" onsubmit="return false">
       <div><label class="block text-sm font-medium mb-1">Permit ID</label>
-        <select class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
-          ${DATA.permits.filter(p=>p.status==='Pending').map(p=>`<option>${p.id} - ${p.applicant}</option>`).join('')}
+        <select id="inspection-permit-id" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
+          ${DATA.permits.filter(p=>p.status==='Pending').map(p=>`<option value="${p.id}">${p.id} - ${p.applicant}</option>`).join('')}
         </select></div>
       <div><label class="block text-sm font-medium mb-1">Inspector</label>
-        <select class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
-          <option>Juan Dela Cruz</option><option>Ana Reyes</option>
+        <select id="inspection-inspector" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
+          <option value="Juan Dela Cruz">Juan Dela Cruz</option><option value="Ana Reyes">Ana Reyes</option>
         </select></div>
       <div class="grid grid-cols-2 gap-4">
         <div><label class="block text-sm font-medium mb-1">Date</label>
-          <input type="date" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
+          <input id="inspection-date" type="date" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
         <div><label class="block text-sm font-medium mb-1">Time</label>
-          <input type="time" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
+          <input id="inspection-time" type="time" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
       </div>
     </form>`,
     `${btnSecondary('Cancel', 'close-modal')} ${btnPrimary('Schedule', 'confirm-schedule')}`
@@ -564,14 +581,14 @@ function showReportCaseModal() {
   openModal('Report New Case', `
     <form class="space-y-4" onsubmit="return false">
       <div><label class="block text-sm font-medium mb-1">Disease / Condition</label>
-        <input type="text" placeholder="e.g. Dengue Fever" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
+        <input id="case-disease" type="text" placeholder="e.g. Dengue Fever" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
       <div><label class="block text-sm font-medium mb-1">Number of Cases</label>
-        <input type="number" min="1" value="1" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
+        <input id="case-count" type="number" min="1" value="1" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
       <div><label class="block text-sm font-medium mb-1">Barangay</label>
-        <input type="text" placeholder="Barangay name" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
+        <input id="case-barangay" type="text" placeholder="Barangay name" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
       <div><label class="block text-sm font-medium mb-1">Severity</label>
-        <select class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
-          <option>Low</option><option>Moderate</option><option>High</option>
+        <select id="case-severity" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
+          <option value="Low">Low</option><option value="Moderate" selected>Moderate</option><option value="High">High</option>
         </select></div>
     </form>`,
     `${btnSecondary('Cancel', 'close-modal')} ${btnPrimary('Submit Report', 'confirm-report-case')}`

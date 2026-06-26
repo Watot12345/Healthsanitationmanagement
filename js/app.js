@@ -402,6 +402,7 @@ import { openModal, closeModal } from './utils/modal.js';
 import { initComplianceFilters,loadComplianceData } from './renderers/compliance.js';
 
 import { renderSidebar } from './ui/sidebar.js';
+import { toggleChat } from './ui/aiChat.js';
 import { updateHeader } from './ui/header.js';
 import { renderNotificationPanel } from './ui/notification.js';
 import { getSearchValue, getSelectValue } from './utils/search.js';
@@ -483,8 +484,10 @@ function initCalendarIfNeeded() {
     if (state.view === 'health-center') {
         setTimeout(() => initHealthCenterCalendar(), 100);
     } else if (state.view === 'analytics') {
-        setTimeout(() => initAnalyticsCharts(), 150);
-        setTimeout(() => loadInsights(), 200);
+        setTimeout(() => {
+            initAnalyticsCharts();
+            loadInsights();
+        }, 150);
     } else if (state.view === 'logs') {
         setTimeout(() => initLogFilters(), 100);
     } else if (state.view === 'compliance') {
@@ -506,7 +509,11 @@ function initCalendarIfNeeded() {
         setTimeout(() => initMaintenanceCalendar(), 150);
     } else if (state.view === 'surveillance-mapping') {
         setTimeout(() => initMappingClustering(), 150);
-    } else {
+    }
+
+    setTimeout(() => initAiFormAutoFill(), 80);
+
+    if (state.view === 'compliance') {
         // Clear compliance refresh when leaving compliance view
         if (window._complianceRefresh) {
             clearInterval(window._complianceRefresh);
@@ -880,6 +887,200 @@ function normalizeInsightPayload(data) {
     return data;
 }
 
+async function loadActionSuggestions() {
+    const target = document.getElementById('ai-insights');
+    if (!target) return;
+
+    try {
+        const response = await fetch('api/ai/action-suggestions.php', { cache: 'no-store' });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!data || data.status !== 'success' || !Array.isArray(data.suggestions)) return;
+
+        const existing = target.querySelector('[data-ai-suggestions]');
+        if (existing) existing.remove();
+
+        const html = `
+            <div data-ai-suggestions class="mt-3 pt-2 border-t border-white/10 dark:border-slate-800/20">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-2 flex items-center gap-1.5">
+                    <span>🤖</span> Suggested Next Actions
+                </div>
+                <div class="space-y-2">
+                    ${data.suggestions.map((item) => `
+                        <div class="p-2.5 rounded-xl border border-emerald-500/10 bg-emerald-500/5 dark:bg-emerald-500/10">
+                            <div class="flex items-center justify-between gap-2 mb-1">
+                                <div class="text-xs font-semibold text-slate-700 dark:text-slate-200">${item.title}</div>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${item.priority === 'High' ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' : item.priority === 'Medium' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'}">${item.priority}</span>
+                            </div>
+                            <div class="text-[11px] text-slate-600 dark:text-slate-300">${item.detail}</div>
+                            <div class="text-[10px] text-slate-500 mt-1">Module: ${item.module}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        target.insertAdjacentHTML('beforeend', html);
+    } catch (e) {
+        console.warn('Unable to load AI action suggestions:', e);
+    }
+}
+
+function getPriorityBadge(priority) {
+    const base = 'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider';
+    if (priority === 'High') return `${base} bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400`;
+    if (priority === 'Medium') return `${base} bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400`;
+    return `${base} bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400`;
+}
+
+function initAiFormAutoFill() {
+    const buttons = document.querySelectorAll('[data-ai-autofill]');
+    if (!buttons.length) return;
+
+    buttons.forEach((button) => {
+        if (button.dataset.aiAutofillInitialized === 'true') return;
+        button.dataset.aiAutofillInitialized = 'true';
+
+        button.onclick = async () => {
+            const type = button.dataset.aiAutofill;
+            const noteFieldIds = {
+                appointment: ['ai-autofill-notes-appointment'],
+                permit: ['ai-autofill-notes-permit'],
+                surveillance: ['ai-autofill-notes-surveillance', 'ai-autofill-notes-surveillance-modal'],
+                sanitation: ['ai-autofill-notes-sanitation', 'ai-autofill-notes-sanitation-modal'],
+                alert: ['ai-autofill-notes-surveillance', 'ai-autofill-notes-surveillance-modal'],
+                violation: ['ai-autofill-notes-sanitation', 'ai-autofill-notes-sanitation-modal'],
+                'admin-user': ['ai-autofill-notes-admin-user'],
+                'admin-violation': ['ai-autofill-notes-admin-violation']
+            };
+            const feedbackIds = {
+                appointment: ['ai-autofill-feedback-appointment'],
+                permit: ['ai-autofill-feedback-permit'],
+                surveillance: ['ai-autofill-feedback-surveillance', 'ai-autofill-feedback-surveillance-modal'],
+                sanitation: ['ai-autofill-feedback-sanitation', 'ai-autofill-feedback-sanitation-modal'],
+                alert: ['ai-autofill-feedback-surveillance', 'ai-autofill-feedback-surveillance-modal'],
+                violation: ['ai-autofill-feedback-sanitation', 'ai-autofill-feedback-sanitation-modal'],
+                'admin-user': ['ai-autofill-feedback-admin-user'],
+                'admin-violation': ['ai-autofill-feedback-admin-violation']
+            };
+            const notesField = button.dataset.notesId ? document.getElementById(button.dataset.notesId) : (noteFieldIds[type] || []).map((id) => document.getElementById(id)).find(Boolean);
+            const feedback = button.dataset.feedbackId ? document.getElementById(button.dataset.feedbackId) : (feedbackIds[type] || []).map((id) => document.getElementById(id)).find(Boolean);
+            const notes = notesField?.value?.trim() || '';
+
+            if (!notes) {
+                if (feedback) feedback.textContent = 'Please enter a note first.';
+                return;
+            }
+
+            if (feedback) feedback.textContent = 'Loading suggestions...';
+
+            try {
+                const response = await fetch('api/ai/form-autofill.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type, notes }),
+                    cache: 'no-store'
+                });
+
+                const data = await response.json();
+                if (!data || data.status !== 'success') {
+                    throw new Error('Auto-fill failed');
+                }
+
+                const suggestions = Array.isArray(data.suggestions) ? data.suggestions : [];
+                const map = Object.fromEntries(suggestions.map((item) => [item.field, item.value]));
+
+                if (type === 'appointment') {
+                    const serviceSelect = document.getElementById('appointment-service-type');
+                    const dateInput = document.getElementById('appointment-date');
+                    const timeSelect = document.getElementById('appointment-time');
+                    const reasonTextarea = document.getElementById('appointment-reason');
+
+                    if (serviceSelect && map.service_type) serviceSelect.value = map.service_type;
+                    if (reasonTextarea && map.reason) reasonTextarea.value = map.reason;
+                    if (dateInput) {
+                        const today = new Date();
+                        today.setDate(today.getDate() + 1);
+                        dateInput.value = today.toISOString().split('T')[0];
+                    }
+                    if (timeSelect && map.priority_hint === 'High') timeSelect.value = '09:00 AM';
+                    if (feedback) feedback.textContent = 'Appointment fields were suggested from your note and recent records.';
+                } else if (type === 'permit') {
+                    const nameInput = document.getElementById('permit-business-name');
+                    const typeSelect = document.getElementById('permit-type');
+                    const addressInput = document.getElementById('permit-address');
+
+                    if (nameInput && map.business_name) nameInput.value = map.business_name;
+                    if (typeSelect && map.permit_type) typeSelect.value = map.permit_type;
+                    if (addressInput && map.address) addressInput.value = map.address;
+                    if (feedback) feedback.textContent = 'Permit fields were suggested from your note and recent records.';
+                } else if (type === 'surveillance' || type === 'alert') {
+                    const diseaseInput = document.getElementById('case-disease');
+                    const caseInput = document.getElementById('case-count');
+                    const barangayInput = document.getElementById('case-barangay');
+                    const severitySelect = document.getElementById('case-severity');
+
+                    if (diseaseInput && map.disease) diseaseInput.value = map.disease;
+                    if (caseInput && map.cases) caseInput.value = map.cases;
+                    if (barangayInput && map.barangay) barangayInput.value = map.barangay;
+                    if (severitySelect && map.severity) severitySelect.value = map.severity;
+
+                    const summary = suggestions.map((item) => {
+                        const value = Array.isArray(item.value) ? item.value.join(', ') : item.value;
+                        return `${item.field}: ${value}`;
+                    }).join(' • ');
+                    if (feedback) feedback.textContent = summary || 'Surveillance suggestions are ready.';
+                } else if (type === 'sanitation' || type === 'violation') {
+                    const permitSelect = document.getElementById('inspection-permit-id');
+                    const inspectorSelect = document.getElementById('inspection-inspector');
+                    const dateInput = document.getElementById('inspection-date');
+                    const timeInput = document.getElementById('inspection-time');
+
+                    if (inspectorSelect && map.recommended_inspector) {
+                        const matched = Array.from(inspectorSelect.options).some((option) => option.value === map.recommended_inspector || option.textContent === map.recommended_inspector);
+                        if (matched) inspectorSelect.value = map.recommended_inspector;
+                    }
+                    if (dateInput) {
+                        const tomorrow = new Date();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        dateInput.value = tomorrow.toISOString().split('T')[0];
+                    }
+                    if (timeInput && map.inspection_time) timeInput.value = map.inspection_time;
+                    if (permitSelect && map.permit_id) permitSelect.value = map.permit_id;
+
+                    const summary = suggestions.map((item) => {
+                        const value = Array.isArray(item.value) ? item.value.join(', ') : item.value;
+                        return `${item.field}: ${value}`;
+                    }).join(' • ');
+                    if (feedback) feedback.textContent = summary || 'Sanitation suggestions are ready.';
+                } else if (type === 'admin-user') {
+                    const nameInput = document.getElementById('admin-user-name');
+                    const emailInput = document.getElementById('admin-user-email');
+                    const roleSelect = document.getElementById('admin-user-role');
+
+                    if (nameInput && (map.full_name || map.name)) nameInput.value = map.full_name || map.name;
+                    if (emailInput && map.email) emailInput.value = map.email;
+                    if (roleSelect && (map.role || map.user_role)) roleSelect.value = map.role || map.user_role;
+
+                    if (feedback) feedback.textContent = 'User account fields were suggested from your note.';
+                } else if (type === 'admin-violation') {
+                    const titleInput = document.getElementById('admin-violation-title');
+                    const severitySelect = document.getElementById('admin-violation-severity');
+                    const actionInput = document.getElementById('admin-violation-action');
+
+                    if (titleInput && (map.title || map.violation_type)) titleInput.value = map.title || map.violation_type;
+                    if (severitySelect && (map.severity || map.risk_level)) severitySelect.value = map.severity || map.risk_level;
+                    if (actionInput && (map.action || map.suggested_action)) actionInput.value = map.action || map.suggested_action;
+
+                    if (feedback) feedback.textContent = 'Violation handling fields were suggested from your note.';
+                }
+            } catch (e) {
+                if (feedback) feedback.textContent = 'Auto-fill is unavailable right now.';
+            }
+        };
+    });
+}
+
 function renderInsightCards(data) {
     const target = document.getElementById('ai-insights');
     if (!target) return;
@@ -1177,6 +1378,7 @@ async function loadInsights() {
 
         if (data && data.status === 'success' && data.insights) {
             renderInsightCards(data.insights);
+            await loadActionSuggestions();
             lastAnalyzedTime = new Date();
             updateLastAnalyzedFooter();
             
@@ -1186,6 +1388,7 @@ async function loadInsights() {
             }
         } else {
             renderInsightCards(null);
+            await loadActionSuggestions();
         }
     } catch (e) {
         console.error('Unable to load AI insights:', e);
@@ -1237,6 +1440,10 @@ function initApp() {
 
     // Dark mode toggle
     document.getElementById('dark-mode-toggle').addEventListener('click', toggleDarkMode);
+    
+    // AI Chat toggle
+    const chatBtn = document.getElementById('ai-chat-toggle-btn');
+    if (chatBtn) chatBtn.addEventListener('click', toggleChat);
     
     // Sidebar
     document.getElementById('menu-toggle').addEventListener('click', toggleSidebar);

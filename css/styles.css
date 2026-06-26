@@ -512,6 +512,12 @@
   animation: breathing 4s ease-in-out infinite;
 }
 
+.ai-chat-avatar {
+  box-shadow: 0 0 0 1px var(--ai-glass-border);
+  background: rgba(255, 255, 255, 0.05);
+  animation: breathing 4s ease-in-out infinite;
+}
+
 /* Rotating Gradient Ring */
 .avatar-ring {
   background: linear-gradient(135deg, var(--ai-primary), var(--ai-secondary), #a855f7, var(--ai-primary));
@@ -869,5 +875,93 @@
   }
   .ai-score-badge .text-lg {
     font-size: 1rem;
+  }
+}
+
+/* ============================================================================
+   AI CHAT ASSISTANT PANEL
+   ============================================================================ */
+
+/* Chat panel base */
+.ai-chat-panel {
+  overflow: hidden;
+}
+
+/* Chat messages area */
+#ai-chat-messages {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+}
+
+#ai-chat-messages::-webkit-scrollbar {
+  width: 3px;
+}
+
+#ai-chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#ai-chat-messages::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 9999px;
+}
+
+/* User message bubble */
+#ai-chat-messages .flex-row-reverse .text-xs {
+  animation: msgSlideIn 0.3s ease forwards;
+}
+
+/* AI message bubble */
+#ai-chat-messages .flex:not(.flex-row-reverse) .text-xs {
+  animation: msgSlideIn 0.3s ease forwards;
+}
+
+@keyframes msgSlideIn {
+  0% { opacity: 0; transform: translateY(8px) scale(0.97); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Typing bounce dots */
+#ai-chat-messages .animate-bounce {
+  animation: chatBounce 1.2s infinite ease-in-out;
+}
+
+@keyframes chatBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* Chat toggle button (floating) */
+#ai-chat-toggle-btn {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#ai-chat-toggle-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.35);
+}
+
+/* Dark mode compatibility for chat */
+.dark .ai-chat-panel {
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark .ai-chat-suggestion {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Chat input focus ring */
+#ai-chat-input:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Prevent body scroll when chat is open on mobile */
+@media (max-width: 640px) {
+  .ai-chat-panel {
+    right: 0.5rem !important;
+    left: 0.5rem !important;
+    width: auto !important;
+    max-height: 60vh;
+    bottom: 5rem;
   }
 }

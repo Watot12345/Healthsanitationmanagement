@@ -208,6 +208,12 @@
   <!-- Toast container -->
   <div id="toast-container" class="fixed bottom-4 right-4 z-[70] flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
 
+  <!-- AI Chat Floating Button -->
+  <button id="ai-chat-toggle-btn" class="fixed bottom-6 right-6 z-[60] w-14 h-14 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-500 text-white shadow-xl flex items-center justify-center hover:shadow-2xl focus:outline-none transition-all duration-300" title="Ask AI Assistant" aria-label="Open AI Chat">
+    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z"/>
+    </svg>
+  </button>
+
   <script type="module" src="js/app.js"></script>
-</body>
 </html>

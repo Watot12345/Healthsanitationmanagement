@@ -20,6 +20,8 @@ SET time_zone = "+00:00";
 --
 -- Database: `health_sanitation_db`
 --
+CREATE DATABASE IF NOT EXISTS `health_sanitation_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `health_sanitation_db`;
 
 -- --------------------------------------------------------
 
@@ -85,6 +87,23 @@ CREATE TABLE `ai_insights_cache` (
 
 INSERT INTO `ai_insights_cache` (`id`, `insights`, `generated_at`) VALUES
 (1, '{\"operational\":{\"title\":\"Sanitation Permit Status\",\"icon\":\"clipboard_check\",\"text\":\"Three sanitation permits are currently pending. Efficient processing is vital for ongoing health and safety compliance.\"},\"risk\":{\"title\":\"Influenza Prevalence\",\"icon\":\"biohazard_warning\",\"level\":\"High\",\"text\":\"Influenza is the most reported disease with 28 cases, requiring focused attention to mitigate community spread.\"},\"action\":{\"title\":\"Disease Alert Response\",\"icon\":\"medical_cross\",\"priority\":\"Urgent\",\"text\":\"With 2 active disease alerts and 28 influenza cases, prioritize public health outreach and intervention strategies.\"}}', '2026-06-26 10:52:21');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ai_tasks`
+--
+
+CREATE TABLE `ai_tasks` (
+  `id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `module` varchar(100) NOT NULL DEFAULT 'general',
+  `priority` varchar(20) NOT NULL DEFAULT 'Medium',
+  `status` varchar(30) NOT NULL DEFAULT 'pending',
+  `created_by` varchar(100) NOT NULL DEFAULT 'System',
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -398,6 +417,12 @@ ALTER TABLE `ai_insights_cache`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `ai_tasks`
+--
+ALTER TABLE `ai_tasks`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `alerts`
 --
 ALTER TABLE `alerts`
@@ -489,6 +514,12 @@ ALTER TABLE `activity_logs`
 --
 ALTER TABLE `ai_insights_cache`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `ai_tasks`
+--
+ALTER TABLE `ai_tasks`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `alerts`

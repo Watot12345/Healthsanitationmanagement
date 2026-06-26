@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../config/database.php';
 header('Content-Type: application/json');
 
 $config = require __DIR__ . '/../../config/env.php';
-$apiKey = trim($config['gemini_key']);
+$apiKey = trim($config['gemini_key'] ?? '');
 
 try {
     $db = new Database();
@@ -29,6 +29,17 @@ try {
         exit;
     }
     // ─── END CACHE CHECK ──────────────────────────────────────
+
+    if ($apiKey === '' || $apiKey === 'PUT_YOUR_GEMINI_API_KEY_HERE') {
+        if ($cached) {
+            echo json_encode(['status' => 'success', 'insights' => json_decode($cached['insights'], true)]);
+            exit;
+        }
+
+        http_response_code(500);
+        echo json_encode(['status' => 'error', 'message' => 'AI insights need a Gemini API key in config/env.local.php.']);
+        exit;
+    }
 
     // ─── FETCH COMPREHENSIVE DATA ─────────────────────────────
     $appointments = (int) $conn->query("SELECT COUNT(*) FROM appointments")->fetchColumn();

@@ -3,6 +3,11 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^api/(.*)$ api/$1.php [L]
 
+# MIME Type Configuration
+AddType application/javascript .js
+AddType application/javascript .mjs
+AddType text/css .css
+
 # Security Headers
 Header set X-Content-Type-Options "nosniff"
 Header set X-Frame-Options "DENY"
