@@ -189,7 +189,6 @@
     </footer>
   </div>
 
-  <!-- Modal -->
   <div id="modal-overlay" class="fixed inset-0 z-[60] hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true">
     <div id="modal-panel" class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-slate-800 shadow-2xl border border-slate-200 dark:border-slate-700 transform transition-all scale-95 opacity-0">
       <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
@@ -205,7 +204,6 @@
     </div>
   </div>
 
-  <!-- Toast container -->
   <div id="toast-container" class="fixed bottom-4 right-4 z-[70] flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
 
   <script type="module" src="js/app.js"></script>
