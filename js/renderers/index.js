@@ -1089,7 +1089,7 @@ function renderAnalytics() {
         </div>
 
         <!-- Scrollable Insights Area -->
-        <div id="ai-insights-scrollable" class="min-h-[160px] max-h-[380px] overflow-y-auto pr-1">
+        <div id="ai-insights-scrollable" class="min-h-[200px] max-h-[600px] overflow-y-auto pr-1">
           <div id="ai-insights" class="space-y-4">
             <!-- Loading indicator or insights will be rendered here dynamically -->
             <div class="flex items-center gap-2 text-sm text-slate-500">
@@ -1240,10 +1240,22 @@ function updateKPICards(data) {
   const cards = document.getElementById('kpi-cards');
   if (!cards) return;
   
-  const totalAppointments = data.appointments ? data.appointments.reduce((a, b) => a + b, 0) : 0;
-  const totalPermits = data.permits ? data.permits.reduce((a, b) => a + b, 0) : 0;
-  const totalDistribution = data.distribution ? Object.values(data.distribution).reduce((a, b) => a + b, 0) : 0;
-  const totalAlerts = data.diseases ? data.diseases.reduce((sum, d) => sum + d.data.reduce((a, b) => a + b, 0), 0) : 0;
+  // Support both stats.php format and insights _stats format
+  let totalAppointments, totalPermits, totalDistribution, totalAlerts;
+
+  if (data.total_appointments !== undefined) {
+    // _stats format from insights.php
+    totalAppointments = data.total_appointments;
+    totalPermits = data.total_permits;
+    totalDistribution = data.total_services;
+    totalAlerts = data.active_alerts || data.disease_cases || 0;
+  } else {
+    // Original stats.php format
+    totalAppointments = data.appointments ? data.appointments.reduce((a, b) => a + b, 0) : 0;
+    totalPermits = data.permits ? data.permits.reduce((a, b) => a + b, 0) : 0;
+    totalDistribution = data.distribution ? Object.values(data.distribution).reduce((a, b) => a + b, 0) : 0;
+    totalAlerts = data.diseases ? data.diseases.reduce((sum, d) => sum + d.data.reduce((a, b) => a + b, 0), 0) : 0;
+  }
 
   cards.innerHTML = `
     ${renderStaticKPICard('Appointments', totalAppointments, '', 'up', '#3b82f6')}
@@ -1449,7 +1461,7 @@ function renderSettings() {
 }
 
 // Export all renderers plus the rest from the next message
-export { renderDashboard, renderUsers, renderLogs, renderAnalytics, renderSettings };
+export { renderDashboard, renderUsers, renderLogs, renderAnalytics, renderSettings, updateKPICards };
 // Add these functions to js/renderers/index.js (continued from above)
 
 function renderHealthCenter(filter = '') {
