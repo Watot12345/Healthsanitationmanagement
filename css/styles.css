@@ -746,3 +746,128 @@
 #ai-insights-scrollable::-webkit-scrollbar-thumb:hover {
   background: rgba(156, 163, 175, 0.45);
 }
+
+/* ============================================================================
+   AI DECISION SUPPORT DASHBOARD - ENHANCED COMPONENTS
+   ============================================================================ */
+
+/* Score Badges */
+.ai-score-badge {
+  animation: scoreFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ai-score-badge:nth-child(1) { animation-delay: 0.05s; }
+.ai-score-badge:nth-child(2) { animation-delay: 0.1s; }
+.ai-score-badge:nth-child(3) { animation-delay: 0.15s; }
+.ai-score-badge:nth-child(4) { animation-delay: 0.2s; }
+
+.ai-score-badge:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+@keyframes scoreFadeIn {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Executive Summary Card */
+.ai-summary-card {
+  animation: summaryGlide 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  transform: translateY(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(59, 130, 246, 0.03) 50%, transparent 100%);
+  pointer-events: none;
+}
+
+@keyframes summaryGlide {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Insight card extra spacing enhancements */
+.ai-insight-card {
+  position: relative;
+}
+
+.ai-insight-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+/* Trend analysis items */
+.ai-insight-card .text-\[11px\] {
+  line-height: 1.5;
+}
+
+/* Warning & Recommendation card alternative styling */
+.warning-card-high {
+  border-left-color: #f43f5e;
+}
+
+.warning-card-medium {
+  border-left-color: #f59e0b;
+}
+
+.warning-card-low {
+  border-left-color: #10b981;
+}
+
+/* Pulse glow for risk level indicator */
+@keyframes riskPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* Ensure consistent dark mode for all new elements */
+.dark .ai-score-badge {
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark .ai-summary-card {
+  border-color: rgba(6, 182, 212, 0.15);
+}
+
+/* Scrollbar stub for summary areas */
+#ai-insights-scrollable {
+  scroll-behavior: smooth;
+}
+
+/* Loading state enhancements for extended loading text */
+.ai-loading-container {
+  min-height: 120px;
+}
+
+/* Score badge number animations */
+.ai-score-badge .text-lg {
+  font-feature-settings: "tnum";
+  letter-spacing: -0.02em;
+}
+
+/* Responsive adjustments for score badges on small screens */
+@media (max-width: 480px) {
+  .ai-score-badge {
+    padding: 0.5rem;
+  }
+  .ai-score-badge .text-lg {
+    font-size: 1rem;
+  }
+}
