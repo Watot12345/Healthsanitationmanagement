@@ -399,7 +399,11 @@ import {
 } from './utils/dom.js';
 import { showToast } from './utils/toast.js';
 import { openModal, closeModal } from './utils/modal.js';
+<<<<<<< HEAD
 import { initComplianceFilters } from './renderers/compliance.js';
+=======
+import { initComplianceFilters,loadComplianceData } from './renderers/compliance.js';
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
 
 import { renderSidebar } from './ui/sidebar.js';
 import { updateHeader } from './ui/header.js';
@@ -412,7 +416,10 @@ import { initMaintenanceCalendar } from './renderers/wastewater/maintenanceSched
 import { initMappingClustering } from './renderers/surveillance/mappingClustering.js';
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
 // Make utilities available globally for inline usage
 window.badge = badge;
 window.icon = icon;
@@ -504,6 +511,34 @@ function initCalendarIfNeeded() {
 if (state.view === 'surveillance-mapping') {
   setTimeout(() => initMappingClustering(), 150);
 }
+<<<<<<< HEAD
+=======
+if (state.view === 'analytics') {
+    setTimeout(() => initAnalyticsCharts(), 150);
+    setTimeout(() => loadInsights(), 200);
+}
+if (state.view === 'compliance') {
+    setTimeout(() => initComplianceFilters(), 100);
+    
+    // Auto-refresh every 15 seconds
+    window._complianceRefresh = setInterval(async () => {
+        const { loadComplianceData } = await import('./renderers/compliance.js');
+        await loadComplianceData();
+        const main = document.getElementById('main-content');
+        if (main && state.view === 'compliance') {
+            const { renderCompliance } = await import('./renderers/compliance.js');
+            main.innerHTML = renderCompliance();
+            initComplianceFilters();
+        }
+    }, 15000);
+} else {
+    // Clear interval when leaving compliance view
+    if (window._complianceRefresh) {
+        clearInterval(window._complianceRefresh);
+        window._complianceRefresh = null;
+    }
+}
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
 }
     
 
@@ -530,6 +565,17 @@ export function renderViewPreserveScroll() {
 export function navigateTo(viewId) {
     state.view = viewId;
     closeSidebarMobile();
+<<<<<<< HEAD
+=======
+    
+    if (viewId === 'compliance') {
+        import('./renderers/compliance.js').then(m => {
+            m.loadComplianceData().then(() => renderView());
+        });
+        return;
+    }
+    
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
     renderView();
 }
 
@@ -745,6 +791,264 @@ async function loadLogs() {
         }
     } catch (e) {}
 }
+<<<<<<< HEAD
+=======
+let insightsLoading = false;
+let insightsRefreshTimer = null;
+let lastAnalyzedTime = null;
+let loadingTextInterval = null;
+
+const loadingSteps = [
+    "Analyzing appointments...",
+    "Reviewing disease alerts...",
+    "Evaluating sanitation permits...",
+    "Generating recommendations..."
+];
+
+function showLoading() {
+    const target = document.getElementById('ai-insights');
+    if (!target) return;
+
+    if (loadingTextInterval) clearInterval(loadingTextInterval);
+
+    let currentLoadingIndex = 0;
+    
+    target.innerHTML = `
+        <div class="ai-loading-container flex flex-col items-center justify-center py-6 text-center space-y-4">
+            <div class="ai-typing-indicator flex items-center justify-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-600/80 dark:bg-cyan-400/80 dot-pulse-1"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-500/80 dark:bg-cyan-300/80 dot-pulse-2"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-400/80 dark:bg-cyan-200/80 dot-pulse-3"></span>
+            </div>
+            <div id="ai-loading-text" class="text-sm font-semibold text-slate-600 dark:text-slate-300 transition-all duration-300 transform translate-y-0 opacity-100">
+                ${loadingSteps[0]}
+            </div>
+        </div>
+    `;
+
+    const loadingTextEl = document.getElementById('ai-loading-text');
+    
+    loadingTextInterval = setInterval(() => {
+        const currentTextEl = document.getElementById('ai-loading-text');
+        if (!currentTextEl) return;
+        
+        currentTextEl.classList.remove('opacity-100', 'translate-y-0');
+        currentTextEl.classList.add('opacity-0', 'translate-y-[-4px]');
+        
+        setTimeout(() => {
+            currentLoadingIndex = (currentLoadingIndex + 1) % loadingSteps.length;
+            currentTextEl.textContent = loadingSteps[currentLoadingIndex];
+            
+            currentTextEl.classList.remove('opacity-0', 'translate-y-[-4px]');
+            currentTextEl.classList.add('opacity-100', 'translate-y-0');
+        }, 300);
+    }, 2000);
+}
+
+function hideLoading() {
+    if (loadingTextInterval) {
+        clearInterval(loadingTextInterval);
+        loadingTextInterval = null;
+    }
+}
+
+function animateAvatar(state) {
+    const container = document.getElementById('ai-avatar-container');
+    if (!container) return;
+
+    if (state === 'loading') {
+        container.classList.add('ai-avatar-thinking');
+    } else {
+        container.classList.remove('ai-avatar-thinking');
+    }
+}
+
+function renderInsightCards(insights) {
+    const target = document.getElementById('ai-insights');
+    if (!target) return;
+
+    if (!insights || Object.keys(insights).length === 0) {
+        target.innerHTML = `
+            <div class="flex flex-col items-center justify-center text-center p-6 bg-slate-500/5 dark:bg-slate-400/5 rounded-xl border border-dashed border-slate-300 dark:border-slate-700/50">
+                <span class="text-3xl mb-2">🔍</span>
+                <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">No municipal health insights available yet.</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">The AI will automatically analyze new operational data.</p>
+            </div>
+        `;
+        return;
+    }
+
+    target.innerHTML = '';
+    
+    const cardKeys = ['operational', 'risk', 'action'];
+    
+    cardKeys.forEach((key, index) => {
+        const item = insights[key];
+        if (!item) return;
+
+        let borderClass = 'border-l-4 border-l-blue-500 shadow-blue-500/5';
+        let badgeHTML = '';
+        
+        if (key === 'operational') {
+            borderClass = 'border-l-4 border-l-blue-500 shadow-blue-500/5';
+        } else if (key === 'risk') {
+            const lvl = (item.level || 'Medium').toLowerCase();
+            if (lvl === 'high') {
+                borderClass = 'border-l-4 border-l-rose-500 shadow-rose-500/5';
+            } else if (lvl === 'medium') {
+                borderClass = 'border-l-4 border-l-amber-500 shadow-amber-500/5';
+            } else {
+                borderClass = 'border-l-4 border-l-emerald-500 shadow-emerald-500/5';
+            }
+            badgeHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">${item.level} Risk</span>`;
+        } else if (key === 'action') {
+            const prio = (item.priority || 'Medium').toLowerCase();
+            if (prio === 'high') {
+                borderClass = 'border-l-4 border-l-purple-500 shadow-purple-500/5';
+            } else if (prio === 'medium') {
+                borderClass = 'border-l-4 border-l-indigo-500 shadow-indigo-500/5';
+            } else {
+                borderClass = 'border-l-4 border-l-teal-500 shadow-teal-500/5';
+            }
+            badgeHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">${item.priority} Priority</span>`;
+        }
+
+        const cardHTML = `
+            <div class="ai-insight-card relative overflow-hidden p-4 rounded-xl ${borderClass} bg-white/20 dark:bg-slate-800/10 backdrop-blur-md border border-white/10 dark:border-slate-800/20 hover:bg-white/30 dark:hover:bg-slate-800/20 shadow-sm transition-all duration-300 transform opacity-0 translate-y-4 hover:-translate-y-1 hover:shadow-md cursor-default group" style="animation-delay: ${index * 150}ms; animation-fill-mode: forwards;">
+                <div class="absolute top-3 right-3 text-slate-300 dark:text-slate-600 group-hover:text-blue-500 dark:group-hover:text-cyan-400 transition-colors duration-300">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 21.5L6.5 16.5L1.5 14L6.5 11.5L9 6.5L11.5 11.5L16.5 14L11.5 16.5L9 21.5ZM19 12.5L17.75 10L15.25 8.75L17.75 7.5L19 5L20.25 7.5L22.75 8.75L20.25 10L19 12.5ZM19 22.5L18.25 21L16.75 20.25L18.25 19.5L19 18L19.75 19.5L21.25 20.25L19.75 21L19 22.5Z"/>
+                    </svg>
+                </div>
+                
+                <div class="flex items-start gap-3">
+                    <span class="text-xl mt-0.5 filter drop-shadow-sm">${item.icon || 'ℹ️'}</span>
+                    <div class="flex-1 min-w-0 pr-4">
+                        <div class="flex items-center gap-2 flex-wrap mb-1">
+                            <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 tracking-tight leading-none">${item.title}</h4>
+                            ${badgeHTML}
+                        </div>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal">${item.text}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        target.insertAdjacentHTML('beforeend', cardHTML);
+    });
+}
+
+function updateLastAnalyzedFooter() {
+    const footerTime = document.getElementById('ai-last-analyzed');
+    const currentTime = document.getElementById('ai-current-time');
+    
+    if (footerTime && lastAnalyzedTime) {
+        const hours = String(lastAnalyzedTime.getHours()).padStart(2, '0');
+        const minutes = String(lastAnalyzedTime.getMinutes()).padStart(2, '0');
+        const seconds = String(lastAnalyzedTime.getSeconds()).padStart(2, '0');
+        footerTime.textContent = `${hours}:${minutes}:${seconds}`;
+    }
+    
+    if (currentTime) {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+        currentTime.textContent = dateStr;
+    }
+}
+
+function setupAutoRefresh() {
+    if (insightsRefreshTimer) clearTimeout(insightsRefreshTimer);
+    
+    // Auto refresh every 5 minutes (5 * 60 * 1000 = 300000ms)
+    insightsRefreshTimer = setTimeout(() => {
+        loadInsights();
+    }, 300000);
+}
+
+function refreshInsights() {
+    if (insightsRefreshTimer) {
+        clearTimeout(insightsRefreshTimer);
+        insightsRefreshTimer = null;
+    }
+    loadInsights();
+}
+
+async function loadInsights() {
+    const target = document.getElementById('ai-insights');
+    if (!target) return;
+
+    if (insightsLoading) return;
+    insightsLoading = true;
+
+    const refreshBtn = document.getElementById('ai-refresh-btn');
+    const refreshIcon = document.getElementById('ai-refresh-icon');
+    if (refreshBtn) refreshBtn.classList.add('ai-refresh-active');
+    if (refreshIcon) refreshIcon.classList.add('rotate-infinite');
+
+    if (refreshBtn) {
+        refreshBtn.onclick = (e) => {
+            e.preventDefault();
+            refreshInsights();
+        };
+    }
+
+    showLoading();
+    animateAvatar('loading');
+
+    try {
+        const response = await fetch('api/analytics/insights.php', { cache: 'no-store' });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP Error ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        hideLoading();
+        animateAvatar('complete');
+
+        if (data && data.status === 'success' && data.insights) {
+            renderInsightCards(data.insights);
+            lastAnalyzedTime = new Date();
+            updateLastAnalyzedFooter();
+        } else {
+            renderInsightCards(null);
+        }
+    } catch (e) {
+        console.error('Unable to load AI insights:', e);
+        hideLoading();
+        animateAvatar('complete');
+        
+        target.innerHTML = `
+            <div class="flex flex-col items-center justify-center text-center p-6 bg-rose-500/5 dark:bg-rose-500/5 rounded-xl border border-rose-300/30 dark:border-rose-700/20">
+                <span class="text-3xl mb-2">⚠️</span>
+                <p class="text-sm font-bold text-rose-600 dark:text-rose-400">AI Assistant Offline</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">Unable to generate insights.</p>
+                <button id="ai-retry-btn" class="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-semibold shadow transition-colors flex items-center gap-1.5 focus:outline-none">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                    </svg>
+                    Retry Connection
+                </button>
+            </div>
+        `;
+        
+        const retryBtn = document.getElementById('ai-retry-btn');
+        if (retryBtn) {
+            retryBtn.onclick = (e) => {
+                e.preventDefault();
+                refreshInsights();
+            };
+        }
+    } finally {
+        insightsLoading = false;
+        if (refreshBtn) refreshBtn.classList.remove('ai-refresh-active');
+        if (refreshIcon) refreshIcon.classList.remove('rotate-infinite');
+        updateLastAnalyzedFooter();
+        setupAutoRefresh();
+    }
+}
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
 // Initialize app
 function initApp() {
     // Set core functions for actions.js to avoid circular dependencies
@@ -849,6 +1153,10 @@ function initApp() {
     await loadRecentUpdates();
     await loadUsers();
     await loadLogs();
+<<<<<<< HEAD
+=======
+    await loadInsights()
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
     renderView();
 });
 }

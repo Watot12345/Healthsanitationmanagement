@@ -363,6 +363,51 @@ export function handleAction(action, target) {
 'confirm-add-record': () => { closeModal(); showToast({ type: 'success', title: 'Success', message: 'Medical record added' }); },
 'view-record': (target) => showRecordDetail(target.dataset.id),
 'download-record': () => showToast('Download started (demo)', 'success'),
+<<<<<<< HEAD
+=======
+'download-report': (target) => {
+    const type = target.dataset.type;
+    const format = target.dataset.format;
+    const url = format === 'pdf' 
+        ? `api/reports/generate_pdf.php?type=${type}`
+        : `api/reports/generate.php?type=${type}&format=csv`;
+    showToast({ type: 'success', title: 'Downloading', message: 'Your report is being generated...' });
+    setTimeout(() => {
+        window.open(url, '_blank');
+        setTimeout(() => {
+            showToast({ type: 'success', title: 'Downloaded', message: 'Report downloaded successfully' });
+        }, 1500);
+    }, 500);
+},
+'resolve-violation': async (target) => {
+    const id = target.dataset.id;
+    const response = await fetch('api/admin/updateViolations.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: 'Resolved' })
+    });
+    const data = await response.json();
+    closeModal();
+    showToast({ type: 'success', title: 'Resolved', message: data.message });
+    renderView();
+},
+
+'escalate-violation': async (target) => {
+    const id = target.dataset.id;
+    const response = await fetch('api/admin/updateViolations.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: 'Escalated' })
+    });
+    const data = await response.json();
+    closeModal();
+    showToast({ type: 'warning', title: 'Escalated', message: data.message });
+    renderView();
+},
+'view-violation': (target) => {
+    import('./renderers/compliance.js').then(m => m.showViolationDetail(target.dataset.id));
+},
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
 'close-modal': () => closeModal(),
     'add-user': () => showAddUserModal(),
     'view-application': (target) => showApplicationDetail(target.dataset.id),

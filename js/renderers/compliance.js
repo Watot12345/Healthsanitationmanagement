@@ -3,6 +3,7 @@
 import { card, icon, renderList, badge, filterData, searchInput } from '../utils/dom.js';
 import { openModal } from '../utils/modal.js';
 
+<<<<<<< HEAD
 // ─── Fake Data ──────────────────────────────────────────────────────────────
 
 const COMPLIANCE_DATA = [
@@ -21,6 +22,35 @@ function getSummary() {
   const critical = COMPLIANCE_DATA.filter(v => v.risk === 'Critical').length;
   const avgScore = Math.round(COMPLIANCE_DATA.reduce((sum, v) => sum + v.score, 0) / total);
 
+=======
+// ─── Data ────────────────────────────────────────────────────────────────────
+
+let COMPLIANCE_DATA = [];
+
+export async function loadComplianceData() {
+    try {
+        const response = await fetch('api/admin/getViolations.php');
+        if (response.ok) {
+            const result = await response.json();
+            COMPLIANCE_DATA = (result.data || result).map(v => ({
+                ...v,
+                dueDate: v.due_date,
+                repeatOffender: v.repeat_offender == 1
+            }));
+        }
+    } catch (e) {}
+}
+
+// ─── Summary ────────────────────────────────────────────────────────────────
+function getSummary() {
+  if (!COMPLIANCE_DATA.length) {
+    return { total: 0, repeat: 0, critical: 0, avgScore: 0 };
+  }
+  const total = COMPLIANCE_DATA.length;
+  const repeat = COMPLIANCE_DATA.filter(v => v.repeatOffender).length;
+  const critical = COMPLIANCE_DATA.filter(v => v.risk === 'Critical').length;
+  const avgScore = Math.round(COMPLIANCE_DATA.reduce((sum, v) => sum + (v.score || 0), 0) / total);
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
   return { total, repeat, critical, avgScore };
 }
 
@@ -57,7 +87,11 @@ const ViolationRow = v => `
 // ─── Detail Modal ────────────────────────────────────────────────────────────
 
 export function showViolationDetail(id) {
+<<<<<<< HEAD
   const v = COMPLIANCE_DATA.find(item => item.id === id);
+=======
+  const v = COMPLIANCE_DATA.find(item => item.id == id);
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
   if (!v) return;
 
   openModal(
@@ -71,7 +105,11 @@ export function showViolationDetail(id) {
           <div><p class="text-xs text-slate-500">Due Date</p><p class="font-medium">${v.dueDate}</p></div>
           <div><p class="text-xs text-slate-500">Risk Level</p>${badge(v.risk)}</div>
           <div><p class="text-xs text-slate-500">Status</p>${badge(v.status)}</div>
+<<<<<<< HEAD
           <div><p class="text-xs text-slate-500">Compliance Score</p><p class="font-medium">${v.score}%</p></div>
+=======
+          <div><p class="text-xs text-slate-500">Compliance Score</p><p class="font-medium">${v.score || 0}%</p></div>
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
           <div><p class="text-xs text-slate-500">Type</p><p class="font-medium">${v.type}</p></div>
         </div>
         <div>
@@ -99,7 +137,18 @@ export function showViolationDetail(id) {
 
 // ─── View ────────────────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
 export function renderCompliance() {
+=======
+export  function renderCompliance() {
+  if (!COMPLIANCE_DATA.length) {
+    loadComplianceData().then(() => {
+        const main = document.getElementById('main-content');
+        if (main) main.innerHTML = renderCompliance();
+    });
+    return '<div class="text-center py-8 text-slate-500">Loading violations...</div>';
+  }
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
   const { total, repeat, critical, avgScore } = getSummary();
 
   return `
@@ -154,7 +203,11 @@ export function renderCompliance() {
                 </tr>
               </thead>
               <tbody id="compliance-tbody" class="divide-y divide-slate-200 dark:divide-slate-700">
+<<<<<<< HEAD
                 ${renderList(COMPLIANCE_DATA, ViolationRow)}
+=======
+                ${COMPLIANCE_DATA.length ? renderList(COMPLIANCE_DATA, ViolationRow) : `<tr><td colspan="8" class="px-4 py-8 text-center text-slate-500">No violations found</td></tr>`}
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
               </tbody>
             </table>
           </div>
@@ -190,7 +243,10 @@ export function initComplianceFilters() {
     document.getElementById(id)?.addEventListener('change', apply);
   });
 
+<<<<<<< HEAD
   // Clear filters
+=======
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
   document.getElementById('compliance-clear-filters')?.addEventListener('click', () => {
     document.getElementById('compliance-search').value = '';
     document.getElementById('compliance-risk-filter').value = '';

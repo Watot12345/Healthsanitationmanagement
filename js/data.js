@@ -5,6 +5,7 @@ export async function fetchDashboardData() {
 
 // ─── Fake Data ───────────────────────────────────────────────────────────────
 export const DATA = {
+<<<<<<< HEAD
     users: [
       { id: 1, name: 'Maria Santos', email: 'maria.santos@municipal.gov', role: 'Admin', status: 'Active', joined: '2023-01-15' },
       { id: 2, name: 'Juan Dela Cruz', email: 'juan.delacruz@municipal.gov', role: 'Staff', status: 'Active', joined: '2023-03-22' },
@@ -144,6 +145,18 @@ export const DATA = {
       { date: '2025-11-20', doctor: 'Dr. Elena Santos', diagnosis: 'COVID-19 booster', notes: 'Vaccine administered' },
     ],
   };
+=======
+  users: [],
+  logs: [],
+  appointments: [],
+  patients: [],
+  permits: [],
+  notifications: [],  // ← Add this
+  kpis: null,
+  systemStatus: null,
+  recentUpdates: [],
+};
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
   
   export function getCalendarEvents() {
     // Return dates that have events for the mini calendar

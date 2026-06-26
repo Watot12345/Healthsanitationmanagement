@@ -1039,6 +1039,77 @@ function renderAnalytics() {
       </div>
     </div>
 
+<<<<<<< HEAD
+=======
+      <!-- AI Insights Redesign -->
+      <div class="ai-glass-card relative overflow-hidden p-6 rounded-2xl border border-white/20 dark:border-slate-800/30 shadow-xl bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl transition-all duration-300">
+        <!-- Animated Mesh and Particles Background -->
+        <div class="absolute inset-0 -z-10 ai-mesh-bg opacity-30 dark:opacity-20 pointer-events-none"></div>
+        <div class="absolute inset-0 -z-10 ai-particles pointer-events-none">
+          <div class="particle p1"></div>
+          <div class="particle p2"></div>
+          <div class="particle p3"></div>
+        </div>
+
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-white/10 dark:border-slate-800/20 pb-4 mb-5">
+          <div class="flex items-center gap-4">
+            <!-- AI Avatar Container -->
+            <div id="ai-avatar-container" class="relative flex-shrink-0 w-16 h-16 rounded-full">
+              <div class="avatar-ring absolute inset-0 rounded-full"></div>
+              <div class="avatar-core absolute inset-[3px] rounded-full flex items-center justify-center bg-gradient-to-tr from-blue-600 to-cyan-500 shadow-inner">
+                <svg class="w-8 h-8 text-white avatar-brain-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.467 5.99 5.99 0 0 0-1.925-3.546 5.974 5.974 0 0 1-2.133-1A3.75 3.75 0 0 0 2.25 12c0 1.257.625 2.368 1.583 3.033A3.743 3.743 0 0 0 3 15.75c0 .352.049.69.141 1.013A3.75 3.75 0 0 0 7.5 19.5h.75a3.75 3.75 0 0 0 3.75-3.75v-.75Z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 0 1-.495-7.467 5.99 5.99 0 0 1 1.925-3.546 5.974 5.974 0 0 0 2.133-1A3.75 3.75 0 0 1 21.75 12c0 1.257-.625 2.368-1.583 3.033A3.743 3.743 0 0 1 21 15.75c0 .352-.049.69-.141 1.013A3.75 3.75 0 0 1 16.5 19.5h-.75a3.75 3.75 0 0 1-3.75-3.75v-.75Z" />
+                </svg>
+              </div>
+              <div class="orbiting-dot dot1"></div>
+              <div class="orbiting-dot dot2"></div>
+            </div>
+
+            <!-- Title / Subtitle & Status -->
+            <div class="text-center sm:text-left">
+              <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                <h3 class="font-bold text-lg text-slate-800 dark:text-slate-100 tracking-tight leading-none">Municipal AI Assistant</h3>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  AI Online
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Powered by Gemini AI Decision Support</p>
+            </div>
+          </div>
+
+          <!-- Refresh Button -->
+          <button id="ai-refresh-btn" class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/50 dark:bg-slate-800/50 hover:bg-white/80 dark:hover:bg-slate-700/80 border border-slate-200/50 dark:border-slate-700/50 shadow-sm transition-all duration-200 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-cyan-400 focus:outline-none" title="Refresh Insights">
+            <svg id="ai-refresh-icon" class="w-5 h-5 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Scrollable Insights Area -->
+        <div id="ai-insights-scrollable" class="min-h-[160px] max-h-[380px] overflow-y-auto pr-1">
+          <div id="ai-insights" class="space-y-4">
+            <!-- Loading indicator or insights will be rendered here dynamically -->
+            <div class="flex items-center gap-2 text-sm text-slate-500">
+              <svg class="animate-spin h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              Initializing assistant...
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex items-center justify-between mt-5 pt-3 border-t border-white/10 dark:border-slate-800/20 text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider">
+          <div>Last Analyzed: <span id="ai-last-analyzed">Never</span></div>
+          <div id="ai-current-time">UTC</div>
+        </div>
+      </div>
+
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
     <!-- KPI Cards -->
     <div id="kpi-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
       ${renderStaticKPICard('Appointments', '342', '+12%', 'up', '#3b82f6')}
@@ -1046,7 +1117,11 @@ function renderAnalytics() {
       ${renderStaticKPICard('Inspections', '156', '+8%', 'up', '#eab308')}
       ${renderStaticKPICard('Cases Reported', '48', '-3%', 'down', '#ef4444')}
     </div>
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
     <!-- Main Trend Charts -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       ${card(`<div class="p-5">
@@ -1139,6 +1214,7 @@ function renderStaticActivityFeed() {
     </div>
   `).join('');
 }
+<<<<<<< HEAD
 
 // Static charts initialization
 export function initAnalyticsCharts() {
@@ -1183,10 +1259,66 @@ function initTrendChart() {
     },
     tooltip: { shared: true },
     legend: { position: 'top' },
+=======
+export async function initAnalyticsCharts() {
+  try {
+    const response = await fetch('api/analytics/stats.php');
+    const data = await response.json();
+    console.log('Analytics data:', data);
+    
+    updateKPICards(data);
+    
+    initTrendChart(data.appointments, data.permits, data.requests);
+    initDiseaseChart(data.diseases);
+    initDonutChart(data.distribution);
+    initHeatmapChart();
+    initStaffChart();
+  } catch (e) {
+    console.error('Analytics error:', e);
+    initTrendChart();
+    initDiseaseChart();
+    initHeatmapChart();
+    initDonutChart();
+    initStaffChart();
+  }
+}
+function updateKPICards(data) {
+  const cards = document.getElementById('kpi-cards');
+  if (!cards) return;
+  
+  const totalAppointments = data.appointments ? data.appointments.reduce((a, b) => a + b, 0) : 0;
+  const totalPermits = data.permits ? data.permits.reduce((a, b) => a + b, 0) : 0;
+  const totalDistribution = data.distribution ? Object.values(data.distribution).reduce((a, b) => a + b, 0) : 0;
+  const totalAlerts = data.diseases ? data.diseases.reduce((sum, d) => sum + d.data.reduce((a, b) => a + b, 0), 0) : 0;
+
+  cards.innerHTML = `
+    ${renderStaticKPICard('Appointments', totalAppointments, '', 'up', '#3b82f6')}
+    ${renderStaticKPICard('Permits Issued', totalPermits, '', 'up', '#22c55e')}
+    ${renderStaticKPICard('Total Services', totalDistribution, '', 'up', '#eab308')}
+    ${renderStaticKPICard('Active Alerts', totalAlerts, '', 'down', '#ef4444')}
+  `;
+}
+
+function initTrendChart(appointments = null, permits = null, requests = null) {
+  const el = document.querySelector('#trendChart');
+  if (!el) return;
+
+  const series = [
+    { name: 'Appointments', data: appointments || [45, 52, 38, 65, 42, 58] },
+    { name: 'Permits', data: permits || [15, 22, 18, 25, 20, 19] },
+    { name: 'Requests', data: requests || [30, 35, 28, 40, 32, 38] }
+  ];
+
+  new ApexCharts(el, {
+    series,
+    chart: { type: 'area', height: 350 },
+    xaxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] },
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
     colors: ['#3b82f6', '#22c55e', '#eab308']
   }).render();
 }
 
+<<<<<<< HEAD
 function initDiseaseChart() {
   const el = document.querySelector('#diseaseTrendChart');
   if (!el) return;
@@ -1200,6 +1332,23 @@ function initDiseaseChart() {
     ],
     chart: { type: 'line', height: 350, animations: { enabled: true } },
     stroke: { width: [3, 3, 3, 2], curve: 'smooth' },
+=======
+function initDiseaseChart(diseaseData = null) {
+  const el = document.querySelector('#diseaseTrendChart');
+  if (!el) return;
+  
+  const series = diseaseData || [
+    { name: 'Dengue', data: [5, 8, 12, 10, 15, 12] },
+    { name: 'Influenza', data: [10, 15, 20, 18, 25, 28] },
+    { name: 'Food Poisoning', data: [2, 3, 5, 4, 3, 3] },
+    { name: 'Leptospirosis', data: [0, 1, 2, 3, 5, 4] }
+  ];
+
+  new ApexCharts(el, {
+    series,
+    chart: { type: 'line', height: 350, animations: { enabled: true } },
+    stroke: { width: 3, curve: 'smooth' },
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
     markers: { size: 4 },
     xaxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] },
     yaxis: { title: { text: 'Number of Cases' } },
@@ -1208,11 +1357,44 @@ function initDiseaseChart() {
   }).render();
 }
 
+<<<<<<< HEAD
+=======
+function initDonutChart(distribution = null) {
+  const el = document.querySelector('#donutChart');
+  if (!el) return;
+
+  const series = distribution 
+    ? [distribution.health, distribution.sanitation, distribution.immunization, distribution.wastewater]
+    : [35, 25, 20, 20];
+
+  new ApexCharts(el, {
+    series,
+    labels: ['Health Center', 'Sanitation', 'Immunization', 'Wastewater'],
+    chart: { type: 'donut', height: 320 },
+    plotOptions: {
+      pie: {
+        donut: {
+          labels: {
+            show: true,
+            total: { show: true, label: 'Total Services' }
+          }
+        }
+      }
+    },
+    legend: { position: 'bottom' },
+    colors: ['#3b82f6', '#22c55e', '#eab308', '#a855f7']
+  }).render();
+}
+
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
 function initHeatmapChart() {
   const el = document.querySelector('#heatmapChart');
   if (!el) return;
   
+<<<<<<< HEAD
   // Generate fake heatmap data
+=======
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
   const hours = ['8AM', '9AM', '10AM', '11AM', '12PM', '1PM', '2PM', '3PM', '4PM', '5PM'];
   const series = days.map(day => ({
@@ -1224,7 +1406,11 @@ function initHeatmapChart() {
   }));
   
   new ApexCharts(el, {
+<<<<<<< HEAD
     series: series,
+=======
+    series,
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
     chart: { type: 'heatmap', height: 350 },
     plotOptions: {
       heatmap: {
@@ -1244,6 +1430,7 @@ function initHeatmapChart() {
   }).render();
 }
 
+<<<<<<< HEAD
 function initDonutChart() {
   const el = document.querySelector('#donutChart');
   if (!el) return;
@@ -1267,11 +1454,14 @@ function initDonutChart() {
   }).render();
 }
 
+=======
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
 function initStaffChart() {
   const el = document.querySelector('#staffChart');
   if (!el) return;
   
   new ApexCharts(el, {
+<<<<<<< HEAD
     series: [{
       name: 'Performance Score',
       data: [94, 91, 88, 85, 82, 78]
@@ -1297,6 +1487,13 @@ function initStaffChart() {
       categories: ['Juan Dela Cruz', 'Ana Reyes', 'Carlos Tan', 'Elena Santos', 'Roberto Silva', 'Jose Mendoza'],
       max: 100
     },
+=======
+    series: [{ name: 'Performance Score', data: [94, 91, 88, 85, 82, 78] }],
+    chart: { type: 'bar', height: 300, animations: { enabled: true } },
+    plotOptions: { bar: { borderRadius: 8, horizontal: true, dataLabels: { position: 'top' } } },
+    dataLabels: { enabled: true, formatter: (val) => val + '%', style: { fontSize: '12px', fontWeight: 'bold' } },
+    xaxis: { categories: ['Juan Dela Cruz', 'Ana Reyes', 'Carlos Tan', 'Elena Santos', 'Roberto Silva', 'Jose Mendoza'], max: 100 },
+>>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
     colors: ['#3b82f6']
   }).render();
 }
