@@ -377,6 +377,34 @@ export function handleAction(action, target) {
         }, 1500);
     }, 500);
 },
+'resolve-violation': async (target) => {
+    const id = target.dataset.id;
+    const response = await fetch('api/admin/updateViolations.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: 'Resolved' })
+    });
+    const data = await response.json();
+    closeModal();
+    showToast({ type: 'success', title: 'Resolved', message: data.message });
+    renderView();
+},
+
+'escalate-violation': async (target) => {
+    const id = target.dataset.id;
+    const response = await fetch('api/admin/updateViolations.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: 'Escalated' })
+    });
+    const data = await response.json();
+    closeModal();
+    showToast({ type: 'warning', title: 'Escalated', message: data.message });
+    renderView();
+},
+'view-violation': (target) => {
+    import('./renderers/compliance.js').then(m => m.showViolationDetail(target.dataset.id));
+},
 'close-modal': () => closeModal(),
     'add-user': () => showAddUserModal(),
     'view-application': (target) => showApplicationDetail(target.dataset.id),

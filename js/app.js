@@ -399,7 +399,7 @@ import {
 } from './utils/dom.js';
 import { showToast } from './utils/toast.js';
 import { openModal, closeModal } from './utils/modal.js';
-import { initComplianceFilters } from './renderers/compliance.js';
+import { initComplianceFilters,loadComplianceData } from './renderers/compliance.js';
 
 import { renderSidebar } from './ui/sidebar.js';
 import { updateHeader } from './ui/header.js';
@@ -410,7 +410,6 @@ import { VIEW_RENDERERS, initHealthCenterCalendar, initAnalyticsCharts, initLogF
 import { initGrowthCharts } from './renderers/immunization/growthCharts.js';
 import { initMaintenanceCalendar } from './renderers/wastewater/maintenanceSchedule.js';
 import { initMappingClustering } from './renderers/surveillance/mappingClustering.js';
-
 
 
 // Make utilities available globally for inline usage
@@ -508,6 +507,27 @@ if (state.view === 'analytics') {
     setTimeout(() => initAnalyticsCharts(), 150);
     setTimeout(() => loadInsights(), 200);
 }
+if (state.view === 'compliance') {
+    setTimeout(() => initComplianceFilters(), 100);
+    
+    // Auto-refresh every 15 seconds
+    window._complianceRefresh = setInterval(async () => {
+        const { loadComplianceData } = await import('./renderers/compliance.js');
+        await loadComplianceData();
+        const main = document.getElementById('main-content');
+        if (main && state.view === 'compliance') {
+            const { renderCompliance } = await import('./renderers/compliance.js');
+            main.innerHTML = renderCompliance();
+            initComplianceFilters();
+        }
+    }, 15000);
+} else {
+    // Clear interval when leaving compliance view
+    if (window._complianceRefresh) {
+        clearInterval(window._complianceRefresh);
+        window._complianceRefresh = null;
+    }
+}
 }
     
 
@@ -534,6 +554,14 @@ export function renderViewPreserveScroll() {
 export function navigateTo(viewId) {
     state.view = viewId;
     closeSidebarMobile();
+    
+    if (viewId === 'compliance') {
+        import('./renderers/compliance.js').then(m => {
+            m.loadComplianceData().then(() => renderView());
+        });
+        return;
+    }
+    
     renderView();
 }
 

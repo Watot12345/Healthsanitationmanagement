@@ -3,24 +3,33 @@
 import { card, icon, renderList, badge, filterData, searchInput } from '../utils/dom.js';
 import { openModal } from '../utils/modal.js';
 
-// ─── Fake Data ──────────────────────────────────────────────────────────────
+// ─── Data ────────────────────────────────────────────────────────────────────
 
-const COMPLIANCE_DATA = [
-  { id: 1, household: 'Pedro Garcia', address: '123 Rizal St.', barangay: 'San Jose', violation: 'Improper waste disposal', type: 'Waste Disposal', risk: 'High', status: 'Open', dueDate: '2026-07-15', repeatOffender: true, score: 34 },
-  { id: 2, household: 'ABC Restaurant', address: '456 Mabini Ave.', barangay: 'Poblacion', violation: 'Food safety violation', type: 'Food Safety', risk: 'Critical', status: 'Escalated', dueDate: '2026-06-30', repeatOffender: true, score: 18 },
-  { id: 3, household: 'Green Market Stall', address: '789 Bonifacio Rd.', barangay: 'San Jose', violation: 'No sanitary permit', type: 'Permit', risk: 'Medium', status: 'Open', dueDate: '2026-07-20', repeatOffender: false, score: 55 },
-  { id: 4, household: 'Carlos Lim', address: '234 Rizal St.', barangay: 'Riverside', violation: 'Septic tank overflow', type: 'Wastewater', risk: 'High', status: 'In Progress', dueDate: '2026-07-05', repeatOffender: false, score: 42 },
-  { id: 5, household: 'Fresh Bakes Co.', address: '567 Mabini Ave.', barangay: 'Poblacion', violation: 'Pest infestation', type: 'Food Safety', risk: 'Critical', status: 'Open', dueDate: '2026-06-28', repeatOffender: true, score: 22 },
-];
+let COMPLIANCE_DATA = [];
+
+export async function loadComplianceData() {
+    try {
+        const response = await fetch('api/admin/getViolations.php');
+        if (response.ok) {
+            const result = await response.json();
+            COMPLIANCE_DATA = (result.data || result).map(v => ({
+                ...v,
+                dueDate: v.due_date,
+                repeatOffender: v.repeat_offender == 1
+            }));
+        }
+    } catch (e) {}
+}
 
 // ─── Summary ────────────────────────────────────────────────────────────────
-
 function getSummary() {
+  if (!COMPLIANCE_DATA.length) {
+    return { total: 0, repeat: 0, critical: 0, avgScore: 0 };
+  }
   const total = COMPLIANCE_DATA.length;
   const repeat = COMPLIANCE_DATA.filter(v => v.repeatOffender).length;
   const critical = COMPLIANCE_DATA.filter(v => v.risk === 'Critical').length;
-  const avgScore = Math.round(COMPLIANCE_DATA.reduce((sum, v) => sum + v.score, 0) / total);
-
+  const avgScore = Math.round(COMPLIANCE_DATA.reduce((sum, v) => sum + (v.score || 0), 0) / total);
   return { total, repeat, critical, avgScore };
 }
 
@@ -57,7 +66,7 @@ const ViolationRow = v => `
 // ─── Detail Modal ────────────────────────────────────────────────────────────
 
 export function showViolationDetail(id) {
-  const v = COMPLIANCE_DATA.find(item => item.id === id);
+  const v = COMPLIANCE_DATA.find(item => item.id == id);
   if (!v) return;
 
   openModal(
@@ -71,7 +80,7 @@ export function showViolationDetail(id) {
           <div><p class="text-xs text-slate-500">Due Date</p><p class="font-medium">${v.dueDate}</p></div>
           <div><p class="text-xs text-slate-500">Risk Level</p>${badge(v.risk)}</div>
           <div><p class="text-xs text-slate-500">Status</p>${badge(v.status)}</div>
-          <div><p class="text-xs text-slate-500">Compliance Score</p><p class="font-medium">${v.score}%</p></div>
+          <div><p class="text-xs text-slate-500">Compliance Score</p><p class="font-medium">${v.score || 0}%</p></div>
           <div><p class="text-xs text-slate-500">Type</p><p class="font-medium">${v.type}</p></div>
         </div>
         <div>
@@ -99,7 +108,14 @@ export function showViolationDetail(id) {
 
 // ─── View ────────────────────────────────────────────────────────────────────
 
-export function renderCompliance() {
+export  function renderCompliance() {
+  if (!COMPLIANCE_DATA.length) {
+    loadComplianceData().then(() => {
+        const main = document.getElementById('main-content');
+        if (main) main.innerHTML = renderCompliance();
+    });
+    return '<div class="text-center py-8 text-slate-500">Loading violations...</div>';
+  }
   const { total, repeat, critical, avgScore } = getSummary();
 
   return `
@@ -154,7 +170,7 @@ export function renderCompliance() {
                 </tr>
               </thead>
               <tbody id="compliance-tbody" class="divide-y divide-slate-200 dark:divide-slate-700">
-                ${renderList(COMPLIANCE_DATA, ViolationRow)}
+                ${COMPLIANCE_DATA.length ? renderList(COMPLIANCE_DATA, ViolationRow) : `<tr><td colspan="8" class="px-4 py-8 text-center text-slate-500">No violations found</td></tr>`}
               </tbody>
             </table>
           </div>
@@ -190,7 +206,6 @@ export function initComplianceFilters() {
     document.getElementById(id)?.addEventListener('change', apply);
   });
 
-  // Clear filters
   document.getElementById('compliance-clear-filters')?.addEventListener('click', () => {
     document.getElementById('compliance-search').value = '';
     document.getElementById('compliance-risk-filter').value = '';
