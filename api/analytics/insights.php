@@ -17,6 +17,19 @@ try {
         exit;
     }
 
+    // ─── CHECK CACHE ──────────────────────────────────────────
+    $stmt = $conn->query("SELECT insights, generated_at FROM ai_insights_cache ORDER BY id DESC LIMIT 1");
+    $cached = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($cached && strtotime($cached['generated_at']) > strtotime('-1 hour')) {
+        echo json_encode([
+            'status' => 'success',
+            'insights' => json_decode($cached['insights'], true)
+        ]);
+        exit;
+    }
+    // ─── END CACHE CHECK ──────────────────────────────────────
+
     $appointments = $conn->query("SELECT COUNT(*) FROM appointments")->fetchColumn();
     $permitsPending = $conn->query("SELECT COUNT(*) FROM permits WHERE status = 'Pending'")->fetchColumn();
     $alertsActive = $conn->query("SELECT COUNT(*) FROM alerts WHERE status = 'Active'")->fetchColumn();
@@ -30,10 +43,7 @@ try {
     ")->fetch(PDO::FETCH_ASSOC);
 
     if (!$topDisease || empty($topDisease['disease'])) {
-        $topDisease = [
-            'disease' => 'None reported',
-            'total' => 0
-        ];
+        $topDisease = ['disease' => 'None reported', 'total' => 0];
     }
 
     $prompt = "
@@ -59,9 +69,7 @@ Instructions:
 
     $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" . $apiKey;
     $payload = [
-        'contents' => [[
-            'parts' => [['text' => $prompt]]
-        ]],
+        'contents' => [['parts' => [['text' => $prompt]]]],
         'generationConfig' => [
             'responseMimeType' => 'application/json',
             'responseSchema' => [
@@ -116,6 +124,11 @@ Instructions:
     curl_close($ch);
 
     if ($response === false || $httpCode >= 400) {
+        // Return cached version if available
+        if ($cached) {
+            echo json_encode(['status' => 'success', 'insights' => json_decode($cached['insights'], true)]);
+            exit;
+        }
         http_response_code(500);
         echo json_encode(['status' => 'error', 'message' => 'AI insights are temporarily unavailable.']);
         exit;
@@ -128,14 +141,10 @@ Instructions:
         $rawText = trim($result['candidates'][0]['content']['parts'][0]['text']);
         if (strpos($rawText, '```json') === 0) {
             $rawText = substr($rawText, 7);
-            if (substr($rawText, -3) === '```') {
-                $rawText = substr($rawText, 0, -3);
-            }
+            if (substr($rawText, -3) === '```') $rawText = substr($rawText, 0, -3);
         } elseif (strpos($rawText, '```') === 0) {
             $rawText = substr($rawText, 3);
-            if (substr($rawText, -3) === '```') {
-                $rawText = substr($rawText, 0, -3);
-            }
+            if (substr($rawText, -3) === '```') $rawText = substr($rawText, 0, -3);
         }
         $rawText = trim($rawText);
         $decodedText = json_decode($rawText, true);
@@ -145,16 +154,15 @@ Instructions:
     }
 
     if ($insights !== null) {
-        echo json_encode([
-            'status' => 'success',
-            'insights' => $insights
-        ]);
+        // Save to cache
+        $conn->exec("DELETE FROM ai_insights_cache");
+        $stmt = $conn->prepare("INSERT INTO ai_insights_cache (insights, generated_at) VALUES (?, NOW())");
+        $stmt->execute([json_encode($insights)]);
+
+        echo json_encode(['status' => 'success', 'insights' => $insights]);
     } else {
         http_response_code(500);
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'AI insights are temporarily unavailable.'
-        ]);
+        echo json_encode(['status' => 'error', 'message' => 'AI insights are temporarily unavailable.']);
     }
 } catch (Exception $e) {
     http_response_code(500);

@@ -58,9 +58,8 @@ export const REPORT_CATEGORIES = [
 ];
 
 // ─── Components ──────────────────────────────────────────────────────────────
-
 const ReportCard = r => card(`
-  <div class="ui-card-body flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer" data-action="generate-report" data-id="${r.id}">
+  <div class="ui-card-body flex items-center justify-between hover:shadow-md transition-shadow">
     <div class="flex items-center gap-3">
       <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-gov-100 dark:bg-gov-900/30 text-gov-600">
         ${icon('document', 'h-5 w-5')}
@@ -70,11 +69,11 @@ const ReportCard = r => card(`
         <p class="text-xs text-slate-500">${r.format}</p>
       </div>
     </div>
-    <div class="flex items-center gap-2">
-      <span class="text-xs text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">Generate</span>
-      <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
-      </svg>
+    <div class="flex items-center gap-1">
+      ${r.format.includes('Excel') || r.format.includes('CSV') ? 
+        `<button data-action="download-report" data-type="${r.id}" data-format="csv" class="px-3 py-1.5 text-xs rounded bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400">Excel/CSV</button>` : ''}
+      ${r.format.includes('PDF') ? 
+        `<button data-action="download-report" data-type="${r.id}" data-format="pdf" class="px-3 py-1.5 text-xs rounded bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400">PDF</button>` : ''}
     </div>
   </div>
 `);

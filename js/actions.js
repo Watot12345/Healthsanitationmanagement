@@ -363,6 +363,20 @@ export function handleAction(action, target) {
 'confirm-add-record': () => { closeModal(); showToast({ type: 'success', title: 'Success', message: 'Medical record added' }); },
 'view-record': (target) => showRecordDetail(target.dataset.id),
 'download-record': () => showToast('Download started (demo)', 'success'),
+'download-report': (target) => {
+    const type = target.dataset.type;
+    const format = target.dataset.format;
+    const url = format === 'pdf' 
+        ? `api/reports/generate_pdf.php?type=${type}`
+        : `api/reports/generate.php?type=${type}&format=csv`;
+    showToast({ type: 'success', title: 'Downloading', message: 'Your report is being generated...' });
+    setTimeout(() => {
+        window.open(url, '_blank');
+        setTimeout(() => {
+            showToast({ type: 'success', title: 'Downloaded', message: 'Report downloaded successfully' });
+        }, 1500);
+    }, 500);
+},
 'close-modal': () => closeModal(),
     'add-user': () => showAddUserModal(),
     'view-application': (target) => showApplicationDetail(target.dataset.id),
