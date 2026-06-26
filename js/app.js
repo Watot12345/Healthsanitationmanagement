@@ -1162,3 +1162,133 @@ function initApp() {
 }
 
 document.addEventListener('DOMContentLoaded', initApp);
+
+// Enhanced Sidebar Functionality
+
+document.addEventListener('DOMContentLoaded', function() {
+  const sidebar = document.getElementById('sidebar');
+  const sidebarIcons = document.getElementById('sidebar-icons');
+  const sidebarToggle = document.getElementById('sidebar-toggle');
+  const sidebarExpandBtn = document.getElementById('sidebar-expand-btn');
+  const menuToggle = document.getElementById('menu-toggle');
+  const mainWrapper = document.getElementById('main-wrapper');
+  const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+  const sidebarTexts = document.querySelectorAll('.sidebar-text');
+
+  let isCollapsed = false;
+
+  // Toggle sidebar collapse/expand on desktop
+  sidebarToggle.addEventListener('click', function() {
+    isCollapsed = !isCollapsed;
+    
+    if (isCollapsed) {
+      collapseSidebar();
+    } else {
+      expandSidebar();
+    }
+  });
+
+  // Expand button in icon view
+  sidebarExpandBtn.addEventListener('click', function() {
+    isCollapsed = false;
+    expandSidebar();
+  });
+
+  // Mobile menu toggle
+  menuToggle.addEventListener('click', function() {
+    sidebar.classList.toggle('open');
+    sidebarBackdrop.classList.toggle('hidden');
+  });
+
+  // Close sidebar when backdrop is clicked
+  sidebarBackdrop.addEventListener('click', function() {
+    sidebar.classList.remove('open');
+    sidebarBackdrop.classList.add('hidden');
+  });
+
+  function collapseSidebar() {
+    sidebar.classList.add('sidebar-collapsed');
+    sidebar.style.display = 'none';
+    sidebarIcons.classList.remove('hidden');
+    mainWrapper.classList.add('sidebar-collapsed');
+    mainWrapper.style.paddingLeft = '0';
+    
+    // Fade out text
+    sidebarTexts.forEach(text => {
+      text.style.opacity = '0';
+      text.style.pointerEvents = 'none';
+    });
+
+    // Save preference
+    localStorage.setItem('sidebarCollapsed', 'true');
+  }
+
+  function expandSidebar() {
+    sidebar.classList.remove('sidebar-collapsed');
+    sidebar.style.display = 'flex';
+    sidebarIcons.classList.add('hidden');
+    mainWrapper.classList.remove('sidebar-collapsed');
+    mainWrapper.style.paddingLeft = '';
+    
+    // Fade in text
+    sidebarTexts.forEach(text => {
+      text.style.opacity = '1';
+      text.style.pointerEvents = 'auto';
+    });
+
+    // Save preference
+    localStorage.setItem('sidebarCollapsed', 'false');
+  }
+
+  // Restore sidebar state from localStorage
+  function restoreSidebarState() {
+    const wasCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    if (wasCollapsed && window.innerWidth >= 1024) {
+      isCollapsed = true;
+      collapseSidebar();
+    }
+  }
+
+  // Restore state on load
+  restoreSidebarState();
+
+  // Handle window resize
+  window.addEventListener('resize', function() {
+    if (window.innerWidth >= 1024) {
+      sidebar.classList.remove('open');
+      sidebarBackdrop.classList.add('hidden');
+    }
+  });
+
+  // Tooltip functionality
+  const sidebarIconButtons = document.querySelectorAll('.sidebar-icons button');
+  sidebarIconButtons.forEach(button => {
+    button.addEventListener('mouseenter', function() {
+      const tooltip = this.querySelector('.sidebar-icon-tooltip');
+      if (tooltip) {
+        tooltip.style.visibility = 'visible';
+        tooltip.style.opacity = '1';
+      }
+    });
+
+    button.addEventListener('mouseleave', function() {
+      const tooltip = this.querySelector('.sidebar-icon-tooltip');
+      if (tooltip) {
+        tooltip.style.visibility = 'hidden';
+        tooltip.style.opacity = '0';
+      }
+    });
+  });
+
+  // Dark mode toggle
+  const darkModeToggle = document.getElementById('dark-mode-toggle');
+  darkModeToggle.addEventListener('click', function() {
+    document.documentElement.classList.toggle('dark');
+    localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+  });
+
+  // Restore dark mode preference
+  if (localStorage.getItem('darkMode') === 'true') {
+    document.documentElement.classList.add('dark');
+  }
+});
