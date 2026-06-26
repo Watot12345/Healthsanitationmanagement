@@ -1214,52 +1214,6 @@ function renderStaticActivityFeed() {
     </div>
   `).join('');
 }
-<<<<<<< HEAD
-
-// Static charts initialization
-export function initAnalyticsCharts() {
-  initTrendChart();
-  initDiseaseChart();
-  initHeatmapChart();
-  initDonutChart();
-  initStaffChart();
-}
-
-function initTrendChart() {
-  const el = document.querySelector('#trendChart');
-  if (!el) return;
-  
-  new ApexCharts(el, {
-    series: [
-      { name: 'Appointments', data: [45, 52, 38, 65, 42, 58] },
-      { name: 'Permits', data: [15, 22, 18, 25, 20, 19] },
-      { name: 'Inspections', data: [30, 35, 28, 40, 32, 38] }
-    ],
-    chart: {
-      type: 'area',
-      height: 350,
-      toolbar: { show: true },
-      animations: { enabled: true, speed: 800 }
-    },
-    dataLabels: { enabled: false },
-    stroke: { curve: 'smooth', width: 2 },
-    fill: {
-      type: 'gradient',
-      gradient: {
-        shadeIntensity: 1,
-        opacityFrom: 0.3,
-        opacityTo: 0.05
-      }
-    },
-    xaxis: {
-      categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
-    },
-    yaxis: {
-      title: { text: 'Number of Requests' }
-    },
-    tooltip: { shared: true },
-    legend: { position: 'top' },
-=======
 export async function initAnalyticsCharts() {
   try {
     const response = await fetch('api/analytics/stats.php');
@@ -1313,26 +1267,10 @@ function initTrendChart(appointments = null, permits = null, requests = null) {
     series,
     chart: { type: 'area', height: 350 },
     xaxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] },
->>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
     colors: ['#3b82f6', '#22c55e', '#eab308']
   }).render();
 }
 
-<<<<<<< HEAD
-function initDiseaseChart() {
-  const el = document.querySelector('#diseaseTrendChart');
-  if (!el) return;
-  
-  new ApexCharts(el, {
-    series: [
-      { name: 'Dengue', data: [5, 8, 12, 10, 15, 12] },
-      { name: 'Influenza', data: [10, 15, 20, 18, 25, 28] },
-      { name: 'Food Poisoning', data: [2, 3, 5, 4, 3, 3] },
-      { name: 'Leptospirosis', data: [0, 1, 2, 3, 5, 4] }
-    ],
-    chart: { type: 'line', height: 350, animations: { enabled: true } },
-    stroke: { width: [3, 3, 3, 2], curve: 'smooth' },
-=======
 function initDiseaseChart(diseaseData = null) {
   const el = document.querySelector('#diseaseTrendChart');
   if (!el) return;
@@ -1348,7 +1286,6 @@ function initDiseaseChart(diseaseData = null) {
     series,
     chart: { type: 'line', height: 350, animations: { enabled: true } },
     stroke: { width: 3, curve: 'smooth' },
->>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
     markers: { size: 4 },
     xaxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] },
     yaxis: { title: { text: 'Number of Cases' } },
@@ -1357,8 +1294,6 @@ function initDiseaseChart(diseaseData = null) {
   }).render();
 }
 
-<<<<<<< HEAD
-=======
 function initDonutChart(distribution = null) {
   const el = document.querySelector('#donutChart');
   if (!el) return;
@@ -1386,15 +1321,10 @@ function initDonutChart(distribution = null) {
   }).render();
 }
 
->>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
 function initHeatmapChart() {
   const el = document.querySelector('#heatmapChart');
   if (!el) return;
   
-<<<<<<< HEAD
-  // Generate fake heatmap data
-=======
->>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
   const hours = ['8AM', '9AM', '10AM', '11AM', '12PM', '1PM', '2PM', '3PM', '4PM', '5PM'];
   const series = days.map(day => ({
@@ -1406,11 +1336,7 @@ function initHeatmapChart() {
   }));
   
   new ApexCharts(el, {
-<<<<<<< HEAD
-    series: series,
-=======
     series,
->>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
     chart: { type: 'heatmap', height: 350 },
     plotOptions: {
       heatmap: {
@@ -1430,70 +1356,16 @@ function initHeatmapChart() {
   }).render();
 }
 
-<<<<<<< HEAD
-function initDonutChart() {
-  const el = document.querySelector('#donutChart');
-  if (!el) return;
-  
-  new ApexCharts(el, {
-    series: [35, 25, 20, 20],
-    labels: ['Health Center', 'Sanitation', 'Immunization', 'Wastewater'],
-    chart: { type: 'donut', height: 320 },
-    plotOptions: {
-      pie: {
-        donut: {
-          labels: {
-            show: true,
-            total: { show: true, label: 'Total Services', formatter: () => '100%' }
-          }
-        }
-      }
-    },
-    legend: { position: 'bottom' },
-    colors: ['#3b82f6', '#22c55e', '#eab308', '#a855f7']
-  }).render();
-}
-
-=======
->>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
 function initStaffChart() {
   const el = document.querySelector('#staffChart');
   if (!el) return;
   
   new ApexCharts(el, {
-<<<<<<< HEAD
-    series: [{
-      name: 'Performance Score',
-      data: [94, 91, 88, 85, 82, 78]
-    }],
-    chart: {
-      type: 'bar',
-      height: 300,
-      animations: { enabled: true }
-    },
-    plotOptions: {
-      bar: {
-        borderRadius: 8,
-        horizontal: true,
-        dataLabels: { position: 'top' }
-      }
-    },
-    dataLabels: {
-      enabled: true,
-      formatter: (val) => val + '%',
-      style: { fontSize: '12px', fontWeight: 'bold' }
-    },
-    xaxis: {
-      categories: ['Juan Dela Cruz', 'Ana Reyes', 'Carlos Tan', 'Elena Santos', 'Roberto Silva', 'Jose Mendoza'],
-      max: 100
-    },
-=======
     series: [{ name: 'Performance Score', data: [94, 91, 88, 85, 82, 78] }],
     chart: { type: 'bar', height: 300, animations: { enabled: true } },
     plotOptions: { bar: { borderRadius: 8, horizontal: true, dataLabels: { position: 'top' } } },
     dataLabels: { enabled: true, formatter: (val) => val + '%', style: { fontSize: '12px', fontWeight: 'bold' } },
     xaxis: { categories: ['Juan Dela Cruz', 'Ana Reyes', 'Carlos Tan', 'Elena Santos', 'Roberto Silva', 'Jose Mendoza'], max: 100 },
->>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
     colors: ['#3b82f6']
   }).render();
 }

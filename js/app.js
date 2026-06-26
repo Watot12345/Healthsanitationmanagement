@@ -80,7 +80,7 @@
  * throughout the renderers. Making them global avoids having to import
  * them in every single renderer file and allows inline usage like:
  * 
- *   `${badge(log.level)}` instead of importing badge everywhere
+ *   ${badge(log.level)} instead of importing badge everywhere
  * 
  * Also exposes window.DATA and window.state for debugging in browser console.
  */
@@ -399,11 +399,7 @@ import {
 } from './utils/dom.js';
 import { showToast } from './utils/toast.js';
 import { openModal, closeModal } from './utils/modal.js';
-<<<<<<< HEAD
-import { initComplianceFilters } from './renderers/compliance.js';
-=======
 import { initComplianceFilters,loadComplianceData } from './renderers/compliance.js';
->>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
 
 import { renderSidebar } from './ui/sidebar.js';
 import { updateHeader } from './ui/header.js';
@@ -416,10 +412,6 @@ import { initMaintenanceCalendar } from './renderers/wastewater/maintenanceSched
 import { initMappingClustering } from './renderers/surveillance/mappingClustering.js';
 
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
 // Make utilities available globally for inline usage
 window.badge = badge;
 window.icon = icon;
@@ -461,7 +453,7 @@ export function renderView() {
     const main = document.getElementById('main-content');
     
     if (state.showLoading) {
-        main.innerHTML = `<div class="space-y-4">${skeletonCards(3)}</div>`;
+        main.innerHTML = <div class="space-y-4">${skeletonCards(3)}</div>;
         state.showLoading = false;
         setTimeout(() => {
             main.innerHTML = renderer ? renderer() : emptyStateIllustrated('View not found', 'The requested page could not be loaded');
@@ -511,8 +503,6 @@ function initCalendarIfNeeded() {
 if (state.view === 'surveillance-mapping') {
   setTimeout(() => initMappingClustering(), 150);
 }
-<<<<<<< HEAD
-=======
 if (state.view === 'analytics') {
     setTimeout(() => initAnalyticsCharts(), 150);
     setTimeout(() => loadInsights(), 200);
@@ -538,7 +528,6 @@ if (state.view === 'compliance') {
         window._complianceRefresh = null;
     }
 }
->>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
 }
     
 
@@ -565,8 +554,6 @@ export function renderViewPreserveScroll() {
 export function navigateTo(viewId) {
     state.view = viewId;
     closeSidebarMobile();
-<<<<<<< HEAD
-=======
     
     if (viewId === 'compliance') {
         import('./renderers/compliance.js').then(m => {
@@ -575,7 +562,6 @@ export function navigateTo(viewId) {
         return;
     }
     
->>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
     renderView();
 }
 
@@ -661,9 +647,9 @@ export function performGlobalSearch(query) {
     });
 
     if (!results.length) {
-        resultsEl.innerHTML = `<div class="p-4 text-sm text-slate-500 text-center">No results for "${query}"</div>`;
+        resultsEl.innerHTML = <div class="p-4 text-sm text-slate-500 text-center">No results for "${query}"</div>;
     } else {
-        resultsEl.innerHTML = results.slice(0, 8).map(r => `
+        resultsEl.innerHTML = results.slice(0, 😎.map(r => `
             <button type="button" data-action="${r.action}" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b border-slate-100 dark:border-slate-700 last:border-0">
                 <div class="flex justify-between items-center"><span class="text-sm font-medium">${r.label}</span>${badge(r.type)}</div>
                 <span class="text-xs text-slate-500">${r.sub}</span>
@@ -791,8 +777,6 @@ async function loadLogs() {
         }
     } catch (e) {}
 }
-<<<<<<< HEAD
-=======
 let insightsLoading = false;
 let insightsRefreshTimer = null;
 let lastAnalyzedTime = null;
@@ -900,7 +884,7 @@ function renderInsightCards(insights) {
             } else {
                 borderClass = 'border-l-4 border-l-emerald-500 shadow-emerald-500/5';
             }
-            badgeHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">${item.level} Risk</span>`;
+            badgeHTML = <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">${item.level} Risk</span>;
         } else if (key === 'action') {
             const prio = (item.priority || 'Medium').toLowerCase();
             if (prio === 'high') {
@@ -910,7 +894,7 @@ function renderInsightCards(insights) {
             } else {
                 borderClass = 'border-l-4 border-l-teal-500 shadow-teal-500/5';
             }
-            badgeHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">${item.priority} Priority</span>`;
+            badgeHTML = <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">${item.priority} Priority</span>;
         }
 
         const cardHTML = `
@@ -946,7 +930,7 @@ function updateLastAnalyzedFooter() {
         const hours = String(lastAnalyzedTime.getHours()).padStart(2, '0');
         const minutes = String(lastAnalyzedTime.getMinutes()).padStart(2, '0');
         const seconds = String(lastAnalyzedTime.getSeconds()).padStart(2, '0');
-        footerTime.textContent = `${hours}:${minutes}:${seconds}`;
+        footerTime.textContent = ${hours}:${minutes}:${seconds};
     }
     
     if (currentTime) {
@@ -999,7 +983,7 @@ async function loadInsights() {
         const response = await fetch('api/analytics/insights.php', { cache: 'no-store' });
         
         if (!response.ok) {
-            throw new Error(`HTTP Error ${response.status}`);
+            throw new Error(HTTP Error ${response.status});
         }
 
         const data = await response.json();
@@ -1048,7 +1032,6 @@ async function loadInsights() {
         setupAutoRefresh();
     }
 }
->>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
 // Initialize app
 function initApp() {
     // Set core functions for actions.js to avoid circular dependencies
@@ -1153,142 +1136,9 @@ function initApp() {
     await loadRecentUpdates();
     await loadUsers();
     await loadLogs();
-<<<<<<< HEAD
-=======
     await loadInsights()
->>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
     renderView();
 });
 }
 
 document.addEventListener('DOMContentLoaded', initApp);
-
-// Enhanced Sidebar Functionality
-
-document.addEventListener('DOMContentLoaded', function() {
-  const sidebar = document.getElementById('sidebar');
-  const sidebarIcons = document.getElementById('sidebar-icons');
-  const sidebarToggle = document.getElementById('sidebar-toggle');
-  const sidebarExpandBtn = document.getElementById('sidebar-expand-btn');
-  const menuToggle = document.getElementById('menu-toggle');
-  const mainWrapper = document.getElementById('main-wrapper');
-  const sidebarBackdrop = document.getElementById('sidebar-backdrop');
-  const sidebarTexts = document.querySelectorAll('.sidebar-text');
-
-  let isCollapsed = false;
-
-  // Toggle sidebar collapse/expand on desktop
-  sidebarToggle.addEventListener('click', function() {
-    isCollapsed = !isCollapsed;
-    
-    if (isCollapsed) {
-      collapseSidebar();
-    } else {
-      expandSidebar();
-    }
-  });
-
-  // Expand button in icon view
-  sidebarExpandBtn.addEventListener('click', function() {
-    isCollapsed = false;
-    expandSidebar();
-  });
-
-  // Mobile menu toggle
-  menuToggle.addEventListener('click', function() {
-    sidebar.classList.toggle('open');
-    sidebarBackdrop.classList.toggle('hidden');
-  });
-
-  // Close sidebar when backdrop is clicked
-  sidebarBackdrop.addEventListener('click', function() {
-    sidebar.classList.remove('open');
-    sidebarBackdrop.classList.add('hidden');
-  });
-
-  function collapseSidebar() {
-    sidebar.classList.add('sidebar-collapsed');
-    sidebar.style.display = 'none';
-    sidebarIcons.classList.remove('hidden');
-    mainWrapper.classList.add('sidebar-collapsed');
-    mainWrapper.style.paddingLeft = '0';
-    
-    // Fade out text
-    sidebarTexts.forEach(text => {
-      text.style.opacity = '0';
-      text.style.pointerEvents = 'none';
-    });
-
-    // Save preference
-    localStorage.setItem('sidebarCollapsed', 'true');
-  }
-
-  function expandSidebar() {
-    sidebar.classList.remove('sidebar-collapsed');
-    sidebar.style.display = 'flex';
-    sidebarIcons.classList.add('hidden');
-    mainWrapper.classList.remove('sidebar-collapsed');
-    mainWrapper.style.paddingLeft = '';
-    
-    // Fade in text
-    sidebarTexts.forEach(text => {
-      text.style.opacity = '1';
-      text.style.pointerEvents = 'auto';
-    });
-
-    // Save preference
-    localStorage.setItem('sidebarCollapsed', 'false');
-  }
-
-  // Restore sidebar state from localStorage
-  function restoreSidebarState() {
-    const wasCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-    if (wasCollapsed && window.innerWidth >= 1024) {
-      isCollapsed = true;
-      collapseSidebar();
-    }
-  }
-
-  // Restore state on load
-  restoreSidebarState();
-
-  // Handle window resize
-  window.addEventListener('resize', function() {
-    if (window.innerWidth >= 1024) {
-      sidebar.classList.remove('open');
-      sidebarBackdrop.classList.add('hidden');
-    }
-  });
-
-  // Tooltip functionality
-  const sidebarIconButtons = document.querySelectorAll('.sidebar-icons button');
-  sidebarIconButtons.forEach(button => {
-    button.addEventListener('mouseenter', function() {
-      const tooltip = this.querySelector('.sidebar-icon-tooltip');
-      if (tooltip) {
-        tooltip.style.visibility = 'visible';
-        tooltip.style.opacity = '1';
-      }
-    });
-
-    button.addEventListener('mouseleave', function() {
-      const tooltip = this.querySelector('.sidebar-icon-tooltip');
-      if (tooltip) {
-        tooltip.style.visibility = 'hidden';
-        tooltip.style.opacity = '0';
-      }
-    });
-  });
-
-  // Dark mode toggle
-  const darkModeToggle = document.getElementById('dark-mode-toggle');
-  darkModeToggle.addEventListener('click', function() {
-    document.documentElement.classList.toggle('dark');
-    localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
-  });
-
-  // Restore dark mode preference
-  if (localStorage.getItem('darkMode') === 'true') {
-    document.documentElement.classList.add('dark');
-  }
-});

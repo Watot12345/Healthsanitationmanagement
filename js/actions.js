@@ -363,8 +363,6 @@ export function handleAction(action, target) {
 'confirm-add-record': () => { closeModal(); showToast({ type: 'success', title: 'Success', message: 'Medical record added' }); },
 'view-record': (target) => showRecordDetail(target.dataset.id),
 'download-record': () => showToast('Download started (demo)', 'success'),
-<<<<<<< HEAD
-=======
 'download-report': (target) => {
     const type = target.dataset.type;
     const format = target.dataset.format;
@@ -407,7 +405,6 @@ export function handleAction(action, target) {
 'view-violation': (target) => {
     import('./renderers/compliance.js').then(m => m.showViolationDetail(target.dataset.id));
 },
->>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
 'close-modal': () => closeModal(),
     'add-user': () => showAddUserModal(),
     'view-application': (target) => showApplicationDetail(target.dataset.id),
