@@ -71,7 +71,7 @@ const ReportCard = r => card(`
     </div>
     <div class="flex items-center gap-1">
       ${r.format.includes('Excel') || r.format.includes('CSV') ? 
-        `<button data-action="download-report" data-type="${r.id}" data-format="csv" class="px-3 py-1.5 text-xs rounded bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400">Excel/CSV</button>` : ''}
+        `<button data-action="download-report" data-type="${r.id}" data-format="csv" class="px-3 py-1.5 text-xs rounded bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400">Excel</button>` : ''}
       ${r.format.includes('PDF') ? 
         `<button data-action="download-report" data-type="${r.id}" data-format="pdf" class="px-3 py-1.5 text-xs rounded bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400">PDF</button>` : ''}
     </div>
