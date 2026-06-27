@@ -204,7 +204,7 @@ const status = document.getElementById('edit-user-status').value;
         // Download after short delay
         setTimeout(() => {
             closeModal();
-            window.open(`api/reports/generate_pdf.php?type=${type}`, '_blank');
+            window.open(`api/reports/generate_ai_report.php?type=${type}`, '_blank');
             showToast({ type: 'success', title: 'Downloaded', message: 'AI report generated successfully' });
         }, 3000);
         return;

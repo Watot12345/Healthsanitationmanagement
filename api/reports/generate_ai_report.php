@@ -1,5 +1,8 @@
 <?php
+error_reporting(E_ALL & ~E_DEPRECATED);
+ini_set('display_errors', 0);
 session_start();
+
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/tcpdf/tcpdf.php';
 
@@ -23,21 +26,26 @@ foreach ($topDisease as $d) {
     $diseases .= "{$d['disease']}: {$d['total']} cases, ";
 }
 
-// ─── CHECK CACHE ──────────────────────────────────────────
-$cacheKey = md5($appointments . $permitsPending . $alertsActive . $violations . $diseases);
-$stmt = $conn->prepare("SELECT report_text, generated_at FROM ai_report_cache WHERE cache_key = ? ORDER BY id DESC LIMIT 1");
-$stmt->execute([$cacheKey]);
-$cached = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if ($cached && strtotime($cached['generated_at']) > strtotime('-30 minutes')) {
-    $aiText = $cached['report_text'];
-} else {
-    $prompt = "Generate a professional executive summary report for a Municipal Health & Sanitation Department. 
+$prompt = "Generate a professional executive summary report for a Municipal Health & Sanitation Department. 
 Stats: $appointments appointments, $permitsPending pending permits, $alertsActive active alerts, $violations unresolved violations.
 Top diseases: $diseases.
 Include: 1) Overview 2) Key Findings 3) Risk Assessment 4) Recommendations. Keep under 300 words.";
 
-    $ch = curl_init("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey");
+// Try multiple models with fallback
+$models = [
+    'gemini-2.5-flash',
+    'gemini-2.5-flash-lite',
+    'gemini-3-flash',
+    'gemini-3.1-flash-lite',
+    'gemini-3.5-flash',
+];
+
+$aiText = null;
+
+foreach ($models as $model) {
+    $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=$apiKey";
+    
+    $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['contents' => [['parts' => [['text' => $prompt]]]]]));
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
@@ -46,19 +54,17 @@ Include: 1) Overview 2) Key Findings 3) Risk Assessment 4) Recommendations. Keep
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
     $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
-    $result = json_decode($response, true);
-    $aiText = $result['candidates'][0]['content']['parts'][0]['text'] ?? 'Report generation failed.';
-    
-    // Save to cache
-    if ($aiText !== 'Report generation failed.') {
-        $conn->exec("DELETE FROM ai_report_cache WHERE cache_key = '$cacheKey'");
-        $stmt = $conn->prepare("INSERT INTO ai_report_cache (cache_key, report_text, generated_at) VALUES (?, ?, NOW())");
-        $stmt->execute([$cacheKey, $aiText]);
+    if ($httpCode === 200) {
+        $result = json_decode($response, true);
+        $aiText = $result['candidates'][0]['content']['parts'][0]['text'] ?? null;
+        if ($aiText) break;
     }
 }
-// ─── END CACHE ────────────────────────────────────────────
+
+$aiText = $aiText ?? 'AI report generation is temporarily unavailable. Please try again later.';
 
 // Generate PDF with AI content
 $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
