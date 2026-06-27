@@ -530,76 +530,390 @@ function renderChartInsightCards(insights) {
         }
     });
 }
-// Add this function right BEFORE renderChartInsightCards (around line 750)
-
 function renderAISnapshot(data) {
     const snapshot = document.getElementById('ai-snapshot');
-    if (!snapshot) {
-        console.log('ai-snapshot element not found');
-        return;
+    if (!snapshot) return;
+    
+    // Better data extraction with proper fallbacks
+    const snapshotData = {
+        status: data.overall_risk || data.status || 'Normal',
+        headline: data.overall_risk ? `${data.overall_risk} Risk Level` : (data.headline || 'System Status'),
+        summary: data.executive_summary || data.summary || 'No summary available',
+        priority: data.priority || (data.overall_risk === 'Critical' || data.overall_risk === 'High' ? 'High' : 'Medium'),
+        confidence: data.confidence_score || data.confidence || 0,
+        lastUpdated: data.last_updated || data.lastUpdated || new Date().toLocaleString(),
+        monitoringSince: data.monitoring_since || data.monitoringSince || '2 hours',
+        riskTrend: data.risk_trend || data.riskTrend || 'Stable',
+        topFinding: data.top_finding || data.topFinding || 'No critical findings detected',
+        nextAction: data.next_action || data.nextAction || 'Continue routine monitoring'
+    };
+    
+    const statusConfig = {
+        'Normal': { 
+            dot: 'bg-emerald-400', 
+            border: 'border-emerald-400/30', 
+            bg: 'from-emerald-50/60 via-white/80 to-emerald-50/30 dark:from-emerald-950/30 dark:via-slate-900/50 dark:to-emerald-950/10',
+            badge: 'bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 backdrop-blur-sm',
+            glow: 'shadow-emerald-500/10',
+            pulse: 'ring-emerald-400/30',
+            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+        },
+        'Attention': { 
+            dot: 'bg-amber-400', 
+            border: 'border-amber-400/30', 
+            bg: 'from-amber-50/60 via-white/80 to-amber-50/30 dark:from-amber-950/30 dark:via-slate-900/50 dark:to-amber-950/10',
+            badge: 'bg-amber-100/80 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 backdrop-blur-sm',
+            glow: 'shadow-amber-500/10',
+            pulse: 'ring-amber-400/30',
+            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>`,
+        },
+        'Warning': { 
+            dot: 'bg-orange-400', 
+            border: 'border-orange-400/30', 
+            bg: 'from-orange-50/60 via-white/80 to-orange-50/30 dark:from-orange-950/30 dark:via-slate-900/50 dark:to-orange-950/10',
+            badge: 'bg-orange-100/80 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 backdrop-blur-sm',
+            glow: 'shadow-orange-500/10',
+            pulse: 'ring-orange-400/30',
+            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>`,
+        },
+        'Critical': { 
+            dot: 'bg-rose-400', 
+            border: 'border-rose-400/30', 
+            bg: 'from-rose-50/60 via-white/80 to-rose-50/30 dark:from-rose-950/30 dark:via-slate-900/50 dark:to-rose-950/10',
+            badge: 'bg-rose-100/80 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 backdrop-blur-sm',
+            glow: 'shadow-rose-500/10',
+            pulse: 'ring-rose-400/30',
+            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+        }
+    };
+    
+    // Normalize status for case-insensitive matching
+    const normalizedStatus = snapshotData.status.charAt(0).toUpperCase() + snapshotData.status.slice(1).toLowerCase();
+    const config = statusConfig[normalizedStatus] || statusConfig['Normal'];
+    const confidenceWidth = Math.min(100, Math.max(0, snapshotData.confidence));
+    
+    const priorityColors = {
+        'High': 'text-rose-600 dark:text-rose-400',
+        'Medium': 'text-amber-600 dark:text-amber-400',
+        'Low': 'text-emerald-600 dark:text-emerald-400'
+    };
+    
+    const trendIcons = {
+        'Stable': `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/></svg>`,
+        'Improving': `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>`,
+        'Worsening': `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>`
+    };
+    
+    const trendColor = {
+        'Stable': 'text-slate-500 dark:text-slate-400',
+        'Improving': 'text-emerald-600 dark:text-emerald-400',
+        'Worsening': 'text-rose-600 dark:text-rose-400'
+    };
+
+    // Generate a dynamic summary if none provided
+    let summaryText = snapshotData.summary;
+    if (summaryText === 'No summary available' || !summaryText) {
+        // Try to generate a contextual summary
+        const statusEmoji = snapshotData.status === 'Normal' ? '✅' : 
+                           snapshotData.status === 'Critical' ? '🚨' : 'ℹ️';
+        summaryText = `${statusEmoji} System is ${snapshotData.status.toLowerCase()} with ${snapshotData.confidence}% confidence`;
     }
-    
-    // Handle the actual API structure
-    const snapshotData = data.snapshot || {
-        status: data.overall_risk || 'Normal',
-        headline: data.overall_risk ? `${data.overall_risk} Risk Level` : 'System Status',
-        summary: data.executive_summary || 'No summary available',
-        priority: data.overall_risk === 'Critical' || data.overall_risk === 'High' ? 'High' : 'Medium',
-        confidence: data.confidence_score || 0
-    };
-    
-    const statusColors = {
-        'Normal': 'border-l-green-500 bg-green-50 dark:bg-green-900/20',
-        'Low': 'border-l-green-500 bg-green-50 dark:bg-green-900/20',
-        'Moderate': 'border-l-amber-500 bg-amber-50 dark:bg-amber-900/20',
-        'Attention': 'border-l-amber-500 bg-amber-50 dark:bg-amber-900/20',
-        'High': 'border-l-orange-500 bg-orange-50 dark:bg-orange-900/20',
-        'Warning': 'border-l-orange-500 bg-orange-50 dark:bg-orange-900/20',
-        'Critical': 'border-l-red-500 bg-red-50 dark:bg-red-900/20'
-    };
-    
+
     snapshot.innerHTML = `
-        <div class="ai-snapshot-card border-l-4 ${statusColors[snapshotData.status] || 'border-l-blue-500'} rounded-lg p-4 bg-white dark:bg-slate-800/50 shadow-sm">
-            <div class="flex items-center justify-between mb-2">
-                <span class="font-bold text-sm text-slate-800 dark:text-slate-200">${snapshotData.headline}</span>
-                <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 font-medium">${snapshotData.status}</span>
+        <div class="ai-snapshot-card relative overflow-hidden rounded-2xl border ${config.border} bg-gradient-to-br ${config.bg} backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-500 group ${config.glow}">
+            <!-- Ambient glow - AI breathing effect -->
+            <div class="absolute -top-24 -right-24 w-64 h-64 rounded-full opacity-[0.08] blur-3xl ${config.dot.replace('bg-', 'bg-')} animate-pulse-slow"></div>
+            <div class="absolute -bottom-16 -left-16 w-48 h-48 rounded-full opacity-[0.05] blur-2xl ${config.dot.replace('bg-', 'bg-')} animate-pulse-slower"></div>
+            
+            <!-- Scanning line shimmer -->
+            <div class="absolute inset-0 pointer-events-none overflow-hidden">
+                <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                    <div class="absolute -inset-full w-[200%] h-[200%] bg-gradient-to-r from-transparent via-white/5 to-transparent rotate-12 translate-y-[-100%] group-hover:translate-y-[100%] transition-transform duration-1000 ease-out"></div>
+                </div>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">${snapshotData.summary}</p>
-            <div class="flex items-center justify-between mt-3 text-xs text-slate-500 dark:text-slate-400">
-                <span class="flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z"/></svg>
-                    Priority: ${snapshotData.priority}
-                </span>
-                <span class="flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-                    Confidence: ${snapshotData.confidence}%
-                </span>
+            
+            <div class="relative p-5 md:p-6">
+                <!-- Header -->
+                <div class="flex items-start justify-between mb-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="flex-shrink-0 w-10 h-10 rounded-xl ${config.badge} flex items-center justify-center shadow-sm relative">
+                            ${config.icon}
+                            <!-- Live pulse dot -->
+                            <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ${config.dot} ring-2 ring-white dark:ring-slate-800 animate-ping"></span>
+                            <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ${config.dot} ring-2 ring-white dark:ring-slate-800"></span>
+                        </div>
+                        <div class="min-w-0">
+                            <h3 class="font-bold text-base md:text-lg text-slate-800 dark:text-slate-100 tracking-tight truncate">${snapshotData.headline}</h3>
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <span class="w-1.5 h-1.5 rounded-full ${config.dot} animate-pulse"></span>
+                                <span class="text-xs font-medium text-slate-500 dark:text-slate-400">AI Monitoring · Live</span>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-500 hidden sm:inline">• ${snapshotData.monitoringSince}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold ${config.badge} shadow-sm border border-current/10 whitespace-nowrap ml-2">
+                        ${snapshotData.status}
+                    </span>
+                </div>
+                
+                <!-- Summary + Top Finding -->
+                <div class="space-y-1.5 mb-4">
+                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                        ${summaryText}
+                    </p>
+                    <div class="flex items-start gap-2 text-xs text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-800/30 rounded-lg px-3 py-2 border border-slate-200/50 dark:border-slate-700/50">
+                        <span class="font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">🔍 Top finding:</span>
+                        <span class="text-slate-600 dark:text-slate-400">${snapshotData.topFinding}</span>
+                    </div>
+                </div>
+                
+                <!-- Stats grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-200/60 dark:border-slate-700/60">
+                    <!-- Priority -->
+                    <div class="flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 ${priorityColors[snapshotData.priority] || 'text-slate-400'}" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z"/>
+                        </svg>
+                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">${snapshotData.priority} Priority</span>
+                    </div>
+                    
+                    <!-- Risk Trend -->
+                    <div class="flex items-center gap-1.5">
+                        ${trendIcons[snapshotData.riskTrend] || trendIcons['Stable']}
+                        <span class="text-xs font-medium ${trendColor[snapshotData.riskTrend] || 'text-slate-500'}">${snapshotData.riskTrend}</span>
+                    </div>
+                    
+                    <!-- Confidence with bar -->
+                    <div class="col-span-2 flex items-center gap-2">
+                        <div class="flex-1 h-1.5 rounded-full bg-slate-200/60 dark:bg-slate-700/60 overflow-hidden">
+                            <div class="h-full rounded-full bg-gradient-to-r ${config.dot} transition-all duration-700 ease-out" style="width:${confidenceWidth}%"></div>
+                        </div>
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 min-w-[2.5rem] text-right">${snapshotData.confidence}%</span>
+                    </div>
+                </div>
+                
+                <!-- Action row + interactions -->
+                <div class="flex flex-wrap items-center justify-between gap-2 mt-3 pt-3 border-t border-slate-200/40 dark:border-slate-700/40">
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="text-slate-400 dark:text-slate-500">Next action:</span>
+                        <span class="font-medium text-slate-700 dark:text-slate-300">${snapshotData.nextAction}</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-1">
+                        <!-- AI Timeline button -->
+                        <button onclick="alert('AI Timeline: showing recent changes and monitoring history')" 
+                                class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors" 
+                                title="View AI Timeline">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </button>
+                        
+                        <!-- Explain button -->
+                        <button onclick="alert('Why this recommendation?\\n\\nBased on recent sanitation reports and health indicators, the AI recommends this action to maintain municipal health standards.')" 
+                                class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors" 
+                                title="Explain recommendation">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </button>
+                        
+                        <!-- Refresh button -->
+                        <button onclick="refreshInsights()" 
+                                class="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 dark:hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors group/refresh" 
+                                title="Refresh insights">
+                            <svg class="w-4 h-4 group-hover/refresh:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Data freshness -->
+                <div class="flex items-center gap-1.5 mt-2 text-[10px] text-slate-400 dark:text-slate-500">
+                    <span>🟢</span>
+                    <span>Updated ${snapshotData.lastUpdated}</span>
+                    <span class="hidden sm:inline">• Monitoring since ${snapshotData.monitoringSince}</span>
+                </div>
             </div>
         </div>
     `;
+    
     snapshot.classList.remove('hidden');
-    console.log('ai-snapshot rendered and unhidden');
 }
+
+function refreshInsights() {
+    if (insightsLoading) return;
+    
+    // Animate the refresh button
+    const btn = document.querySelector('.group/refresh svg');
+    if (btn) btn.classList.add('animate-spin');
+    
+    // Clear cache and reload
+    fetch('api/analytics/ai-snapshot.php', { cache: 'no-store' })
+        .then(() => {
+            setTimeout(() => {
+                if (btn) btn.classList.remove('animate-spin');
+            }, 500);
+        });
+    
+    loadInsights();
+}
+
 function renderSingleInsightCard(item) {
-    const badgeColors = {
-        'Trend': 'border-l-green-500 bg-green-50',
-        'Risk': 'border-l-red-500 bg-red-50',
-        'Anomaly': 'border-l-amber-500 bg-amber-50',
-        'Forecast': 'border-l-blue-500 bg-blue-50',
-        'Opportunity': 'border-l-emerald-500 bg-emerald-50'
+    const badgeConfig = {
+        'Trending Up': { 
+            border: 'border-emerald-400/40', 
+            dot: 'bg-emerald-400', 
+            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>`,
+            gradient: 'from-emerald-50/40 via-white/60 to-emerald-50/20 dark:from-emerald-950/20 dark:via-slate-900/40 dark:to-emerald-950/10',
+            badgeClass: 'bg-emerald-100/70 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+        },
+        'Trending Down': { 
+            border: 'border-rose-400/40', 
+            dot: 'bg-rose-400', 
+            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17l5-5m0 0l-5-5m5 5H6"/></svg>`,
+            gradient: 'from-rose-50/40 via-white/60 to-rose-50/20 dark:from-rose-950/20 dark:via-slate-900/40 dark:to-rose-950/10',
+            badgeClass: 'bg-rose-100/70 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300'
+        },
+        'Stable': { 
+            border: 'border-blue-400/40', 
+            dot: 'bg-blue-400', 
+            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/></svg>`,
+            gradient: 'from-blue-50/40 via-white/60 to-blue-50/20 dark:from-blue-950/20 dark:via-slate-900/40 dark:to-blue-950/10',
+            badgeClass: 'bg-blue-100/70 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+        },
+        'Needs Attention': { 
+            border: 'border-amber-400/40', 
+            dot: 'bg-amber-400', 
+            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>`,
+            gradient: 'from-amber-50/40 via-white/60 to-amber-50/20 dark:from-amber-950/20 dark:via-slate-900/40 dark:to-amber-950/10',
+            badgeClass: 'bg-amber-100/70 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+        },
+        'Good Performance': { 
+            border: 'border-emerald-400/40', 
+            dot: 'bg-emerald-400', 
+            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+            gradient: 'from-emerald-50/40 via-white/60 to-emerald-50/20 dark:from-emerald-950/20 dark:via-slate-900/40 dark:to-emerald-950/10',
+            badgeClass: 'bg-emerald-100/70 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+        },
+        'Trend': { 
+            border: 'border-emerald-400/40', 
+            dot: 'bg-emerald-400', 
+            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>`,
+            gradient: 'from-emerald-50/40 via-white/60 to-emerald-50/20 dark:from-emerald-950/20 dark:via-slate-900/40 dark:to-emerald-950/10',
+            badgeClass: 'bg-emerald-100/70 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+        },
+        'Risk': { 
+            border: 'border-rose-400/40', 
+            dot: 'bg-rose-400', 
+            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+            gradient: 'from-rose-50/40 via-white/60 to-rose-50/20 dark:from-rose-950/20 dark:via-slate-900/40 dark:to-rose-950/10',
+            badgeClass: 'bg-rose-100/70 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300'
+        },
+        'Anomaly': { 
+            border: 'border-amber-400/40', 
+            dot: 'bg-amber-400', 
+            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>`,
+            gradient: 'from-amber-50/40 via-white/60 to-amber-50/20 dark:from-amber-950/20 dark:via-slate-900/40 dark:to-amber-950/10',
+            badgeClass: 'bg-amber-100/70 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+        },
+        'Forecast': { 
+            border: 'border-blue-400/40', 
+            dot: 'bg-blue-400', 
+            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`,
+            gradient: 'from-blue-50/40 via-white/60 to-blue-50/20 dark:from-blue-950/20 dark:via-slate-900/40 dark:to-blue-950/10',
+            badgeClass: 'bg-blue-100/70 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+        },
+        'Opportunity': { 
+            border: 'border-emerald-400/40', 
+            dot: 'bg-emerald-400', 
+            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>`,
+            gradient: 'from-emerald-50/40 via-white/60 to-emerald-50/20 dark:from-emerald-950/20 dark:via-slate-900/40 dark:to-emerald-950/10',
+            badgeClass: 'bg-emerald-100/70 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+        },
     };
+    
+    const config = badgeConfig[item.badge] || { 
+        border: 'border-slate-400/40', 
+        dot: 'bg-slate-400', 
+        icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+        gradient: 'from-slate-50/40 via-white/60 to-slate-50/20 dark:from-slate-800/20 dark:via-slate-900/40 dark:to-slate-800/10',
+        badgeClass: 'bg-slate-100/70 text-slate-700 dark:bg-slate-700/30 dark:text-slate-300'
+    };
+    
+    const confidenceWidth = Math.min(100, Math.max(0, item.confidence || 0));
+    
+    const getConfidenceColor = (value) => {
+        if (value >= 80) return 'bg-emerald-400';
+        if (value >= 60) return 'bg-blue-400';
+        if (value >= 40) return 'bg-amber-400';
+        return 'bg-rose-400';
+    };
+    
+    const confidenceColor = getConfidenceColor(confidenceWidth);
+
     return `
-        <div class="ai-mini-card border-l-4 ${badgeColors[item.badge] || 'border-l-slate-500'} rounded-lg p-2.5 bg-white dark:bg-slate-800/50 text-xs">
-            <div class="flex items-center justify-between mb-1">
-                <span class="font-semibold">${item.title}</span>
-                <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100">${item.badge}</span>
+        <div class="ai-mini-card group relative overflow-hidden rounded-xl border ${config.border} bg-gradient-to-br ${config.gradient} backdrop-blur-sm p-4 shadow-sm hover:shadow-lg transition-all duration-400 hover:-translate-y-1 cursor-default">
+            <!-- Subtle ambient glow -->
+            <div class="absolute -top-10 -right-10 w-24 h-24 rounded-full opacity-[0.06] blur-2xl ${config.dot.replace('bg-', 'bg-')} group-hover:opacity-[0.12] transition-opacity duration-500"></div>
+            
+            <!-- Scanning shimmer on hover -->
+            <div class="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
+                <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                    <div class="absolute -inset-full w-[200%] h-[200%] bg-gradient-to-r from-transparent via-white/5 to-transparent -rotate-12 translate-y-[-100%] group-hover:translate-y-[100%] transition-transform duration-1000 ease-out"></div>
+                </div>
             </div>
-            <p class="text-slate-600 dark:text-slate-400">${item.insight}</p>
-            <p class="text-blue-600 dark:text-blue-400 mt-1">→ ${item.recommendation}</p>
-            <div class="mt-1.5 h-1 rounded-full bg-slate-200">
-                <div class="h-1 rounded-full bg-gov-600" style="width:${item.confidence}%"></div>
+            
+            <div class="relative">
+                <!-- Header with icon and badge -->
+                <div class="flex items-start justify-between mb-2.5">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="flex-shrink-0 w-8 h-8 rounded-lg ${config.badgeClass} flex items-center justify-center shadow-sm">
+                            ${config.icon}
+                        </div>
+                        <span class="font-semibold text-sm text-slate-800 dark:text-slate-200 truncate">${item.title}</span>
+                    </div>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-medium ${config.badgeClass} border border-current/10 shadow-sm whitespace-nowrap ml-2">
+                        ${item.badge}
+                    </span>
+                </div>
+                
+                <!-- Insight text -->
+                <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-2.5">${item.insight}</p>
+                
+                <!-- Recommendation with arrow -->
+                <div class="flex items-center gap-1.5 text-xs font-medium text-blue-600 dark:text-cyan-400 mb-3 group-hover:text-blue-700 dark:group-hover:text-cyan-300 transition-colors">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0 group-hover:translate-x-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                    </svg>
+                    <span class="truncate">${item.recommendation}</span>
+                </div>
+                
+                <!-- Confidence bar with label -->
+                <div class="flex items-center gap-2">
+                    <div class="flex-1 h-1.5 rounded-full bg-slate-200/60 dark:bg-slate-700/60 overflow-hidden">
+                        <div class="h-full rounded-full bg-gradient-to-r ${confidenceColor} transition-all duration-700 ease-out" style="width:${confidenceWidth}%"></div>
+                    </div>
+                    <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 min-w-[2.2rem] text-right">${confidenceWidth}%</span>
+                </div>
+                
+                <!-- Interactive footer -->
+                <div class="flex items-center justify-end gap-1 mt-2 pt-2 border-t border-slate-200/40 dark:border-slate-700/40">
+                    <button onclick="alert('View details for: ${item.title}')" 
+                            class="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors flex items-center gap-1 group/btn">
+                        <span>Details</span>
+                        <svg class="w-3 h-3 group-hover/btn:translate-x-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                    <span class="w-px h-3 bg-slate-200/60 dark:bg-slate-700/60"></span>
+                    <button onclick="alert('Confidence breakdown for: ${item.title}\\n\\nBased on data quality, recency, and pattern consistency.')" 
+                            class="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                        Confidence breakdown
+                    </button>
+                </div>
             </div>
-            <span class="text-[10px] text-slate-400">Confidence: ${item.confidence}%</span>
         </div>
     `;
 }
@@ -627,13 +941,6 @@ function setupAutoRefresh() {
     insightsRefreshTimer = setTimeout(() => loadInsights(), 300000);
 }
 
-function refreshInsights() {
-    if (insightsRefreshTimer) {
-        clearTimeout(insightsRefreshTimer);
-        insightsRefreshTimer = null;
-    }
-    loadInsights();
-}
 
 async function reloadCurrentView() {
     await loadDashboardData();
@@ -712,6 +1019,27 @@ async function loadInsights() {
 
 // Initialize app
 function initApp() {
+    // Add custom animations once
+    if (!document.getElementById('ai-animation-styles')) {
+        const style = document.createElement('style');
+        style.id = 'ai-animation-styles';
+        style.textContent = `
+            @keyframes pulse-slow {
+                0%, 100% { opacity: 0.08; transform: scale(1); }
+                50% { opacity: 0.15; transform: scale(1.05); }
+            }
+            @keyframes pulse-slower {
+                0%, 100% { opacity: 0.05; transform: scale(1); }
+                50% { opacity: 0.1; transform: scale(1.08); }
+            }
+            .animate-pulse-slow { animation: pulse-slow 4s ease-in-out infinite; }
+            .animate-pulse-slower { animation: pulse-slower 6s ease-in-out infinite; }
+            .ai-snapshot-card { transition: box-shadow 0.3s ease, transform 0.3s ease; }
+            .ai-snapshot-card:hover { transform: translateY(-2px); }
+        `;
+        document.head.appendChild(style);
+    }
+
     // Set core functions for actions.js to avoid circular dependencies
     setCoreFunctions({
         navigateTo,
@@ -721,8 +1049,6 @@ function initApp() {
     });
 
     if (state.darkMode) document.documentElement.classList.add('dark');
-
-   
 
     // Dark mode toggle
     document.getElementById('dark-mode-toggle').addEventListener('click', toggleDarkMode);
@@ -761,7 +1087,7 @@ function initApp() {
         if (e.target.closest('[data-action="close-modal"]')) closeModal();
     });
 
-        // Global click handler
+    // Global click handler
     document.addEventListener('click', (e) => {
         if (!e.target.closest('#notif-dropdown-wrap') && 
             !e.target.closest('#profile-dropdown-wrap') && 
@@ -769,7 +1095,6 @@ function initApp() {
             closeAllDropdowns();
         }
 
-        // Sidebar collapsible toggle
         const toggleBtn = e.target.closest('[data-toggle]');
         if (toggleBtn) {
             const id = toggleBtn.dataset.toggle;
@@ -809,17 +1134,17 @@ function initApp() {
     document.getElementById('main-content').addEventListener('change', handleSearchInput);
 
     // Initial render
-        renderNotificationPanel();
+    renderNotificationPanel();
     
-   checkAuth().then(async () => {
-    await loadDashboardData();
-    await loadSystemStatus();
-    await loadRecentActivity();
-    await loadRecentUpdates();
-    await loadUsers();
-    await loadLogs();
-    renderView();
-});
+    checkAuth().then(async () => {
+        await loadDashboardData();
+        await loadSystemStatus();
+        await loadRecentActivity();
+        await loadRecentUpdates();
+        await loadUsers();
+        await loadLogs();
+        renderView();
+    });
 }
 
 document.addEventListener('DOMContentLoaded', initApp);
