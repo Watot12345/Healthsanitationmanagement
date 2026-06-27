@@ -94,15 +94,16 @@ function initCalendarIfNeeded() {
     if (state.view === 'health-center') {
         setTimeout(() => initHealthCenterCalendar(), 100);
     } else if (state.view === 'analytics') {
+        console.log('ANALYTICS VIEW - calling insights');
         setTimeout(() => {
             initAnalyticsCharts();
+            console.log('Calling loadInsights now');
             loadInsights();
         }, 150);
     } else if (state.view === 'logs') {
         setTimeout(() => initLogFilters(), 100);
     } else if (state.view === 'compliance') {
         setTimeout(() => initComplianceFilters(), 100);
-        // Auto-refresh every 15 seconds
         window._complianceRefresh = setInterval(async () => {
             const { loadComplianceData } = await import('./renderers/compliance.js');
             await loadComplianceData();
@@ -121,10 +122,7 @@ function initCalendarIfNeeded() {
         setTimeout(() => initMappingClustering(), 150);
     }
 
-    setTimeout(() => initAiFormAutoFill(), 80);
-
     if (state.view === 'compliance') {
-        // Clear compliance refresh when leaving compliance view
         if (window._complianceRefresh) {
             clearInterval(window._complianceRefresh);
             window._complianceRefresh = null;
@@ -497,44 +495,6 @@ function normalizeInsightPayload(data) {
     return data;
 }
 
-async function loadActionSuggestions() {
-    const target = document.getElementById('ai-insights');
-    if (!target) return;
-
-    try {
-        const response = await fetch('api/ai/action-suggestions.php', { cache: 'no-store' });
-        if (!response.ok) return;
-        const data = await response.json();
-        if (!data || data.status !== 'success' || !Array.isArray(data.suggestions)) return;
-
-        const existing = target.querySelector('[data-ai-suggestions]');
-        if (existing) existing.remove();
-
-        const html = `
-            <div data-ai-suggestions class="mt-3 pt-2 border-t border-white/10 dark:border-slate-800/20">
-                <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-2 flex items-center gap-1.5">
-                    <span>🤖</span> Suggested Next Actions
-                </div>
-                <div class="space-y-2">
-                    ${data.suggestions.map((item) => `
-                        <div class="p-2.5 rounded-xl border border-emerald-500/10 bg-emerald-500/5 dark:bg-emerald-500/10">
-                            <div class="flex items-center justify-between gap-2 mb-1">
-                                <div class="text-xs font-semibold text-slate-700 dark:text-slate-200">${item.title}</div>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${item.priority === 'High' ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' : item.priority === 'Medium' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'}">${item.priority}</span>
-                            </div>
-                            <div class="text-[11px] text-slate-600 dark:text-slate-300">${item.detail}</div>
-                            <div class="text-[10px] text-slate-500 mt-1">Module: ${item.module}</div>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        `;
-
-        target.insertAdjacentHTML('beforeend', html);
-    } catch (e) {
-        console.warn('Unable to load AI action suggestions:', e);
-    }
-}
 
 function getPriorityBadge(priority) {
     const base = 'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider';
@@ -542,379 +502,106 @@ function getPriorityBadge(priority) {
     if (priority === 'Medium') return `${base} bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400`;
     return `${base} bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400`;
 }
-
-function initAiFormAutoFill() {
-    const buttons = document.querySelectorAll('[data-ai-autofill]');
-    if (!buttons.length) return;
-
-    buttons.forEach((button) => {
-        if (button.dataset.aiAutofillInitialized === 'true') return;
-        button.dataset.aiAutofillInitialized = 'true';
-
-        button.onclick = async () => {
-            const type = button.dataset.aiAutofill;
-            const noteFieldIds = {
-                appointment: ['ai-autofill-notes-appointment'],
-                permit: ['ai-autofill-notes-permit'],
-                surveillance: ['ai-autofill-notes-surveillance', 'ai-autofill-notes-surveillance-modal'],
-                sanitation: ['ai-autofill-notes-sanitation', 'ai-autofill-notes-sanitation-modal'],
-                alert: ['ai-autofill-notes-surveillance', 'ai-autofill-notes-surveillance-modal'],
-                violation: ['ai-autofill-notes-sanitation', 'ai-autofill-notes-sanitation-modal'],
-                'admin-user': ['ai-autofill-notes-admin-user'],
-                'admin-violation': ['ai-autofill-notes-admin-violation']
-            };
-            const feedbackIds = {
-                appointment: ['ai-autofill-feedback-appointment'],
-                permit: ['ai-autofill-feedback-permit'],
-                surveillance: ['ai-autofill-feedback-surveillance', 'ai-autofill-feedback-surveillance-modal'],
-                sanitation: ['ai-autofill-feedback-sanitation', 'ai-autofill-feedback-sanitation-modal'],
-                alert: ['ai-autofill-feedback-surveillance', 'ai-autofill-feedback-surveillance-modal'],
-                violation: ['ai-autofill-feedback-sanitation', 'ai-autofill-feedback-sanitation-modal'],
-                'admin-user': ['ai-autofill-feedback-admin-user'],
-                'admin-violation': ['ai-autofill-feedback-admin-violation']
-            };
-            const notesField = button.dataset.notesId ? document.getElementById(button.dataset.notesId) : (noteFieldIds[type] || []).map((id) => document.getElementById(id)).find(Boolean);
-            const feedback = button.dataset.feedbackId ? document.getElementById(button.dataset.feedbackId) : (feedbackIds[type] || []).map((id) => document.getElementById(id)).find(Boolean);
-            const notes = notesField?.value?.trim() || '';
-
-            if (!notes) {
-                if (feedback) feedback.textContent = 'Please enter a note first.';
-                return;
-            }
-
-            if (feedback) feedback.textContent = 'Loading suggestions...';
-
-            try {
-                const response = await fetch('api/ai/form-autofill.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type, notes }),
-                    cache: 'no-store'
-                });
-
-                const data = await response.json();
-                if (!data || data.status !== 'success') {
-                    throw new Error('Auto-fill failed');
-                }
-
-                const suggestions = Array.isArray(data.suggestions) ? data.suggestions : [];
-                const map = Object.fromEntries(suggestions.map((item) => [item.field, item.value]));
-
-                if (type === 'appointment') {
-                    const serviceSelect = document.getElementById('appointment-service-type');
-                    const dateInput = document.getElementById('appointment-date');
-                    const timeSelect = document.getElementById('appointment-time');
-                    const reasonTextarea = document.getElementById('appointment-reason');
-
-                    if (serviceSelect && map.service_type) serviceSelect.value = map.service_type;
-                    if (reasonTextarea && map.reason) reasonTextarea.value = map.reason;
-                    if (dateInput) {
-                        const today = new Date();
-                        today.setDate(today.getDate() + 1);
-                        dateInput.value = today.toISOString().split('T')[0];
-                    }
-                    if (timeSelect && map.priority_hint === 'High') timeSelect.value = '09:00 AM';
-                    if (feedback) feedback.textContent = 'Appointment fields were suggested from your note and recent records.';
-                } else if (type === 'permit') {
-                    const nameInput = document.getElementById('permit-business-name');
-                    const typeSelect = document.getElementById('permit-type');
-                    const addressInput = document.getElementById('permit-address');
-
-                    if (nameInput && map.business_name) nameInput.value = map.business_name;
-                    if (typeSelect && map.permit_type) typeSelect.value = map.permit_type;
-                    if (addressInput && map.address) addressInput.value = map.address;
-                    if (feedback) feedback.textContent = 'Permit fields were suggested from your note and recent records.';
-                } else if (type === 'surveillance' || type === 'alert') {
-                    const diseaseInput = document.getElementById('case-disease');
-                    const caseInput = document.getElementById('case-count');
-                    const barangayInput = document.getElementById('case-barangay');
-                    const severitySelect = document.getElementById('case-severity');
-
-                    if (diseaseInput && map.disease) diseaseInput.value = map.disease;
-                    if (caseInput && map.cases) caseInput.value = map.cases;
-                    if (barangayInput && map.barangay) barangayInput.value = map.barangay;
-                    if (severitySelect && map.severity) severitySelect.value = map.severity;
-
-                    const summary = suggestions.map((item) => {
-                        const value = Array.isArray(item.value) ? item.value.join(', ') : item.value;
-                        return `${item.field}: ${value}`;
-                    }).join(' • ');
-                    if (feedback) feedback.textContent = summary || 'Surveillance suggestions are ready.';
-                } else if (type === 'sanitation' || type === 'violation') {
-                    const permitSelect = document.getElementById('inspection-permit-id');
-                    const inspectorSelect = document.getElementById('inspection-inspector');
-                    const dateInput = document.getElementById('inspection-date');
-                    const timeInput = document.getElementById('inspection-time');
-
-                    if (inspectorSelect && map.recommended_inspector) {
-                        const matched = Array.from(inspectorSelect.options).some((option) => option.value === map.recommended_inspector || option.textContent === map.recommended_inspector);
-                        if (matched) inspectorSelect.value = map.recommended_inspector;
-                    }
-                    if (dateInput) {
-                        const tomorrow = new Date();
-                        tomorrow.setDate(tomorrow.getDate() + 1);
-                        dateInput.value = tomorrow.toISOString().split('T')[0];
-                    }
-                    if (timeInput && map.inspection_time) timeInput.value = map.inspection_time;
-                    if (permitSelect && map.permit_id) permitSelect.value = map.permit_id;
-
-                    const summary = suggestions.map((item) => {
-                        const value = Array.isArray(item.value) ? item.value.join(', ') : item.value;
-                        return `${item.field}: ${value}`;
-                    }).join(' • ');
-                    if (feedback) feedback.textContent = summary || 'Sanitation suggestions are ready.';
-                } else if (type === 'admin-user') {
-                    const nameInput = document.getElementById('admin-user-name');
-                    const emailInput = document.getElementById('admin-user-email');
-                    const roleSelect = document.getElementById('admin-user-role');
-
-                    if (nameInput && (map.full_name || map.name)) nameInput.value = map.full_name || map.name;
-                    if (emailInput && map.email) emailInput.value = map.email;
-                    if (roleSelect && (map.role || map.user_role)) roleSelect.value = map.role || map.user_role;
-
-                    if (feedback) feedback.textContent = 'User account fields were suggested from your note.';
-                } else if (type === 'admin-violation') {
-                    const titleInput = document.getElementById('admin-violation-title');
-                    const severitySelect = document.getElementById('admin-violation-severity');
-                    const actionInput = document.getElementById('admin-violation-action');
-
-                    if (titleInput && (map.title || map.violation_type)) titleInput.value = map.title || map.violation_type;
-                    if (severitySelect && (map.severity || map.risk_level)) severitySelect.value = map.severity || map.risk_level;
-                    if (actionInput && (map.action || map.suggested_action)) actionInput.value = map.action || map.suggested_action;
-
-                    if (feedback) feedback.textContent = 'Violation handling fields were suggested from your note.';
-                }
-            } catch (e) {
-                if (feedback) feedback.textContent = 'Auto-fill is unavailable right now.';
-            }
-        };
-    });
-}
-
-function renderInsightCards(data) {
-    const target = document.getElementById('ai-insights');
-    if (!target) return;
-
-    data = normalizeInsightPayload(data);
-
-    if (!data || Object.keys(data).length === 0 || !data.insights || !Array.isArray(data.insights) || data.insights.length === 0) {
-        target.innerHTML = `
-            <div class="flex flex-col items-center justify-center text-center p-6 bg-slate-500/5 dark:bg-slate-400/5 rounded-xl border border-dashed border-slate-300 dark:border-slate-700/50">
-                <span class="text-3xl mb-2">🔍</span>
-                <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">No municipal health insights available yet.</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">The AI will automatically analyze new operational data.</p>
-            </div>
-        `;
+function renderChartInsightCards(insights) {
+    console.log('renderChartInsightCards called with:', insights);
+    if (!Array.isArray(insights)) {
+        console.log('insights is not an array');
         return;
     }
-
-    target.innerHTML = '';
-
-    // ─── SCORE BADGES ──────────────────────────────────────────
-    if (data.municipal_health_score !== undefined) {
-        const riskColor = data.overall_risk === 'Critical' || data.overall_risk === 'High' ? 'rose' : 
-                          data.overall_risk === 'Moderate' ? 'amber' : 'emerald';
-        const riskDotColor = data.overall_risk === 'Critical' || data.overall_risk === 'High' ? 'bg-rose-500' : 
-                             data.overall_risk === 'Moderate' ? 'bg-amber-500' : 'bg-emerald-500';
+    
+    insights.forEach(item => {
+        console.log('Processing insight item:', item);
+        const chartId = item.chart; // e.g., "service_requests", "disease_surveillance"
+        const containerMap = {
+            'service_requests': 'ai-card-trendChart',
+            'disease_surveillance': 'ai-card-diseaseTrendChart',
+            'weekly_activity': 'ai-card-heatmapChart',
+            'service_distribution': 'ai-card-donutChart',
+            'staff_performance': 'ai-card-staffChart'
+        };
+        const containerId = containerMap[chartId];
+        console.log('Looking for container:', containerId);
+        const container = document.getElementById(containerId);
+        console.log('Container found:', container);
         
-        target.insertAdjacentHTML('beforeend', `
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-                <div class="ai-score-badge p-2.5 rounded-xl bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/10 dark:border-blue-500/20 text-center">
-                    <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Health</div>
-                    <div class="text-lg font-bold text-blue-600 dark:text-blue-400">${data.municipal_health_score}</div>
-                </div>
-                <div class="ai-score-badge p-2.5 rounded-xl bg-violet-500/5 dark:bg-violet-500/10 border border-violet-500/10 dark:border-violet-500/20 text-center">
-                    <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Efficiency</div>
-                    <div class="text-lg font-bold text-violet-600 dark:text-violet-400">${data.operational_efficiency_score}</div>
-                </div>
-                <div class="ai-score-badge p-2.5 rounded-xl bg-${riskColor}-500/5 dark:bg-${riskColor}-500/10 border border-${riskColor}-500/10 dark:border-${riskColor}-500/20 text-center">
-                    <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Risk</div>
-                    <div class="text-lg font-bold text-${riskColor}-600 dark:text-${riskColor}-400">${data.risk_score}</div>
-                </div>
-                <div class="ai-score-badge p-2.5 rounded-xl bg-teal-500/5 dark:bg-teal-500/10 border border-teal-500/10 dark:border-teal-500/20 text-center">
-                    <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Confidence</div>
-                    <div class="text-lg font-bold text-teal-600 dark:text-teal-400">${data.confidence_score}%</div>
-                </div>
-            </div>
-            <div class="flex items-center gap-2 mb-3 px-1">
-                <span class="w-2 h-2 rounded-full ${riskDotColor} animate-pulse"></span>
-                <span class="text-[11px] font-semibold uppercase tracking-wider text-${riskColor}-600 dark:text-${riskColor}-400">${data.overall_risk} Risk Level</span>
-            </div>
-        `);
+        if (container && item.title !== 'No significant insight') {
+            container.innerHTML = renderSingleInsightCard(item);
+            console.log('Rendered insight card in:', containerId);
+        }
+    });
+}
+// Add this function right BEFORE renderChartInsightCards (around line 750)
+
+function renderAISnapshot(data) {
+    const snapshot = document.getElementById('ai-snapshot');
+    if (!snapshot) {
+        console.log('ai-snapshot element not found');
+        return;
     }
-
-    // ─── EXECUTIVE SUMMARY ─────────────────────────────────────
-    if (data.executive_summary) {
-        target.insertAdjacentHTML('beforeend', `
-            <div class="ai-summary-card p-3 rounded-xl bg-gradient-to-r from-blue-500/5 to-cyan-500/5 dark:from-blue-500/10 dark:to-cyan-500/10 border border-blue-500/10 dark:border-cyan-500/20 mb-3">
-                <div class="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-cyan-400 mb-1.5">Executive Briefing</div>
-                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${data.executive_summary}</p>
+    
+    // Handle the actual API structure
+    const snapshotData = data.snapshot || {
+        status: data.overall_risk || 'Normal',
+        headline: data.overall_risk ? `${data.overall_risk} Risk Level` : 'System Status',
+        summary: data.executive_summary || 'No summary available',
+        priority: data.overall_risk === 'Critical' || data.overall_risk === 'High' ? 'High' : 'Medium',
+        confidence: data.confidence_score || 0
+    };
+    
+    const statusColors = {
+        'Normal': 'border-l-green-500 bg-green-50 dark:bg-green-900/20',
+        'Low': 'border-l-green-500 bg-green-50 dark:bg-green-900/20',
+        'Moderate': 'border-l-amber-500 bg-amber-50 dark:bg-amber-900/20',
+        'Attention': 'border-l-amber-500 bg-amber-50 dark:bg-amber-900/20',
+        'High': 'border-l-orange-500 bg-orange-50 dark:bg-orange-900/20',
+        'Warning': 'border-l-orange-500 bg-orange-50 dark:bg-orange-900/20',
+        'Critical': 'border-l-red-500 bg-red-50 dark:bg-red-900/20'
+    };
+    
+    snapshot.innerHTML = `
+        <div class="ai-snapshot-card border-l-4 ${statusColors[snapshotData.status] || 'border-l-blue-500'} rounded-lg p-4 bg-white dark:bg-slate-800/50 shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+                <span class="font-bold text-sm text-slate-800 dark:text-slate-200">${snapshotData.headline}</span>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 font-medium">${snapshotData.status}</span>
             </div>
-        `);
-    }
-
-    // ─── INSIGHT CARDS (from insights array) ───────────────────
-    if (data.insights && Array.isArray(data.insights) && data.insights.length > 0) {
-        data.insights.forEach((item, index) => {
-            if (!item) return;
-
-            let borderClass = 'border-l-4 border-l-blue-500 shadow-blue-500/5';
-            let badgeHTML = '';
-            let iconHTML = '';
-
-            if (item.category === 'Operational') {
-                borderClass = 'border-l-4 border-l-blue-500 shadow-blue-500/5';
-            } else if (item.category === 'Risk') {
-                const lvl = (item.severity || 'Medium').toLowerCase();
-                if (lvl === 'high') {
-                    borderClass = 'border-l-4 border-l-rose-500 shadow-rose-500/5';
-                } else if (lvl === 'medium') {
-                    borderClass = 'border-l-4 border-l-amber-500 shadow-amber-500/5';
-                } else {
-                    borderClass = 'border-l-4 border-l-emerald-500 shadow-emerald-500/5';
-                }
-                badgeHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${lvl === 'high' ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400' : lvl === 'medium' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'}">${item.severity} Risk</span>`;
-            } else if (item.category === 'Action') {
-                borderClass = 'border-l-4 border-l-violet-500 shadow-violet-500/5';
-                badgeHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400">${item.severity}</span>`;
-            }
-
-            // Font Awesome to emoji mapping, while also preserving any emoji icon already supplied by the API
-            const iconMap = {
-                'fa-chart-line': '📈', 'fa-triangle-exclamation': '⚠️', 'fa-lightbulb': '💡',
-                'fa-water': '💧', 'fa-virus': '🦠', 'fa-hospital': '🏥', 'fa-clock': '⏰',
-                'fa-users': '👥', 'fa-shield': '🛡️', 'fa-check-circle': '✅',
-                'fa-biohazard': '☣️', 'fa-bug': '🐛', 'fa-chart-simple': '📊',
-                'fa-people-arrows': '↔️', 'fa-handshake': '🤝', 'fa-file': '📄',
-                'fa-truck': '🚛', 'fa-syringe': '💉', 'fa-stethoscope': '🩺'
-            };
-            iconHTML = item.icon && typeof item.icon === 'string' && item.icon.trim()
-                ? (iconMap[item.icon] || item.icon)
-                : 'ℹ️';
-
-            // Trend indicator
-            const trendIcon = item.trend === 'Increasing' ? '📈' : item.trend === 'Decreasing' ? '📉' : '➡️';
-            const trendColor = item.trend === 'Increasing' ? 'text-rose-500' : item.trend === 'Decreasing' ? 'text-emerald-500' : 'text-slate-500';
-
-            const cardHTML = `
-                <div class="ai-insight-card relative overflow-hidden p-3 rounded-xl ${borderClass} bg-white/20 dark:bg-slate-800/10 backdrop-blur-md border border-white/10 dark:border-slate-800/20 hover:bg-white/30 dark:hover:bg-slate-800/20 shadow-sm transition-all duration-300 transform opacity-0 translate-y-4 hover:-translate-y-1 hover:shadow-md cursor-default group" style="animation-delay: ${index * 150}ms; animation-fill-mode: forwards;">
-                    <div class="flex items-start gap-3">
-                        <span class="text-lg mt-0.5">${iconHTML}</span>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 flex-wrap mb-0.5">
-                                <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 tracking-tight leading-none">${item.title}</h4>
-                                ${badgeHTML}
-                                <span class="text-[10px] ${trendColor} font-medium">${trendIcon} ${item.trend}</span>
-                            </div>
-                            <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed mb-1.5">${item.description}</p>
-                            <div class="flex flex-col gap-0.5 text-[10px]">
-                                <div class="flex items-start gap-1.5">
-                                    <span class="text-slate-400 font-medium shrink-0">Why:</span>
-                                    <span class="text-slate-500 dark:text-slate-400">${item.reason}</span>
-                                </div>
-                                <div class="flex items-start gap-1.5">
-                                    <span class="text-blue-500 dark:text-cyan-400 font-medium shrink-0">Action:</span>
-                                    <span class="text-slate-500 dark:text-slate-400">${item.recommendation}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            target.insertAdjacentHTML('beforeend', cardHTML);
-        });
-    }
-
-    // ─── EARLY WARNINGS ────────────────────────────────────────
-    if (data.early_warnings && Array.isArray(data.early_warnings) && data.early_warnings.length > 0) {
-        target.insertAdjacentHTML('beforeend', `
-            <div class="mt-3 pt-2 border-t border-white/10 dark:border-slate-800/20">
-                <div class="text-[10px] font-bold uppercase tracking-wider text-rose-500 mb-2 flex items-center gap-1.5">
-                    <span>🚨</span> Early Warning Alerts
-                </div>
-                ${data.early_warnings.map((w, i) => {
-                    const warnColors = {
-                        'High': 'border-l-rose-500 bg-rose-500/5 dark:bg-rose-500/10',
-                        'Medium': 'border-l-amber-500 bg-amber-500/5 dark:bg-amber-500/10',
-                        'Low': 'border-l-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10'
-                    };
-                    const wColor = warnColors[w.severity] || warnColors.Medium;
-                    return `
-                        <div class="p-2.5 rounded-xl border-l-4 ${wColor} border border-white/10 dark:border-slate-800/20 mb-2 ai-insight-card opacity-0 translate-y-3" style="animation-delay: ${i * 100}ms; animation-fill-mode: forwards;">
-                            <div class="flex items-center gap-2 mb-0.5">
-                                <span class="text-[10px] font-bold uppercase tracking-wider ${w.severity === 'High' ? 'text-rose-600 dark:text-rose-400' : w.severity === 'Medium' ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}">${w.severity}</span>
-                                <h5 class="text-xs font-semibold text-slate-700 dark:text-slate-200">${w.title}</h5>
-                            </div>
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-1">${w.description}</p>
-                            <p class="text-[10px] text-blue-600 dark:text-cyan-400 font-medium">→ ${w.recommended_action}</p>
-                        </div>
-                    `;
-                }).join('')}
+            <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">${snapshotData.summary}</p>
+            <div class="flex items-center justify-between mt-3 text-xs text-slate-500 dark:text-slate-400">
+                <span class="flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z"/></svg>
+                    Priority: ${snapshotData.priority}
+                </span>
+                <span class="flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                    Confidence: ${snapshotData.confidence}%
+                </span>
             </div>
-        `);
-    }
-
-    // ─── RECOMMENDATIONS ───────────────────────────────────────
-    if (data.recommendations && Array.isArray(data.recommendations) && data.recommendations.length > 0) {
-        target.insertAdjacentHTML('beforeend', `
-            <div class="mt-3 pt-2 border-t border-white/10 dark:border-slate-800/20">
-                <div class="text-[10px] font-bold uppercase tracking-wider text-violet-500 mb-2 flex items-center gap-1.5">
-                    <span>🎯</span> Recommended Actions
-                </div>
-                ${data.recommendations.map((r, i) => {
-                    const recColors = {
-                        'High': 'border-l-violet-500 bg-violet-500/5 dark:bg-violet-500/10',
-                        'Medium': 'border-l-indigo-500 bg-indigo-500/5 dark:bg-indigo-500/10',
-                        'Low': 'border-l-teal-500 bg-teal-500/5 dark:bg-teal-500/10'
-                    };
-                    const rColor = recColors[r.priority] || recColors.Medium;
-                    return `
-                        <div class="p-2.5 rounded-xl border-l-4 ${rColor} border border-white/10 dark:border-slate-800/20 mb-2 ai-insight-card opacity-0 translate-y-3" style="animation-delay: ${i * 100}ms; animation-fill-mode: forwards;">
-                            <div class="flex items-center gap-2 mb-0.5">
-                                <span class="text-[10px] font-bold uppercase tracking-wider ${r.priority === 'High' ? 'text-violet-600 dark:text-violet-400' : r.priority === 'Medium' ? 'text-indigo-600 dark:text-indigo-400' : 'text-teal-600 dark:text-teal-400'}">${r.priority} Priority</span>
-                                <span class="text-[10px] text-slate-400">| ${r.timeframe || 'Immediate'}</span>
-                            </div>
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-1">${r.reason}</p>
-                            <p class="text-xs font-medium text-slate-700 dark:text-slate-200 mb-0.5">${r.action}</p>
-                            <p class="text-[10px] text-emerald-600 dark:text-emerald-400">Expected: ${r.expected_impact}</p>
-                        </div>
-                    `;
-                }).join('')}
+        </div>
+    `;
+    snapshot.classList.remove('hidden');
+    console.log('ai-snapshot rendered and unhidden');
+}
+function renderSingleInsightCard(item) {
+    const badgeColors = {
+        'Trend': 'border-l-green-500 bg-green-50',
+        'Risk': 'border-l-red-500 bg-red-50',
+        'Anomaly': 'border-l-amber-500 bg-amber-50',
+        'Forecast': 'border-l-blue-500 bg-blue-50',
+        'Opportunity': 'border-l-emerald-500 bg-emerald-50'
+    };
+    return `
+        <div class="ai-mini-card border-l-4 ${badgeColors[item.badge] || 'border-l-slate-500'} rounded-lg p-2.5 bg-white dark:bg-slate-800/50 text-xs">
+            <div class="flex items-center justify-between mb-1">
+                <span class="font-semibold">${item.title}</span>
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100">${item.badge}</span>
             </div>
-        `);
-    }
-
-    // ─── TREND ANALYSIS TABLE ──────────────────────────────────
-    if (data.trend_analysis && Array.isArray(data.trend_analysis) && data.trend_analysis.length > 0) {
-        target.insertAdjacentHTML('beforeend', `
-            <div class="mt-3 pt-2 border-t border-white/10 dark:border-slate-800/20">
-                <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
-                    <span>📊</span> Trend Analysis
-                </div>
-                <div class="space-y-1.5">
-                    ${data.trend_analysis.map((t, i) => {
-                        const tIcon = t.trend === 'Increasing' ? '📈' : t.trend === 'Decreasing' ? '📉' : '➡️';
-                        const tColor = t.trend === 'Increasing' ? 'text-rose-600' : t.trend === 'Decreasing' ? 'text-emerald-600' : 'text-slate-500';
-                        return `
-                            <div class="flex items-start gap-2 p-2 rounded-lg bg-white/10 dark:bg-slate-800/10 ai-insight-card opacity-0 translate-y-2" style="animation-delay: ${i * 80}ms; animation-fill-mode: forwards;">
-                                <span class="text-sm shrink-0 mt-0.5">${tIcon}</span>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <span class="text-xs font-semibold text-slate-700 dark:text-slate-200">${t.metric}</span>
-                                        <span class="text-[10px] font-medium ${tColor}">${t.trend}</span>
-                                        <span class="text-[10px] text-slate-400">vs ${t.comparison}</span>
-                                    </div>
-                                    <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">${t.reason}</p>
-                                    <p class="text-[10px] text-slate-400 mt-0.5">Impact: ${t.impact}</p>
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
+            <p class="text-slate-600 dark:text-slate-400">${item.insight}</p>
+            <p class="text-blue-600 dark:text-blue-400 mt-1">→ ${item.recommendation}</p>
+            <div class="mt-1.5 h-1 rounded-full bg-slate-200">
+                <div class="h-1 rounded-full bg-gov-600" style="width:${item.confidence}%"></div>
             </div>
-        `);
-    }
+            <span class="text-[10px] text-slate-400">Confidence: ${item.confidence}%</span>
+        </div>
+    `;
 }
 
 function updateLastAnalyzedFooter() {
@@ -937,11 +624,7 @@ function updateLastAnalyzedFooter() {
 
 function setupAutoRefresh() {
     if (insightsRefreshTimer) clearTimeout(insightsRefreshTimer);
-    
-    // Auto refresh every 5 minutes (5 * 60 * 1000 = 300000ms)
-    insightsRefreshTimer = setTimeout(() => {
-        loadInsights();
-    }, 300000);
+    insightsRefreshTimer = setTimeout(() => loadInsights(), 300000);
 }
 
 function refreshInsights() {
@@ -951,65 +634,59 @@ function refreshInsights() {
     }
     loadInsights();
 }
+
 async function reloadCurrentView() {
     await loadDashboardData();
     await loadUsers();
     await loadLogs();
     renderView();
 }
-async function loadInsights() {
-    const target = document.getElementById('ai-insights');
-    if (!target) return;
 
-    if (insightsLoading) return;
+async function loadInsights() {
+    console.log('loadInsights STARTED');
+    const target = document.getElementById('ai-insights');
+    console.log('Target element:', target);
+    if (!target || insightsLoading) return;
     insightsLoading = true;
 
     const refreshBtn = document.getElementById('ai-refresh-btn');
     const refreshIcon = document.getElementById('ai-refresh-icon');
     if (refreshBtn) refreshBtn.classList.add('ai-refresh-active');
     if (refreshIcon) refreshIcon.classList.add('rotate-infinite');
-
-    if (refreshBtn) {
-        refreshBtn.onclick = (e) => {
-            e.preventDefault();
-            refreshInsights();
-        };
-    }
+    if (refreshBtn) refreshBtn.onclick = (e) => { e.preventDefault(); refreshInsights(); };
 
     showLoading();
     animateAvatar('loading');
 
     try {
-        const response = await fetch('api/analytics/insights.php', { cache: 'no-store' });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP Error ${response.status}`);
-        }
+        console.log('Fetching ai-snapshot.php...');
+        const response = await fetch('api/analytics/ai-snapshot.php', { cache: 'no-store' });
+        console.log('Response status:', response.status);
+        if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
 
         const data = await response.json();
-        
+        console.log('Insights data received:', data);
         hideLoading();
         animateAvatar('complete');
 
-        if (data && data.status === 'success' && data.insights) {
-            renderInsightCards(data.insights);
-            await loadActionSuggestions();
+        if (data?.status === 'success' && data.insights) {
+            console.log('Rendering snapshot + chart cards');
+            console.log('data.insights structure:', Object.keys(data.insights));
+            console.log('data.insights.snapshot:', data.insights.snapshot);
+            console.log('data.insights.insights:', data.insights.insights);
+            
+            renderAISnapshot(data.insights);
+            if (data.insights.insights) renderChartInsightCards(data.insights.insights);
             lastAnalyzedTime = new Date();
             updateLastAnalyzedFooter();
-            
-            // Sync KPI cards with the same data the AI analyzed
-            if (data.insights._stats) {
-                updateKPICards(data.insights._stats);
-            }
+            if (data.insights._stats) updateKPICards(data.insights._stats);
         } else {
-            renderInsightCards(null);
-            await loadActionSuggestions();
+            console.log('No insights in response');
         }
     } catch (e) {
         console.error('Unable to load AI insights:', e);
         hideLoading();
         animateAvatar('complete');
-        
         target.innerHTML = `
             <div class="flex flex-col items-center justify-center text-center p-6 bg-rose-500/5 dark:bg-rose-500/5 rounded-xl border border-rose-300/30 dark:border-rose-700/20">
                 <span class="text-3xl mb-2">⚠️</span>
@@ -1017,20 +694,12 @@ async function loadInsights() {
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">Unable to generate insights.</p>
                 <button id="ai-retry-btn" class="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-semibold shadow transition-colors flex items-center gap-1.5 focus:outline-none">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/>
                     </svg>
                     Retry Connection
                 </button>
-            </div>
-        `;
-        
-        const retryBtn = document.getElementById('ai-retry-btn');
-        if (retryBtn) {
-            retryBtn.onclick = (e) => {
-                e.preventDefault();
-                refreshInsights();
-            };
-        }
+            </div>`;
+        document.getElementById('ai-retry-btn')?.addEventListener('click', refreshInsights);
     } finally {
         insightsLoading = false;
         if (refreshBtn) refreshBtn.classList.remove('ai-refresh-active');
@@ -1039,6 +708,8 @@ async function loadInsights() {
         setupAutoRefresh();
     }
 }
+
+
 // Initialize app
 function initApp() {
     // Set core functions for actions.js to avoid circular dependencies
