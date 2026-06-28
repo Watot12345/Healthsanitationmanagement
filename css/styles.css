@@ -2406,7 +2406,47 @@ label.font-medium {
 #ai-chat-input:focus {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
+/* ============================================================
+   SEARCH INPUT ICON FIX - Prevent SVG from disappearing
+============================================================ */
 
+/* Ensure search wrapper maintains proper positioning */
+.relative:has(> input[type="search"]) > svg.absolute,
+.search-wrapper > svg,
+[class*="search"] > svg.absolute {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+}
+
+/* Ensure the parent relative container doesn't clip the icon */
+.relative:has(> input[type="search"]) {
+    overflow: visible !important;
+}
+
+/* Fix for Tailwind's pl-10 on search inputs */
+input[type="search"][class*="pl-10"] {
+    padding-left: 2.5rem !important;
+}
+
+/* Dark mode search icon color */
+.dark .relative > svg.absolute.text-slate-400 {
+    color: rgb(148 163 184) !important;
+}
+
+/* Prevent background from overlapping the icon */
+input[type="search"] {
+    position: relative;
+    z-index: 1;
+}
+
+/* Ensure the SVG icon is always on top */
+input[type="search"] + svg,
+div.relative > svg:first-child {
+    z-index: 3 !important;
+}
 /* Prevent body scroll when chat is open on mobile */
 @media (max-width: 640px) {
   .ai-chat-panel {

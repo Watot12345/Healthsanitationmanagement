@@ -80,11 +80,8 @@ export function showViolationDetail(id) {
           <div><p class="text-xs text-slate-500">Due Date</p><p class="font-medium">${v.dueDate}</p></div>
           <div><p class="text-xs text-slate-500">Risk Level</p>${badge(v.risk)}</div>
           <div><p class="text-xs text-slate-500">Status</p>${badge(v.status)}</div>
-<<<<<<< HEAD
           <div><p class="text-xs text-slate-500">Compliance Score</p><p class="font-medium">${v.score}%</p></div>
-=======
           <div><p class="text-xs text-slate-500">Compliance Score</p><p class="font-medium">${v.score || 0}%</p></div>
->>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
           <div><p class="text-xs text-slate-500">Type</p><p class="font-medium">${v.type}</p></div>
         </div>
         <div>
@@ -174,11 +171,8 @@ export  function renderCompliance() {
                 </tr>
               </thead>
               <tbody id="compliance-tbody" class="divide-y divide-slate-200 dark:divide-slate-700">
-<<<<<<< HEAD
                 ${renderList(COMPLIANCE_DATA, ViolationRow)}
-=======
                 ${COMPLIANCE_DATA.length ? renderList(COMPLIANCE_DATA, ViolationRow) : `<tr><td colspan="8" class="px-4 py-8 text-center text-slate-500">No violations found</td></tr>`}
->>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
               </tbody>
             </table>
           </div>

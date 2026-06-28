@@ -1,363 +1,3 @@
-/**
- * ============================================================================
- * RENDERERS INDEX MODULE
- * ============================================================================
- * 
- * PURPOSE:
- * Central rendering engine for the Health & Sanitation Management System.
- * Generates all HTML views using functional composition with reusable
- * UI components from dom.js and mock data from data.js.
- * 
- * ARCHITECTURE:
- * ┌─────────────────────────────────────────────────────────────────────┐
- * │                        VIEW_RENDERERS (Export)                       │
- * │  Route name → render function (called by router on navigation)      │
- * ├─────────────────────────────────────────────────────────────────────┤
- * │  ADMIN MODULES               │  USER MODULES                        │
- * │  • dashboard                 │  • profile                           │
- * │  • users                     │  • book-appointment                  │
- * │  • logs (paginated+live)    │  • request-permit                     │
- * │  • analytics (ApexCharts)   │  • my-immunization                    │
- * │  • reports                   │  • request-wastewater                 │
- * │  • compliance                │  • track-requests                    │
- * │  • settings                  │                                       │
- * │  • health-center (FullCal)  │                                       │
- * │  • sanitation                │                                       │
- * │  • immunization              │                                       │
- * │  • wastewater                │                                       │
- * │  • surveillance              │                                       │
- * └─────────────────────────────────────────────────────────────────────┘
- * 
- * DEPENDENCIES:
- *   state.js        → Global app state (role, current view)
- *   data.js         → Mock data (DATA.kpis, DATA.logs, DATA.users, etc.)
- *   utils/search.js → getSearchValue(), getSelectValue()
- *   utils/dom.js    → UI helpers (card, badge, tableWrap, icon, etc.)
- *   reports.js      → renderReports() for reports module
- *   compliance.js   → renderCompliance() for compliance module
- * 
- * CONVENTIONS:
- *   - All render functions return HTML strings (not DOM nodes)
- *   - Filter values are read from DOM inputs on each render call
- *   - Interactive elements use data-action / data-id for event delegation
- *   - Search inputs have naming convention: {module}-search
- *   - Filter selects have naming convention: {type}-filter
- * 
- * ============================================================================
- * EXPORTED FUNCTIONS
- * ============================================================================
- */
-
-// ─── CORE VIEW RENDERERS (exported via VIEW_RENDERERS) ────────────────────
-
-/**
- * renderDashboard()
- * - Builds KPI cards from DATA.kpis using buildFromConfig()
- * - Renders system status cards (uptime, active sessions, approvals)
- * - Shows recent activity log (last 4 entries)
- * - Displays role-based quick actions (admin gets extra options)
- * - Includes recent updates feed from DATA.recentUpdates
- */
-
-/**
- * renderUsers(filter)
- * - Searches/filters DATA.users by name, email, or role
- * - Renders user table with edit/delete action buttons
- * - Filter parameter comes from #user-search input
- */
-
-/**
- * renderLogs(filter) - PAGINATED WITH ADVANCED FEATURES
- * - Client-side pagination (10 items/page) via logPagination state
- * - Multi-filter support: severity, module, user, date range
- * - Live log feed with configurable interval (toggle checkbox)
- * - Statistics dashboard: today's logs, errors/warnings, active users
- * - CSV export functionality
- * - Filter chips UI for quick filtering
- */
-
-/**
- * renderAnalytics() - CHARTS DASHBOARD
- * - Date range filter buttons (7d, 30d, 90d, 1y) + custom date picker
- * - Static KPI cards (appointments, permits, inspections, cases)
- * - Trend chart (service requests over time)
- * - Disease surveillance chart (dengue, influenza, etc.)
- * - Heatmap (weekly activity by day/hour)
- * - Donut chart (service distribution)
- * - Staff performance bar chart
- * - Live activity feed
- */
-
-/**
- * renderSettings()
- * - General settings form (system name, municipality, email)
- * - Notification preferences (email alerts, SMS, daily reports)
- * - Data management (audit log retention, session timeout, timezone)
- * - Security settings (password length, login attempts, 2FA toggle)
- * - Danger zone (reset data, clear logs, factory reset)
- */
-
-/**
- * renderHealthCenter(filter) - FULLCALENDAR INTEGRATION
- * - Doctor availability cards with status dots
- * - Appointment calendar (FullCalendar initialized in initHealthCenterCalendar)
- * - Appointment queue table with triage badges and approve/reject actions
- * - Patient records table with blood type, condition, last visit
- * - Consultation history timeline for patient P-101
- */
-
-/**
- * renderSanitation(filter)
- * - Permit workflow stepper (submitted → review → inspection → approved)
- * - Application review table with approve/reject/schedule actions
- * - Scheduled inspections table
- * - Inspector assignment cards
- * - Document upload status checklist
- * - Inspection checklist with checkbox items
- */
-
-/**
- * renderImmunization()
- * - Vaccine reminders with urgency badges
- * - Child record cards with vaccination progress bars
- * - Vaccination schedule timeline (BCG through booster)
- * - Growth tracking chart placeholder
- * - Nutrition risk indicators
- */
-
-/**
- * renderWastewater(filter)
- * - Priority-sorted service request queue (Critical → Low)
- * - Before/After inspection comparison cards
- * - Technician assignment cards
- * - Maintenance schedule mini calendar
- * - Status timeline for request tracking
- * - Inspection checklist with submit button
- */
-
-/**
- * renderSurveillance(filter, severityFilter)
- * - Outbreak alert banner (conditional display)
- * - Alert cards by severity (red/yellow/green)
- * - Disease trend cards (rising/declining/stable)
- * - Case reports table with barangay breakdown
- * - Case density heatmap placeholder
- * - Incident timeline feed
- */
-
-/**
- * renderProfile()
- * - User profile card with avatar, contact details
- * - Edit profile action button
- * - Summary statistics (appointments, active requests, completed)
- */
-
-/**
- * renderBookAppointment()
- * - Service type selector dropdown
- * - Date/time picker form
- * - Reason for visit textarea
- * - Submit booking button
- */
-
-/**
- * renderRequestPermit()
- * - Business name input
- * - Permit type selector
- * - Address field
- * - Document upload dropzone
- * - Submit application button
- */
-
-/**
- * renderMyImmunization()
- * - Vaccination status banner (up to date / needs attention)
- * - Immunization record table (vaccine, date, provider, status)
- */
-
-/**
- * renderRequestWastewater()
- * - Service type selector (septic cleaning, installation, etc.)
- * - Property address input
- * - Preferred schedule date picker
- * - Additional notes textarea
- * - Submit request button
- */
-
-/**
- * renderTrackRequests()
- * - Request status cards with progress bars
- * - Request timeline visualization
- * - Color-coded by status (pending/approved/completed/rejected)
- */
-
-// ─── LOGS MODULE STATE & HELPERS ──────────────────────────────────────────
-
-/**
- * logPagination {Object}
- * - currentPage: Current page number (starts at 1)
- * - perPage: Items per page (10)
- * - totalPages: Calculated total pages
- * - totalFiltered: Total items matching current filters
- */
-
-/**
- * getTodayLogCount()
- * - Returns count of log entries with today's date
- * - Falls back to 6 if no entries found (demo data)
- */
-
-/**
- * getErrorWarningCount()
- * - Counts logs with level 'error' or 'warning'
- * - Used for error statistics dashboard card
- */
-
-/**
- * getActiveUsers()
- * - Returns count of unique users in log data
- * - Uses Set for deduplication
- */
-
-/**
- * getUniqueUsers()
- * - Returns array of unique user names from logs
- * - Used to populate user filter dropdown
- */
-
-/**
- * exportLogsToCSV()
- * - Generates CSV file from current log data
- * - Creates Blob download with formatted filename
- * - Includes timestamp, user, action, module, level columns
- */
-
-/**
- * renderPagination()
- * - Generates pagination HTML with page numbers
- * - Shows ellipsis for large page ranges
- * - Includes first/last and prev/next buttons
- * - Shows "Page X of Y (Z total logs)" info
- */
-
-/**
- * applyLogFilters()
- * - Reads all active filter values from DOM elements
- * - Filters DATA.logs based on severity, module, user, date range
- * - Updates pagination state
- * - Re-renders table body and pagination controls
- */
-
-/**
- * addNewLogEntry()
- * - Simulates real-time log entry (for live feed mode)
- * - Generates random log data with timestamp
- * - Inserts new row at top of table with highlight animation
- * - Removes last row if exceeding per-page limit
- * - Highlight fades after 1 second
- */
-
-// ─── INITIALIZATION FUNCTIONS (called after DOM render) ──────────────────
-
-/**
- * initLogFilters()
- * - Attaches change listeners to all filter dropdowns/inputs
- * - Sets up pagination button click handlers
- * - Wires up clear filters button
- * - Initializes CSV export button
- * - Sets up live log feed toggle with interval
- * - Resets pagination to page 1 on init
- */
-
-/**
- * initAnalyticsCharts()
- * - Initializes all ApexCharts instances:
- *   → initTrendChart()      - Service requests area chart
- *   → initDiseaseChart()    - Disease surveillance line chart
- *   → initHeatmapChart()    - Weekly activity heatmap
- *   → initDonutChart()      - Service distribution donut
- *   → initStaffChart()      - Staff performance bar chart
- */
-
-/**
- * initHealthCenterCalendar()
- * - Initializes FullCalendar instance in #appointment-calendar
- * - Transforms DATA.appointments into FullCalendar events
- * - Color-codes by status and triage priority
- * - Configures views: month, week, day, list
- * - Adds event click and date click handlers
- * - Stores instance globally for cleanup
- */
-
-// ─── HELPER/CONFIG FUNCTIONS ──────────────────────────────────────────────
-
-/**
- * buildFromConfig(source, config)
- * - Generic data mapper: transforms raw data using config array
- * - Each config item has: label, getValue(source), icon, color
- * - Used for KPI_CONFIG and STATUS_CONFIG
- */
-
-/**
- * getQuickActions()
- * - Returns array of action buttons based on user role
- * - Admin gets: Add User (primary) + base actions
- * - Regular users get: New Appointment (primary) + base actions
- * - Base actions: New Inspection, Add Patient, Report Case
- */
-
-/**
- * getDashboardModel()
- * - Assembles complete dashboard data model
- * - Combines KPIs, status, logs, updates, and quick actions
- * - Returns object consumed by renderDashboard()
- */
-
-// ─── STATIC CONTENT HELPERS (for analytics demo data) ────────────────────
-
-/**
- * renderStaticKPICard(title, value, change, trend, color)
- * - Renders KPI card with trend indicator arrow
- * - Trend: 'up' (green arrow) or 'down' (red arrow)
- * - Used for analytics dashboard summary cards
- */
-
-/**
- * renderStaticActivityFeed()
- * - Generates mock activity feed entries
- * - Color-coded by type: info, success, warning, error
- * - Shows action, user, and relative time
- */
-
-// ─── KPI/STATUS CONFIGURATIONS ───────────────────────────────────────────
-
-/**
- * KPI_CONFIG
- * - Defines dashboard KPI cards structure:
- *   → Total Users (blue), Active Staff (green)
- *   → Pending Requests (yellow), System Alerts (red)
- */
-
-/**
- * STATUS_CONFIG
- * - Defines system status indicators:
- *   → System Uptime (green), Active Sessions (blue)
- *   → Pending Approvals (yellow)
- */
-
-// ─── VIEW_RENDERERS EXPORT MAP ───────────────────────────────────────────
-
-/**
- * VIEW_RENDERERS {Object}
- * - Maps route/view names to their render functions
- * - Used by router to dynamically call correct renderer
- * - Some renderers accept filter params from search inputs
- * - surveillance uses both search and severity filters
- * 
- * Example usage:
- *   const html = VIEW_RENDERERS['dashboard']();
- *   document.getElementById('content').innerHTML = html;
- */
 import { state } from '../state.js';
 import { DATA } from '../data.js';
 import { getSearchValue, getSelectValue } from '../utils/search.js';
@@ -1020,7 +660,6 @@ function addNewLogEntry() {
     row.style.backgroundColor = '';
   }, 1000);
 }
-
 function renderAnalytics() {
   
   return `<div class="space-y-6">
@@ -1040,83 +679,10 @@ function renderAnalytics() {
       </div>
     </div>
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-      <!-- AI Insights Redesign -->
-      <div class="ai-glass-card relative overflow-hidden p-6 rounded-2xl border border-white/20 dark:border-slate-800/30 shadow-xl bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl transition-all duration-300">
-        <!-- Animated Mesh and Particles Background -->
-        <div class="absolute inset-0 -z-10 ai-mesh-bg opacity-30 dark:opacity-20 pointer-events-none"></div>
-        <div class="absolute inset-0 -z-10 ai-particles pointer-events-none">
-          <div class="particle p1"></div>
-          <div class="particle p2"></div>
-          <div class="particle p3"></div>
-        </div>
-
-        <!-- Header -->
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-white/10 dark:border-slate-800/20 pb-4 mb-5">
-          <div class="flex items-center gap-4">
-            <!-- AI Avatar Container -->
-            <div id="ai-avatar-container" class="relative flex-shrink-0 w-16 h-16 rounded-full">
-              <div class="avatar-ring absolute inset-0 rounded-full"></div>
-              <div class="avatar-core absolute inset-[3px] rounded-full flex items-center justify-center bg-gradient-to-tr from-blue-600 to-cyan-500 shadow-inner">
-                <svg class="w-8 h-8 text-white avatar-brain-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.467 5.99 5.99 0 0 0-1.925-3.546 5.974 5.974 0 0 1-2.133-1A3.75 3.75 0 0 0 2.25 12c0 1.257.625 2.368 1.583 3.033A3.743 3.743 0 0 0 3 15.75c0 .352.049.69.141 1.013A3.75 3.75 0 0 0 7.5 19.5h.75a3.75 3.75 0 0 0 3.75-3.75v-.75Z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 0 1-.495-7.467 5.99 5.99 0 0 1 1.925-3.546 5.974 5.974 0 0 0 2.133-1A3.75 3.75 0 0 1 21.75 12c0 1.257-.625 2.368-1.583 3.033A3.743 3.743 0 0 1 21 15.75c0 .352-.049.69-.141 1.013A3.75 3.75 0 0 1 16.5 19.5h-.75a3.75 3.75 0 0 1-3.75-3.75v-.75Z" />
-                </svg>
-              </div>
-              <div class="orbiting-dot dot1"></div>
-              <div class="orbiting-dot dot2"></div>
-            </div>
-
-            <!-- Title / Subtitle & Status -->
-            <div class="text-center sm:text-left">
-              <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                <h3 class="font-bold text-lg text-slate-800 dark:text-slate-100 tracking-tight leading-none">Municipal AI Assistant</h3>
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  AI Online
-                </span>
-              </div>
-              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Powered by Gemini AI Decision Support</p>
-            </div>
-          </div>
-
-          <!-- Refresh Button -->
-          <button id="ai-refresh-btn" class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/50 dark:bg-slate-800/50 hover:bg-white/80 dark:hover:bg-slate-700/80 border border-slate-200/50 dark:border-slate-700/50 shadow-sm transition-all duration-200 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-cyan-400 focus:outline-none" title="Refresh Insights">
-            <svg id="ai-refresh-icon" class="w-5 h-5 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-            </svg>
-          </button>
-        </div>
-
-        <!-- Scrollable Insights Area -->
-        <div id="ai-insights-scrollable" class="min-h-[200px] max-h-[600px] overflow-y-auto pr-1">
-          <div id="ai-insights" class="space-y-4">
-            <!-- Loading indicator or insights will be rendered here dynamically -->
-            <div class="flex items-center gap-2 text-sm text-slate-500">
-              <svg class="animate-spin h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-              </svg>
-              Initializing assistant...
-            </div>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="flex items-center justify-between mt-5 pt-3 border-t border-white/10 dark:border-slate-800/20 text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider">
-          <div>Last Analyzed: <span id="ai-last-analyzed">Never</span></div>
-          <div id="ai-current-time">UTC</div>
-        </div>
-      </div>
-=======
     <!-- AI Snapshot Card -->
     <div id="ai-snapshot" class="hidden"></div>
     <div id="ai-insights" class="hidden"></div>
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
 
->>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
     <!-- KPI Cards -->
     <div id="kpi-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
       ${renderStaticKPICard('Appointments', '342', '+12%', 'up', '#3b82f6')}
@@ -1124,11 +690,7 @@ function renderAnalytics() {
       ${renderStaticKPICard('Inspections', '156', '+8%', 'up', '#eab308')}
       ${renderStaticKPICard('Cases Reported', '48', '-3%', 'down', '#ef4444')}
     </div>
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
     <!-- Main Trend Charts -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       ${card(`<div class="p-5">
@@ -1846,16 +1408,26 @@ function renderHealthCenter(filter = '') {
   }
   
   // User renderers
-  function renderProfile() {
-    const p = DATA.userProfile;
+function renderProfile() {
+    // Fallback if userProfile is missing from DATA
+    const p = DATA.userProfile || {
+        name: 'System Administrator',
+        email: 'admin@municipal.gov.ph',
+        phone: '+63 912 345 6789',
+        address: '123 Municipal Hall, City of San Jose',
+        birthdate: '1985-03-15',
+        bloodType: 'O+',
+        emergencyContact: 'Maria Santos (+63 917 876 5432)'
+    };
+    
     return `<div class="max-w-3xl space-y-6">
       ${card(`<div class="p-6">
         <div class="flex flex-col sm:flex-row items-center gap-6 mb-6">
-          <div class="h-24 w-24 rounded-full bg-gov-100 dark:bg-gov-900/30 flex items-center justify-center text-gov-600 text-3xl font-bold">${p.name.charAt(0)}</div>
-          <div class="text-center sm:text-left"><h3 class="text-xl font-bold">${p.name}</h3><p class="text-slate-500">${p.email}</p>${badge('Active')}</div>
+          <div class="h-24 w-24 rounded-full bg-gov-100 dark:bg-gov-900/30 flex items-center justify-center text-gov-600 text-3xl font-bold">${(p.name || 'U').charAt(0)}</div>
+          <div class="text-center sm:text-left"><h3 class="text-xl font-bold">${p.name || 'Unknown User'}</h3><p class="text-slate-500">${p.email || 'No email'}</p>${badge('Active')}</div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          ${[{l:'Phone',v:p.phone},{l:'Address',v:p.address},{l:'Birthdate',v:p.birthdate},{l:'Blood Type',v:p.bloodType},{l:'Emergency Contact',v:p.emergencyContact}].map(f=>`
+          ${[{l:'Phone',v:p.phone || 'N/A'},{l:'Address',v:p.address || 'N/A'},{l:'Birthdate',v:p.birthdate || 'N/A'},{l:'Blood Type',v:p.bloodType || 'N/A'},{l:'Emergency Contact',v:p.emergencyContact || 'N/A'}].map(f=>`
             <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-700/50"><p class="text-xs text-slate-500 uppercase tracking-wider">${f.l}</p><p class="text-sm font-medium mt-1">${f.v}</p></div>`).join('')}
         </div>
         ${btnSecondary('Edit Profile', 'edit-profile', 'mt-4')}
@@ -1865,20 +1437,11 @@ function renderHealthCenter(filter = '') {
           <div class="p-4 text-center"><p class="text-2xl font-bold ${s.c}">${s.v}</p><p class="text-sm text-slate-500 mt-1">${s.l}</p></div>`)).join('')}
       </div>
     </div>`;
-  }
+}
   
-  function renderBookAppointment() {
+function renderBookAppointment() {
     return `<div class="max-w-xl">
       ${card(`<div class="p-6"><h3 class="font-semibold mb-4">Schedule an Appointment</h3>
-        <div class="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 mb-4 dark:border-emerald-800 dark:bg-emerald-900/20">
-          <div class="text-sm font-semibold text-emerald-800 dark:text-emerald-300">AI Assist</div>
-          <p class="text-xs text-emerald-700 dark:text-emerald-400 mt-1">Paste symptoms or notes and we’ll suggest the right values for the form.</p>
-          <textarea id="ai-autofill-notes-appointment" rows="2" placeholder="Example: fever and cough, urgent follow-up, barangay San Jose" class="w-full mt-2 px-3 py-2 rounded-lg border border-emerald-200 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
-          <div class="mt-2 flex items-center justify-between gap-2">
-            <div id="ai-autofill-feedback-appointment" class="text-xs text-emerald-700 dark:text-emerald-300"></div>
-            <button type="button" data-ai-autofill="appointment" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700">Auto-fill</button>
-          </div>
-        </div>
         <form id="appointment-form" class="space-y-4" onsubmit="return false">
           <div><label class="block text-sm font-medium mb-1">Service Type</label>
             <select id="appointment-service-type" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
@@ -1897,20 +1460,11 @@ function renderHealthCenter(filter = '') {
           <button type="submit" data-action="submit-appointment" class="w-full py-3 rounded-xl bg-gov-600 text-white font-semibold text-base hover:bg-gov-700 transition-colors shadow-sm hover:shadow-md">Book Appointment</button>
         </form></div>`)}
     </div>`;
-  }
+} 
   
-  function renderRequestPermit() {
+ function renderRequestPermit() {
     return `<div class="max-w-xl">
       ${card(`<div class="p-6"><h3 class="font-semibold mb-4">Sanitation Permit Application</h3>
-        <div class="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 mb-4 dark:border-emerald-800 dark:bg-emerald-900/20">
-          <div class="text-sm font-semibold text-emerald-800 dark:text-emerald-300">AI Assist</div>
-          <p class="text-xs text-emerald-700 dark:text-emerald-400 mt-1">Paste a business description or inspection note and we’ll suggest the right permit details.</p>
-          <textarea id="ai-autofill-notes-permit" rows="2" placeholder="Example: food stall near barangay San Jose, needs permit renewal" class="w-full mt-2 px-3 py-2 rounded-lg border border-emerald-200 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
-          <div class="mt-2 flex items-center justify-between gap-2">
-            <div id="ai-autofill-feedback-permit" class="text-xs text-emerald-700 dark:text-emerald-300"></div>
-            <button type="button" data-ai-autofill="permit" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700">Auto-fill</button>
-          </div>
-        </div>
         <form class="space-y-4" onsubmit="return false">
           <div><label class="block text-sm font-medium mb-1">Business Name</label>
             <input id="permit-business-name" type="text" placeholder="Enter business name" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
@@ -1928,20 +1482,33 @@ function renderHealthCenter(filter = '') {
           <button type="submit" data-action="submit-permit" class="w-full py-3 rounded-xl bg-gov-600 text-white font-semibold text-base hover:bg-gov-700 transition-colors">Submit Application</button>
         </form></div>`)}
     </div>`;
-  }
+}
   
   function renderMyImmunization() {
-    const rows = DATA.userImmunization.map(r => `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+    // Fallback if userImmunization is missing from DATA
+    const immunizationRecords = DATA.userImmunization || [
+        { vaccine: 'BCG', date: '2025-01-15', provider: 'Health Center', status: 'Completed' },
+        { vaccine: 'Hepatitis B', date: '2025-01-15', provider: 'Health Center', status: 'Completed' },
+        { vaccine: 'DPT', date: '2025-03-20', provider: 'Health Center', status: 'Completed' },
+        { vaccine: 'MMR', date: '2025-09-10', provider: 'Health Center', status: 'Pending' }
+    ];
+    
+    const rows = immunizationRecords.map(r => `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
       <td class="px-4 py-3 text-sm font-medium">${r.vaccine}</td>
       <td class="px-4 py-3 text-sm text-slate-500">${r.date}</td>
       <td class="px-4 py-3 text-sm text-slate-500">${r.provider}</td>
       <td class="px-4 py-3 text-sm">${badge(r.status)}</td>
     </tr>`).join('');
-  
+
+    // Count completed vaccines
+    const completed = immunizationRecords.filter(r => r.status === 'Completed').length;
+    const total = immunizationRecords.length;
+    const isUpToDate = completed === total;
+
     return `<div class="space-y-4 max-w-3xl">
-      ${card(`<div class="p-5 flex items-center gap-4 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-        ${icon('shield', 'h-8 w-8 text-green-600')}
-        <div><p class="font-semibold text-green-800 dark:text-green-300">Vaccination Status: Up to Date</p><p class="text-sm text-green-600 dark:text-green-400">3 of 4 recommended vaccines completed</p></div>
+      ${card(`<div class="p-5 flex items-center gap-4 ${isUpToDate ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'}">
+        ${icon('shield', `h-8 w-8 ${isUpToDate ? 'text-green-600' : 'text-yellow-600'}`)}
+        <div><p class="font-semibold ${isUpToDate ? 'text-green-800 dark:text-green-300' : 'text-yellow-800 dark:text-yellow-300'}">Vaccination Status: ${isUpToDate ? 'Up to Date' : 'Needs Attention'}</p><p class="text-sm ${isUpToDate ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">${completed} of ${total} recommended vaccines completed</p></div>
       </div>`)}
       ${tableWrap(`<table class="w-full text-left rounded-xl border border-slate-200 dark:border-slate-700"><thead class="bg-slate-50 dark:bg-slate-700/50"><tr>
         <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Vaccine</th>
@@ -1950,7 +1517,7 @@ function renderHealthCenter(filter = '') {
         <th class="px-4 py-3 text-xs font-semibold uppercase text-slate-500">Status</th>
       </tr></thead><tbody class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-800">${rows}</tbody></table>`)}
     </div>`;
-  }
+}
   
   function renderRequestWastewater() {
     return `<div class="max-w-xl">
@@ -1971,15 +1538,24 @@ function renderHealthCenter(filter = '') {
     </div>`;
   }
   
-  function renderTrackRequests() {
+ function renderTrackRequests() {
+    // Fallback if userRequests is missing from DATA
+    const requests = DATA.userRequests || [
+        { id: 'REQ-001', title: 'Septic Tank Cleaning', type: 'Wastewater', date: '2026-01-15', status: 'Completed' },
+        { id: 'REQ-002', title: 'Sanitation Permit Renewal', type: 'Sanitation', date: '2026-02-20', status: 'Approved' },
+        { id: 'REQ-003', title: 'Health Certificate', type: 'Health Center', date: '2026-03-10', status: 'Pending' },
+        { id: 'REQ-004', title: 'Garbage Collection Request', type: 'Wastewater', date: '2026-04-05', status: 'Rejected' }
+    ];
+    
     const barWidths = { Pending: 33, Approved: 66, Completed: 100, Rejected: 50 };
     const barColors = {
-      Pending: 'bg-yellow-500',
-      Approved: 'bg-green-500',
-      Completed: 'bg-green-500',
-      Rejected: 'bg-red-500',
+        Pending: 'bg-yellow-500',
+        Approved: 'bg-green-500',
+        Completed: 'bg-green-500',
+        Rejected: 'bg-red-500',
     };
-    const cards = DATA.userRequests.map(r => card(`
+    
+    const cards = requests.map(r => card(`
         <div class="p-5">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div><p class="text-xs font-mono text-slate-500">${r.id}</p><h4 class="font-semibold">${r.title}</h4><p class="text-sm text-slate-500">${r.type} · ${r.date}</p></div>
@@ -1992,22 +1568,22 @@ function renderHealthCenter(filter = '') {
           </div>
         </div>
       `)).join('');
-  
-    const timeline = DATA.userRequests.map((r, i) => `
-      <div class="flex gap-4 ${i < DATA.userRequests.length - 1 ? 'pb-8' : ''}">
+
+    const timeline = requests.map((r, i) => `
+      <div class="flex gap-4 ${i < requests.length - 1 ? 'pb-8' : ''}">
         <div class="flex flex-col items-center">
           <div class="timeline-dot h-4 w-4 rounded-full ${r.status === 'Rejected' ? 'bg-red-500' : r.status === 'Pending' ? 'bg-yellow-500' : 'bg-green-500'}"></div>
-          ${i < DATA.userRequests.length - 1 ? '<div class="w-0.5 flex-1 bg-slate-200 dark:bg-slate-700 mt-1"></div>' : ''}
+          ${i < requests.length - 1 ? '<div class="w-0.5 flex-1 bg-slate-200 dark:bg-slate-700 mt-1"></div>' : ''}
         </div>
         <div><p class="text-sm font-medium">${r.title}</p><p class="text-xs text-slate-500">${r.type} · ${r.date}</p>${badge(r.status)}</div>
       </div>
     `).join('');
-  
+
     return `<div class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">${cards}</div>
       ${card(`<div class="ui-card-body"><h3 class="ui-section-title">Request Timeline</h3>${timeline}</div>`)}
     </div>`;
-  }
+}
   
   // ─── VIEW_RENDERERS Export ───────────────────────────────────────────────────
   export const VIEW_RENDERERS = {

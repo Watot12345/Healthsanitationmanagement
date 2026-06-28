@@ -1231,7 +1231,6 @@ const status = document.getElementById('edit-user-status').value;
 'set-alert-warning': () => { closeModal(); showToast('Alert escalated to Warning', 'warning'); },
 'declare-outbreak': () => { closeModal(); showToast('⚠ Outbreak declared! Staff notified.', 'error'); },
 'notify-staff': () => { closeModal(); showToast('Notification sent to all health center staff', 'info'); },
-
   };
   
  if (actions[action]) actions[action](target);

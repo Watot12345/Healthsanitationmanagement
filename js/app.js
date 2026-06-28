@@ -1115,7 +1115,6 @@ function openSettingsModal() {
     });
 }
 
-
 // Initialize app
 function initApp() {
     // Add custom animations once

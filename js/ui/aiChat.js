@@ -58,16 +58,14 @@ export function openChat() {
 
         <!-- Messages -->
         <div id="ai-chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 scroll-smooth">
-            <div class="flex items-start gap-2.5 ai-msg-ai ">
-                <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center shrink-0 mt-0.5 ml-2">
-            <div class="flex items-start gap-2.5 ai-msg-ai">
+            <div class="flex items-start gap-2.5">
                 <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center shrink-0 mt-0.5">
                     <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z"/>
                     </svg>
                 </div>
                 <div class="flex-1">
-                    <div class="text-xs text-slate-700 dark:text-slate-200 bg-blue-500/5 dark:bg-blue-500/10 rounded-xl rounded-tl-none px-3 py-2 border border-blue-500/10 dark:border-blue-500/20">
+                    <div class="text-xs text-slate-700 dark:text-slate-200 bg-blue-50 dark:bg-blue-500/10 rounded-xl rounded-tl-none px-3 py-2 border border-blue-100 dark:border-blue-500/20">
                         Hello! I'm your Municipal Health & Sanitation AI Assistant. Ask me anything about your system data.
                     </div>
                     <div class="flex flex-wrap gap-1.5 mt-2">
@@ -207,7 +205,7 @@ function appendMessage(role, text) {
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z"/>
                 </svg>
             </div>
-            <div class="text-xs text-slate-700 dark:text-slate-200 bg-blue-500/5 dark:bg-blue-500/10 rounded-xl rounded-tl-none px-3 py-2 border border-blue-500/10 dark:border-blue-500/20 max-w-[85%] leading-relaxed">${escapeHtml(text)}</div>
+            <div class="text-xs text-slate-700 dark:text-slate-200 bg-blue-50 dark:bg-blue-500/10 rounded-xl rounded-tl-none px-3 py-2 border border-blue-100 dark:border-blue-500/20 max-w-[85%] leading-relaxed">${escapeHtml(text)}</div>
         `;
     } else {
         div.innerHTML = `
@@ -235,7 +233,7 @@ function showTypingIndicator(container) {
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z"/>
             </svg>
         </div>
-        <div class="flex items-center gap-1 px-3 py-2 rounded-xl bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/10 dark:border-blue-500/20">
+        <div class="flex items-center gap-1 px-3 py-2 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20">
             <span class="w-1.5 h-1.5 rounded-full bg-blue-400 dark:bg-cyan-400 animate-bounce" style="animation-delay: 0s"></span>
             <span class="w-1.5 h-1.5 rounded-full bg-blue-400 dark:bg-cyan-400 animate-bounce" style="animation-delay: 0.15s"></span>
             <span class="w-1.5 h-1.5 rounded-full bg-blue-400 dark:bg-cyan-400 animate-bounce" style="animation-delay: 0.3s"></span>
