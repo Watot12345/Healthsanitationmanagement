@@ -123,6 +123,7 @@
 
     <header class="sticky top-0 z-30 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-700/40 shadow-sm">
       <div class="flex flex-col gap-2.5 px-4 py-3 lg:px-6">
+        <!-- Top row -->
         <div class="flex items-center justify-between gap-3">
           <div class="flex items-center gap-3 min-w-0">
             <button id="menu-toggle" type="button" class="lg:hidden p-2 rounded-xl hover:bg-gov-50 dark:hover:bg-gov-900/40 border border-transparent hover:border-gov-200 dark:hover:border-gov-700/50 transition-all shrink-0" aria-label="Toggle menu">
@@ -194,12 +195,8 @@
             </div>
           </div>
         </div>
-<<<<<<< HEAD
 
-=======
-<!-- Bottom row -->
-        <!-- Global search -->
->>>>>>> 6a4b299d785bf355f7e9601d2875756f17bc1deb
+        <!-- Bottom row - Global search -->
         <div class="relative" id="global-search-wrap">
           <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
