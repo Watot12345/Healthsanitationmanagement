@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Jun 26, 2026 at 08:27 AM
+-- Generation Time: Jun 27, 2026 at 05:36 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -84,7 +84,45 @@ CREATE TABLE `ai_insights_cache` (
 --
 
 INSERT INTO `ai_insights_cache` (`id`, `insights`, `generated_at`) VALUES
-(1, '{\"operational\":{\"title\":\"Sanitation Permit Status\",\"icon\":\"clipboard_check\",\"text\":\"Three sanitation permits are currently pending. Efficient processing is vital for ongoing health and safety compliance.\"},\"risk\":{\"title\":\"Influenza Prevalence\",\"icon\":\"biohazard_warning\",\"level\":\"High\",\"text\":\"Influenza is the most reported disease with 28 cases, requiring focused attention to mitigate community spread.\"},\"action\":{\"title\":\"Disease Alert Response\",\"icon\":\"medical_cross\",\"priority\":\"Urgent\",\"text\":\"With 2 active disease alerts and 28 influenza cases, prioritize public health outreach and intervention strategies.\"}}', '2026-06-26 10:52:21');
+(2, '{\"operational\":{\"title\":\"Permit Processing\",\"icon\":\"\\ud83d\\udcd1\",\"text\":\"Three sanitation permits are pending review, requiring prompt attention for operational efficiency.\"},\"risk\":{\"title\":\"Influenza Prevalence\",\"icon\":\"\\ud83e\\udda0\",\"level\":\"High\",\"text\":\"Influenza is the most reported disease with 28 cases, signaling a significant community health focus.\"},\"action\":{\"title\":\"Disease Alert Resolution\",\"icon\":\"\\ud83d\\udea8\",\"priority\":\"High\",\"text\":\"Resolve the two active disease alerts to mitigate potential public health impacts.\"}}', '2026-06-26 17:54:20');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ai_report_cache`
+--
+
+CREATE TABLE `ai_report_cache` (
+  `id` int(11) NOT NULL,
+  `cache_key` varchar(32) DEFAULT NULL,
+  `report_text` text DEFAULT NULL,
+  `generated_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ai_tasks`
+--
+
+CREATE TABLE `ai_tasks` (
+  `id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `module` varchar(100) NOT NULL DEFAULT 'general',
+  `priority` varchar(20) NOT NULL DEFAULT 'Medium',
+  `status` varchar(30) NOT NULL DEFAULT 'pending',
+  `created_by` varchar(100) NOT NULL DEFAULT 'System',
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `ai_tasks`
+--
+
+INSERT INTO `ai_tasks` (`id`, `title`, `module`, `priority`, `status`, `created_by`, `notes`, `created_at`) VALUES
+(1, 'Schedule a site inspection', 'inspection', 'HIGH', 'pending', 'Test User', 'Testing AI task persistence', '2026-06-26 11:19:54'),
+(2, 'Notify the assigned inspector', 'inspection', 'HIGH', 'pending', 'Test User', 'Testing AI task persistence', '2026-06-26 11:19:54');
 
 -- --------------------------------------------------------
 
@@ -274,8 +312,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `role`, `full_name`, `department`, `is_active`, `last_login`, `created_at`) VALUES
-(1, 'admin', 'admin@123', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5OEv/veCF4ki', 'admin', 'System Administrator', 'IT Department', 1, '2026-06-26 12:19:19', '2026-06-22 05:38:55'),
-(2, 'staff@123', 'staff@123', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5OEv/veCF4ki', 'staff', 'staff', 'HR', 1, '2026-06-25 21:46:43', '2026-06-25 13:14:39'),
+(1, 'admin', 'admin@123', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5OEv/veCF4ki', 'admin', 'System Administrator', 'IT Department', 1, '2026-06-26 21:27:43', '2026-06-22 05:38:55'),
+(2, 'staff@123', 'staff@123', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5OEv/veCF4ki', 'staff', 'staff', 'HR', 1, '2026-06-26 19:43:30', '2026-06-25 13:14:39'),
 (3, 'user', 'user@123', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5OEv/veCF4ki', 'user', 'user@123', 'NONE', 1, '2026-06-25 21:39:48', '2026-06-25 13:15:35'),
 (4, 'dr.elena', 'elena.santos@municipal.gov', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5O...', 'staff', 'Dr. Elena Santos', 'Health Center', 1, NULL, '2026-06-25 19:40:10'),
 (5, 'dr.miguel', 'miguel.reyes@municipal.gov', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5O...', 'staff', 'Dr. Miguel Reyes', 'Health Center', 1, NULL, '2026-06-25 19:40:10'),
@@ -315,7 +353,13 @@ INSERT INTO `user_sessions` (`id`, `user_id`, `token`, `expires_at`, `created_at
 (13, 1, '5e8393af6848f7477918374b343fdd98eb5e18eaae8ed3553161b2db290401cb', '2026-06-26 15:36:53', '2026-06-25 21:36:53'),
 (14, 1, 'f0eef9c61296c0376272a9c2cdef6df5ee424ffdf83fa2a04fc35e4a5198579b', '2026-06-26 20:37:26', '2026-06-26 02:37:26'),
 (15, 1, 'eeda0913923a5fc4eee8280e8bbda7dba760f1c977a56e9a50c4516ae95ee5fb', '2026-06-26 20:52:08', '2026-06-26 02:52:08'),
-(16, 1, '590a083b59e2f6485a50c1ff7e488b6ce51527da200c734afc6894906ade968f', '2026-06-26 22:19:19', '2026-06-26 04:19:19');
+(16, 1, '590a083b59e2f6485a50c1ff7e488b6ce51527da200c734afc6894906ade968f', '2026-06-26 22:19:19', '2026-06-26 04:19:19'),
+(17, 1, 'f89b0d26d9f4566faf025e3b66e53b0eed7c28c12575795648707c5748ff8968', '2026-06-27 00:47:15', '2026-06-26 06:47:15'),
+(18, 1, '39a9e1db3fc882dc5d9806b877dba825d8d763c8ce25f12f54ac44cd9e30a72f', '2026-06-27 01:12:33', '2026-06-26 07:12:33'),
+(19, 1, '944bcba2344e4c993d148134ffb23283540eb572e732b38e392feb64b4978c5c', '2026-06-27 03:02:48', '2026-06-26 09:02:48'),
+(20, 2, '688f0a2c8407b7381fc2ab2d3e492c5e8549ade1286a7e84f200acb58d81026d', '2026-06-27 05:43:30', '2026-06-26 11:43:30'),
+(21, 1, 'ec827cb4777b37551bd1b2c8ceed501655ee860e5e9a3ec71ca84642e1fc51ac', '2026-06-27 05:56:08', '2026-06-26 11:56:08'),
+(22, 1, '23e15a6f42f11f08c82fc3a69000fc0653963d88f278652e427168e19e747fa6', '2026-06-27 07:27:43', '2026-06-26 13:27:43');
 
 -- --------------------------------------------------------
 
@@ -395,6 +439,18 @@ ALTER TABLE `activity_logs`
 -- Indexes for table `ai_insights_cache`
 --
 ALTER TABLE `ai_insights_cache`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `ai_report_cache`
+--
+ALTER TABLE `ai_report_cache`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `ai_tasks`
+--
+ALTER TABLE `ai_tasks`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -488,7 +544,19 @@ ALTER TABLE `activity_logs`
 -- AUTO_INCREMENT for table `ai_insights_cache`
 --
 ALTER TABLE `ai_insights_cache`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `ai_report_cache`
+--
+ALTER TABLE `ai_report_cache`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `ai_tasks`
+--
+ALTER TABLE `ai_tasks`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `alerts`
@@ -542,7 +610,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `user_sessions`
 --
 ALTER TABLE `user_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `violations`

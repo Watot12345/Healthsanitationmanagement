@@ -5,6 +5,14 @@ import { card, icon, renderList } from '../utils/dom.js';
 
 export const REPORT_CATEGORIES = [
   {
+    id: 'ai',
+    label: 'AI Executive Reports',
+    icon: '🤖',
+    reports: [
+      { id: 'ai-executive', label: 'AI Executive Summary', format: 'PDF' },
+    ]
+  },
+  {
     id: 'health',
     label: 'Health Center Reports',
     icon: 'heart',

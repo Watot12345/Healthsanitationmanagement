@@ -4,12 +4,6 @@ require_once __DIR__ . '/../../config/database.php';
 
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Access denied']);
-    exit;
-}
-
 $data = json_decode(file_get_contents('php://input'), true);
 
 $name = trim($data['name'] ?? '');
@@ -33,10 +27,11 @@ if ($stmt->fetch()) {
     exit;
 }
 
-// Insert user
 $hash = password_hash($password, PASSWORD_DEFAULT);
-$stmt = $conn->prepare("INSERT INTO users (full_name, email, role, password_hash, is_active, created_at) VALUES (?, ?, ?, ?, 1, NOW())");
-$stmt->execute([$name, $email, $role, $hash]);
+$username = strtolower(explode(' ', $name)[0]) . '.' . strtolower(explode(' ', $name)[1] ?? '');
+
+$stmt = $conn->prepare("INSERT INTO users (username, full_name, email, password_hash, role, department, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)");
+$stmt->execute([$username, $name, $email, $hash, $role, $role . ' Department']);
 
 // Log activity
 $stmt = $conn->prepare("INSERT INTO activity_logs (user_name, action, module, level) VALUES (?, ?, ?, ?)");

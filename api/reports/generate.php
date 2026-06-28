@@ -9,7 +9,7 @@ $db = new Database();
 $conn = $db->getConnection();
 
 header('Content-Type: text/csv');
-header('Content-Disposition: attachment; filename="' . $type . '_report_' . date('Y-m-d') . '.csv"');
+header('Content-Disposition: attachment; filename="' . $type . '_report_' . date('Y-m-d_His') . '.csv"');
 
 $output = fopen('php://output', 'w');
 

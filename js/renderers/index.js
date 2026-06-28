@@ -1022,6 +1022,7 @@ function addNewLogEntry() {
 }
 
 function renderAnalytics() {
+  
   return `<div class="space-y-6">
     <!-- Date Range Filter -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -1039,6 +1040,7 @@ function renderAnalytics() {
       </div>
     </div>
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
       <!-- AI Insights Redesign -->
@@ -1108,6 +1110,11 @@ function renderAnalytics() {
           <div id="ai-current-time">UTC</div>
         </div>
       </div>
+=======
+    <!-- AI Snapshot Card -->
+    <div id="ai-snapshot" class="hidden"></div>
+    <div id="ai-insights" class="hidden"></div>
+>>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
 
 >>>>>>> 0e6ec516f61032bb17df9534c68734e60fcf141d
     <!-- KPI Cards -->
@@ -1127,11 +1134,13 @@ function renderAnalytics() {
       ${card(`<div class="p-5">
         <h3 class="font-semibold mb-4">Service Requests Trend</h3>
         <div id="trendChart" style="min-height: 350px;"></div>
+        <div id="ai-card-trendChart" class="ai-chart-insight mt-3"></div>
       </div>`)}
       
       ${card(`<div class="p-5">
         <h3 class="font-semibold mb-4">Disease Surveillance</h3>
         <div id="diseaseTrendChart" style="min-height: 350px;"></div>
+        <div id="ai-card-diseaseTrendChart" class="ai-chart-insight mt-3"></div>
       </div>`)}
     </div>
     
@@ -1140,11 +1149,13 @@ function renderAnalytics() {
       ${card(`<div class="p-5 lg:col-span-2">
         <h3 class="font-semibold mb-4">Weekly Activity Heatmap</h3>
         <div id="heatmapChart" style="min-height: 350px;"></div>
+        <div id="ai-card-heatmapChart" class="ai-chart-insight mt-3"></div>
       </div>`)}
       
       ${card(`<div class="p-5">
         <h3 class="font-semibold mb-4">Service Distribution</h3>
         <div id="donutChart" style="min-height: 320px;"></div>
+        <div id="ai-card-donutChart" class="ai-chart-insight mt-3"></div>
       </div>`)}
     </div>
     
@@ -1152,6 +1163,7 @@ function renderAnalytics() {
     ${card(`<div class="p-5">
       <h3 class="font-semibold mb-4">Staff Performance</h3>
       <div id="staffChart" style="min-height: 300px;"></div>
+      <div id="ai-card-staffChart" class="ai-chart-insight mt-3"></div>
     </div>`)}
     
     <!-- Live Activity Feed -->
@@ -1244,7 +1256,7 @@ function updateKPICards(data) {
   let totalAppointments, totalPermits, totalDistribution, totalAlerts;
 
   if (data.total_appointments !== undefined) {
-    // _stats format from insights.php
+  
     totalAppointments = data.total_appointments;
     totalPermits = data.total_permits;
     totalDistribution = data.total_services;
@@ -1581,6 +1593,15 @@ function renderHealthCenter(filter = '') {
   
     return `<div class="space-y-6">
       ${card(`<div class="ui-card-body"><h3 class="ui-section-title">Permit Workflow (SP-1042)</h3>${workflowStepper(['Submitted','Under Review','Inspection','Approved/Rejected'], 2)}</div>`)}
+      <div class="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 mb-4 dark:border-emerald-800 dark:bg-emerald-900/20">
+        <div class="text-sm font-semibold text-emerald-800 dark:text-emerald-300">AI Assist</div>
+        <p class="text-xs text-emerald-700 dark:text-emerald-400 mt-1">Paste a sanitation note or violation report to suggest the right alert/inspection details.</p>
+        <textarea id="ai-autofill-notes-sanitation" rows="2" placeholder="Example: food stall with unsafe storage and repeated waste issue" class="w-full mt-2 px-3 py-2 rounded-lg border border-emerald-200 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
+        <div class="mt-2 flex items-center justify-between gap-2">
+          <div id="ai-autofill-feedback-sanitation" class="text-xs text-emerald-700 dark:text-emerald-300"></div>
+          <button type="button" data-ai-autofill="sanitation" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700">Auto-fill</button>
+        </div>
+      </div>
       <div class="flex flex-col sm:flex-row gap-3 justify-between">${searchInput('permit-search', 'Search permits...')}${btnPrimary('Schedule Inspection', 'schedule-inspection')}</div>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 space-y-6">
@@ -1786,6 +1807,15 @@ function renderHealthCenter(filter = '') {
   
     return `<div class="space-y-6">
       ${outbreakBanner}
+      <div class="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 mb-4 dark:border-emerald-800 dark:bg-emerald-900/20">
+        <div class="text-sm font-semibold text-emerald-800 dark:text-emerald-300">AI Assist</div>
+        <p class="text-xs text-emerald-700 dark:text-emerald-400 mt-1">Paste an alert note or disease report to suggest the priority, disease tag, and response action.</p>
+        <textarea id="ai-autofill-notes-surveillance" rows="2" placeholder="Example: influenza cluster in barangay San Jose with 8 new cases" class="w-full mt-2 px-3 py-2 rounded-lg border border-emerald-200 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
+        <div class="mt-2 flex items-center justify-between gap-2">
+          <div id="ai-autofill-feedback-surveillance" class="text-xs text-emerald-700 dark:text-emerald-300"></div>
+          <button type="button" data-ai-autofill="surveillance" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700">Auto-fill</button>
+        </div>
+      </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">${alerts}</div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">${trendCards}</div>
       <div class="flex flex-col sm:flex-row gap-3">
@@ -1840,21 +1870,30 @@ function renderHealthCenter(filter = '') {
   function renderBookAppointment() {
     return `<div class="max-w-xl">
       ${card(`<div class="p-6"><h3 class="font-semibold mb-4">Schedule an Appointment</h3>
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 mb-4 dark:border-emerald-800 dark:bg-emerald-900/20">
+          <div class="text-sm font-semibold text-emerald-800 dark:text-emerald-300">AI Assist</div>
+          <p class="text-xs text-emerald-700 dark:text-emerald-400 mt-1">Paste symptoms or notes and we’ll suggest the right values for the form.</p>
+          <textarea id="ai-autofill-notes-appointment" rows="2" placeholder="Example: fever and cough, urgent follow-up, barangay San Jose" class="w-full mt-2 px-3 py-2 rounded-lg border border-emerald-200 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
+          <div class="mt-2 flex items-center justify-between gap-2">
+            <div id="ai-autofill-feedback-appointment" class="text-xs text-emerald-700 dark:text-emerald-300"></div>
+            <button type="button" data-ai-autofill="appointment" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700">Auto-fill</button>
+          </div>
+        </div>
         <form id="appointment-form" class="space-y-4" onsubmit="return false">
           <div><label class="block text-sm font-medium mb-1">Service Type</label>
-            <select class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
+            <select id="appointment-service-type" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
               <option>General Checkup</option><option>Dental Consultation</option><option>Laboratory Test</option><option>Vaccination</option><option>Prenatal Care</option>
             </select></div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-medium mb-1">Preferred Date</label>
-              <input type="date" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
+              <input id="appointment-date" type="date" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
             <div><label class="block text-sm font-medium mb-1">Preferred Time</label>
-              <select class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
+              <select id="appointment-time" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
                 <option>08:00 AM</option><option>09:00 AM</option><option>10:00 AM</option><option>02:00 PM</option><option>03:00 PM</option>
               </select></div>
           </div>
           <div><label class="block text-sm font-medium mb-1">Reason for Visit</label>
-            <textarea rows="3" placeholder="Describe your symptoms or reason..." class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none resize-none"></textarea></div>
+            <textarea id="appointment-reason" rows="3" placeholder="Describe your symptoms or reason..." class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none resize-none"></textarea></div>
           <button type="submit" data-action="submit-appointment" class="w-full py-3 rounded-xl bg-gov-600 text-white font-semibold text-base hover:bg-gov-700 transition-colors shadow-sm hover:shadow-md">Book Appointment</button>
         </form></div>`)}
     </div>`;
@@ -1863,15 +1902,24 @@ function renderHealthCenter(filter = '') {
   function renderRequestPermit() {
     return `<div class="max-w-xl">
       ${card(`<div class="p-6"><h3 class="font-semibold mb-4">Sanitation Permit Application</h3>
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 mb-4 dark:border-emerald-800 dark:bg-emerald-900/20">
+          <div class="text-sm font-semibold text-emerald-800 dark:text-emerald-300">AI Assist</div>
+          <p class="text-xs text-emerald-700 dark:text-emerald-400 mt-1">Paste a business description or inspection note and we’ll suggest the right permit details.</p>
+          <textarea id="ai-autofill-notes-permit" rows="2" placeholder="Example: food stall near barangay San Jose, needs permit renewal" class="w-full mt-2 px-3 py-2 rounded-lg border border-emerald-200 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
+          <div class="mt-2 flex items-center justify-between gap-2">
+            <div id="ai-autofill-feedback-permit" class="text-xs text-emerald-700 dark:text-emerald-300"></div>
+            <button type="button" data-ai-autofill="permit" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700">Auto-fill</button>
+          </div>
+        </div>
         <form class="space-y-4" onsubmit="return false">
           <div><label class="block text-sm font-medium mb-1">Business Name</label>
-            <input type="text" placeholder="Enter business name" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
+            <input id="permit-business-name" type="text" placeholder="Enter business name" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
           <div><label class="block text-sm font-medium mb-1">Permit Type</label>
-            <select class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
+            <select id="permit-type" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
               <option>Food Establishment</option><option>Market Vendor</option><option>Bakery</option><option>Recreational Facility</option>
             </select></div>
           <div><label class="block text-sm font-medium mb-1">Business Address</label>
-            <input type="text" placeholder="Full address" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
+            <input id="permit-address" type="text" placeholder="Full address" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
           <div><label class="block text-sm font-medium mb-1">Upload Documents</label>
             <div class="border-2 border-dashed border-slate-200 dark:border-slate-600 rounded-xl p-6 text-center hover:border-gov-400 transition-colors cursor-pointer">
               <svg class="h-8 w-8 mx-auto text-slate-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
