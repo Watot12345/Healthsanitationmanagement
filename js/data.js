@@ -14,6 +14,8 @@ export const DATA = {
   kpis: null,
   systemStatus: null,
   recentUpdates: [],
+  medicalRecords: [],
+  applications: [],
 };
   
   export function getCalendarEvents() {

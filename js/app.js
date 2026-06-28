@@ -260,17 +260,50 @@ export function performGlobalSearch(query) {
     state.openDropdown = 'search';
 }
 
+const searchIds = ['user-search', 'log-search', 'apt-search', 'permit-search', 'ww-search', 'surv-search', 'patient-search', 'consultation-search', 'record-search'];
 // Search handling
+async function loadConsultations() {
+    try {
+        const response = await fetch('api/consultations/get.php');
+        const data = await response.json();
+        if (data.success) {
+            DATA.consultations = data.consultations;
+        }
+    } catch (e) {
+        console.error('Error loading consultations:', e);
+    }
+}
+async function loadApplications() {
+    try {
+        const response = await fetch('api/applications/get.php');
+        const data = await response.json();
+        if (data.success) {
+            DATA.applications = data.applications;
+        }
+    } catch (e) {
+        console.error('Error loading applications:', e);
+    }
+}
 function handleSearchInput(e) {
     const id = e.target.id;
-    const searchIds = ['user-search', 'log-search', 'apt-search', 'permit-search', 'ww-search', 'surv-search'];
+    const searchIds = ['user-search', 'log-search', 'apt-search', 'permit-search', 'ww-search', 'surv-search', 'patient-search', 'consultation-search', 'record-search', 'application-search'];
     if (searchIds.includes(id)) {
         state.searchFilters[id] = e.target.value;
         renderViewPreserveScroll();
     }
-    if (id === 'severity-filter') {
-        state.searchFilters['severity-filter'] = e.target.value;
-        renderViewPreserveScroll();
+}
+async function loadMedicalRecords() {
+    try {
+        const response = await fetch('api/medicalRecords/get.php');
+        const data = await response.json();
+        if (data.success) {
+            DATA.medicalRecords = data.records;
+            console.log('Medical records loaded:', DATA.medicalRecords.length);
+        }
+    } catch (e) {
+        console.error('Error loading medical records:', e);
+        // Set empty array as fallback
+        DATA.medicalRecords = [];
     }
 }
 async function loadDashboardData() {
@@ -760,6 +793,29 @@ function refreshInsights() {
     loadInsights();
 }
 
+async function loadPatients() {
+    try {
+        console.log('Fetching patients from API...');
+        const response = await fetch('api/patients/get.php');
+        
+        if (!response.ok) {
+            console.error('Failed to fetch patients:', response.status);
+            return;
+        }
+        
+        const data = await response.json();
+        console.log('Patients data received:', data);
+        
+        if (data.success) {
+            DATA.patients = data.patients; // Update the global DATA object
+            console.log(`Loaded ${DATA.patients.length} patients`);
+        } else {
+            console.error('API error:', data.message);
+        }
+    } catch (e) {
+        console.error('Error loading patients:', e);
+    }
+}
 function renderSingleInsightCard(item) {
     const badgeConfig = {
         'Trending Up': { 
@@ -1143,6 +1199,10 @@ function initApp() {
         await loadRecentUpdates();
         await loadUsers();
         await loadLogs();
+         await loadPatients();
+         await loadConsultations();
+         await loadMedicalRecords();
+         await loadApplications();
         renderView();
     });
 }

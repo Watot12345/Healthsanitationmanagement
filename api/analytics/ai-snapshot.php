@@ -10,6 +10,82 @@ header('Content-Type: application/json');
 $config = require __DIR__ . '/../../config/env.php';
 $apiKey = trim($config['gemini_key'] ?? '');
 
+// ─── FALLBACK INSIGHTS GENERATOR FUNCTION ──────────────────
+function generateFallbackInsights($conn) {
+    // Fetch fresh data
+    $appointments = (int) $conn->query("SELECT COUNT(*) FROM appointments")->fetchColumn();
+    $permitsPending = (int) $conn->query("SELECT COUNT(*) FROM permits WHERE status = 'Pending'")->fetchColumn();
+    $permitsTotal = (int) $conn->query("SELECT COUNT(*) FROM permits")->fetchColumn();
+    $activeCases = (int) $conn->query("SELECT COUNT(*) FROM alerts WHERE status = 'Active'")->fetchColumn();
+    $alertCaseTotal = (int) $conn->query("SELECT COALESCE(SUM(cases), 0) FROM alerts WHERE status = 'Active'")->fetchColumn();
+    
+    $healthTotal = (int) $conn->query("SELECT COUNT(*) FROM appointments")->fetchColumn();
+    $sanitationTotal = (int) $conn->query("SELECT COUNT(*) FROM permits")->fetchColumn();
+    $immunizationTotal = (int) $conn->query("SELECT COUNT(*) FROM activity_logs WHERE module = 'Immunization'")->fetchColumn();
+    $wastewaterTotal = (int) $conn->query("SELECT COUNT(*) FROM wastewater_requests")->fetchColumn();
+
+    // Monthly trends
+    $apptMonthly = [];
+    for ($i = 5; $i >= 0; $i--) {
+        $apptMonthly[] = (int) $conn->query("SELECT COUNT(*) FROM appointments WHERE MONTH(created_at) = MONTH(NOW() - INTERVAL $i MONTH)")->fetchColumn();
+    }
+    $permitMonthly = [];
+    for ($i = 5; $i >= 0; $i--) {
+        $permitMonthly[] = (int) $conn->query("SELECT COUNT(*) FROM permits WHERE MONTH(created_at) = MONTH(NOW() - INTERVAL $i MONTH)")->fetchColumn();
+    }
+
+    return [
+        'snapshot' => [
+            'status' => $activeCases > 30 ? 'Warning' : 'Normal',
+            'headline' => 'System Status Overview',
+            'summary' => "Monitoring $appointments appointments, $permitsTotal permits, and $activeCases disease alerts.",
+            'priority' => $activeCases > 30 ? 'High' : 'Medium',
+            'confidence' => 75
+        ],
+        'insights' => [
+            [
+                'chart' => 'service_requests',
+                'badge' => 'Trend',
+                'title' => 'Service Activity',
+                'insight' => "Total of $appointments appointments recorded in the system.",
+                'recommendation' => 'Monitor service demand trends',
+                'confidence' => 80
+            ],
+            [
+                'chart' => 'disease_surveillance',
+                'badge' => $activeCases > 30 ? 'Risk' : 'Stable',
+                'title' => 'Disease Monitoring',
+                'insight' => "Currently tracking $activeCases active disease alerts with $alertCaseTotal total cases.",
+                'recommendation' => $activeCases > 30 ? 'Review high-priority alerts' : 'Continue routine monitoring',
+                'confidence' => 85
+            ],
+            [
+                'chart' => 'service_distribution',
+                'badge' => 'Stable',
+                'title' => 'Service Distribution',
+                'insight' => "Services distributed across health, sanitation, immunization, and wastewater management.",
+                'recommendation' => 'Maintain balanced resource allocation',
+                'confidence' => 90
+            ]
+        ],
+        '_stats' => [
+            'appointments' => $apptMonthly,
+            'permits' => $permitMonthly,
+            'distribution' => [
+                'health' => $healthTotal,
+                'sanitation' => $sanitationTotal,
+                'immunization' => $immunizationTotal,
+                'wastewater' => $wastewaterTotal
+            ],
+            'disease_cases' => $alertCaseTotal,
+            'active_alerts' => $activeCases,
+            'total_appointments' => $appointments,
+            'total_permits' => $permitsTotal,
+            'total_services' => $healthTotal + $sanitationTotal + $immunizationTotal + $wastewaterTotal
+        ]
+    ];
+}
+
 try {
     $db = new Database();
     $conn = $db->getConnection();
@@ -20,22 +96,50 @@ try {
         exit;
     }
 
-    // ─── CHECK CACHE ──────────────────────────────────────────
-    $stmt = $conn->query("SELECT insights, generated_at FROM ai_insights_cache ORDER BY id DESC LIMIT 1");
+    // ─── GET CURRENT DATA HASH FROM DATABASE ──────────────────
+    // This creates a unique fingerprint of your current data
+    $dataHash = md5(
+        (int) $conn->query("SELECT COUNT(*) FROM appointments")->fetchColumn() .
+        (int) $conn->query("SELECT COUNT(*) FROM permits")->fetchColumn() .
+        (int) $conn->query("SELECT COUNT(*) FROM alerts WHERE status = 'Active'")->fetchColumn() .
+        (int) $conn->query("SELECT COUNT(*) FROM activity_logs WHERE module = 'Immunization'")->fetchColumn() .
+        (int) $conn->query("SELECT COUNT(*) FROM wastewater_requests")->fetchColumn()
+    );
+
+    // ─── CHECK IF data_hash COLUMN EXISTS ────────────────────
+    try {
+        $conn->query("SELECT data_hash FROM ai_insights_cache LIMIT 1");
+    } catch (PDOException $e) {
+        // Column doesn't exist, add it
+        $conn->exec("ALTER TABLE ai_insights_cache ADD COLUMN data_hash VARCHAR(32) DEFAULT NULL");
+        file_put_contents('/tmp/ai-db-update.log', date('Y-m-d H:i:s') . " - Added data_hash column to ai_insights_cache\n", FILE_APPEND);
+    }
+
+    // ─── CHECK CACHE WITH DATA HASH ──────────────────────────
+    $stmt = $conn->query("SELECT insights, generated_at, data_hash FROM ai_insights_cache ORDER BY id DESC LIMIT 1");
     $cached = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($cached && strtotime($cached['generated_at']) > strtotime('-1 hour')) {
-        echo json_encode(['status' => 'success', 'insights' => json_decode($cached['insights'], true)]);
+    // If cache exists and data hasn't changed, use cache immediately
+    if ($cached && isset($cached['data_hash']) && $cached['data_hash'] === $dataHash) {
+        $insights = json_decode($cached['insights'], true);
+        file_put_contents('/tmp/ai-cache-hit.log', date('Y-m-d H:i:s') . " - Cache HIT - Data unchanged\n", FILE_APPEND);
+        echo json_encode(['status' => 'success', 'insights' => $insights, 'source' => 'cache']);
         exit;
     }
 
+    // ─── DATA HAS CHANGED - FETCH FRESH DATA ──────────────────
+    file_put_contents('/tmp/ai-data-change.log', date('Y-m-d H:i:s') . " - Data changed, fetching fresh data\n", FILE_APPEND);
+
     if ($apiKey === '' || $apiKey === 'PUT_YOUR_GEMINI_API_KEY_HERE') {
-        if ($cached) {
-            echo json_encode(['status' => 'success', 'insights' => json_decode($cached['insights'], true)]);
-            exit;
-        }
-        http_response_code(500);
-        echo json_encode(['status' => 'error', 'message' => 'AI insights need a Gemini API key.']);
+        // Use fallback with fresh data
+        $fallbackInsights = generateFallbackInsights($conn);
+        
+        // Cache the fallback with data hash
+        $conn->exec("DELETE FROM ai_insights_cache");
+        $stmt = $conn->prepare("INSERT INTO ai_insights_cache (insights, generated_at, data_hash) VALUES (?, NOW(), ?)");
+        $stmt->execute([json_encode($fallbackInsights), $dataHash]);
+        
+        echo json_encode(['status' => 'success', 'insights' => $fallbackInsights, 'source' => 'fallback_fresh']);
         exit;
     }
 
@@ -73,9 +177,8 @@ try {
     $permitMonthlySummary = '';
     foreach ($permitMonthly as $i => $v) { $permitMonthlySummary .= "$months[$i]: $v\n"; }
 
-    // ─── COMPREHENSIVE PROMPT ──────────────────────────────────
-  // ─── COMPACT PROMPT ────────────────────────────────────────
-$prompt = <<<PROMPT
+    // ─── COMPACT PROMPT ────────────────────────────────────────
+    $prompt = <<<PROMPT
 You are a municipal health decision support AI embedded in an analytics dashboard. Analyze this data and return a compact card for each chart.
 
 CURRENT DATA:
@@ -157,12 +260,35 @@ PROMPT;
     $curlError = curl_error($ch);
     curl_close($ch);
 
+    // ─── CHECK FOR API ERRORS (INCLUDING QUOTA LIMITS) ──────
+    $shouldUseFallback = false;
+    $errorMessage = '';
+
     if ($response === false || $httpCode >= 400) {
-        error_log("AI Snapshot API Error: HTTP $httpCode, cURL: $curlError, Response: " . substr($response, 0, 200));
-        if ($cached) {
-            echo json_encode(['status' => 'success', 'insights' => json_decode($cached['insights'], true)]);
-            exit;
+        $shouldUseFallback = true;
+        $errorMessage = "HTTP $httpCode, cURL: $curlError";
+        error_log("AI Snapshot API Error: HTTP $httpCode, cURL: $curlError");
+    } else {
+        // Parse response to check for API errors in response body
+        $result = json_decode($response, true);
+        
+        // Check for error in response body (Gemini returns error in this format)
+        if (isset($result['error'])) {
+            $shouldUseFallback = true;
+            $errorMessage = "API Error: " . ($result['error']['message'] ?? 'Unknown error');
+            $errorCode = $result['error']['code'] ?? 0;
+            
+            // Log the specific quota error
+            if ($errorCode === 429 || stripos($errorMessage, 'quota') !== false || stripos($errorMessage, 'limit') !== false || stripos($errorMessage, 'rate') !== false) {
+                file_put_contents('/tmp/ai-quota-error.log', date('Y-m-d H:i:s') . " - QUOTA EXCEEDED: $errorMessage (Code: $errorCode)\n", FILE_APPEND);
+                error_log("AI Snapshot QUOTA ERROR: $errorMessage");
+            }
         }
+    }
+
+    // ─── HANDLE FALLBACK IF NEEDED ───────────────────────────
+    if ($shouldUseFallback) {
+        file_put_contents('/tmp/ai-fallback-triggered.log', date('Y-m-d H:i:s') . " - $errorMessage\n", FILE_APPEND);
         
         // Generate fallback insights based on actual data
         $fallbackInsights = [
@@ -216,10 +342,16 @@ PROMPT;
             ]
         ];
         
-        echo json_encode(['status' => 'success', 'insights' => $fallbackInsights, 'source' => 'fallback']);
+        // Cache the fallback with data hash
+        $conn->exec("DELETE FROM ai_insights_cache");
+        $stmt = $conn->prepare("INSERT INTO ai_insights_cache (insights, generated_at, data_hash) VALUES (?, NOW(), ?)");
+        $stmt->execute([json_encode($fallbackInsights), $dataHash]);
+        
+        echo json_encode(['status' => 'success', 'insights' => $fallbackInsights, 'source' => 'fallback_fresh']);
         exit;
     }
 
+    // ─── PROCESS SUCCESSFUL RESPONSE ──────────────────────────
     $result = json_decode($response, true);
     $insights = null;
     $rawText = trim($result['candidates'][0]['content']['parts'][0]['text'] ?? '');
@@ -255,22 +387,24 @@ PROMPT;
             'total_services' => $healthTotal + $sanitationTotal + $immunizationTotal + $wastewaterTotal
         ];
 
-        // Store in cache
+        // Store in cache with data hash
         $conn->exec("DELETE FROM ai_insights_cache");
-        $stmt = $conn->prepare("INSERT INTO ai_insights_cache (insights, generated_at) VALUES (?, NOW())");
-        $stmt->execute([json_encode($insights)]);
+        $stmt = $conn->prepare("INSERT INTO ai_insights_cache (insights, generated_at, data_hash) VALUES (?, NOW(), ?)");
+        $stmt->execute([json_encode($insights), $dataHash]);
 
-        echo json_encode(['status' => 'success', 'insights' => $insights]);
+        echo json_encode(['status' => 'success', 'insights' => $insights, 'source' => 'api_fresh']);
     } else {
         // Fallback to cached if available
         if ($cached) {
-            echo json_encode(['status' => 'success', 'insights' => json_decode($cached['insights'], true)]);
+            echo json_encode(['status' => 'success', 'insights' => json_decode($cached['insights'], true), 'source' => 'cache_old']);
             exit;
         }
         http_response_code(500);
         echo json_encode(['status' => 'error', 'message' => 'AI insights are temporarily unavailable.']);
     }
 } catch (Exception $e) {
+    file_put_contents('/tmp/ai-error.log', date('Y-m-d H:i:s') . " - Exception: " . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n", FILE_APPEND);
     http_response_code(500);
     echo json_encode(['status' => 'error', 'message' => 'AI insights are temporarily unavailable.']);
 }
+?>

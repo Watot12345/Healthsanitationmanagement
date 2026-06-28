@@ -1,6 +1,6 @@
 <?php
 class Database {
-    private $hosts = ["127.0.0.1:3307", "localhost:3307", "127.0.0.1", "localhost"];
+    private $hosts = ["127.0.0.1:33066", "localhost:3306", "127.0.0.1", "localhost"];
     private $db_name = "health_sanitation_db";
     private $username = "root";
     private $password = "";
@@ -26,16 +26,22 @@ class Database {
     }
 
     public function getConnection() {
-        foreach ($this->hosts as $host) {
+        foreach ($this->hosts as $hostEntry) {
             try {
-                $this->conn = new PDO(
-                    "mysql:host=" . $host . ";dbname=" . $this->db_name . ";charset=utf8mb4",
-                    $this->username,
-                    $this->password
-                );
+                // ✅ Split host and port correctly for PDO
+                $parts    = explode(':', $hostEntry);
+                $hostname = $parts[0];
+                $port     = $parts[1] ?? '3306';
+
+                // ✅ port must be a separate parameter in DSN
+                $dsn = "mysql:host={$hostname};port={$port};dbname={$this->db_name};charset=utf8mb4";
+
+                $this->conn = new PDO($dsn, $this->username, $this->password);
                 $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 $this->conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+
                 return $this->conn;
+
             } catch(PDOException $e) {
                 $this->lastError = $e->getMessage();
                 continue;

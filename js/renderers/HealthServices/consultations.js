@@ -1,19 +1,13 @@
 import { card, icon, renderList, badge, filterData, searchInput, btnPrimary, tableWrap, emptyState, btnSecondary } from '../../utils/dom.js';
 import { openModal } from '../../utils/modal.js';
 import { DATA } from '../../data.js';
-
-// ─── Fake Data ──────────────────────────────────────────────────────────────
-
-const CONSULTATIONS = [
-  { id: 'CON-001', patient: 'Pedro Garcia', doctor: 'Dr. Elena Santos', date: '2026-06-22', time: '09:00 AM', diagnosis: 'Hypertension follow-up', notes: 'BP 140/90, continue medication', prescription: 'Losartan 50mg daily', followUp: '2026-07-22', status: 'Completed' },
-  { id: 'CON-002', patient: 'Rosa Mendoza', doctor: 'Dr. Miguel Reyes', date: '2026-06-21', time: '10:30 AM', diagnosis: 'Annual physical', notes: 'All vitals normal', prescription: 'Multivitamins', followUp: '2027-06-21', status: 'Completed' },
-  { id: 'CON-003', patient: 'Carlos Lim', doctor: 'Dr. Ana Cruz', date: '2026-06-23', time: '08:00 AM', diagnosis: 'Dental caries', notes: 'Two cavities found', prescription: 'Amoxicillin 500mg', followUp: '2026-07-01', status: 'Pending' },
-];
+import { getSearchValue } from '../../utils/search.js';
 
 // ─── View ────────────────────────────────────────────────────────────────────
-
-export function renderConsultations(filter = '') {
-  const filtered = filterData(CONSULTATIONS, filter, ['patient', 'doctor', 'diagnosis']);
+export function renderConsultations() {  // Remove filter parameter
+  const filter = (window.state?.searchFilters?.['consultation-search']) || getSearchValue('consultation-search') || '';
+  const consultations = DATA.consultations || [];
+  const filtered = filterData(consultations, filter, ['patient', 'doctor', 'diagnosis']);
 
   return `
     <div class="space-y-6">
@@ -21,7 +15,6 @@ export function renderConsultations(filter = '') {
         ${searchInput('consultation-search', 'Search by patient, doctor, diagnosis...')}
         ${btnPrimary('+ New Consultation', 'new-consultation')}
       </div>
-
       ${card(`
         <div class="ui-card-body">
           <h3 class="ui-section-title mb-4">Consultation Records</h3>
@@ -43,15 +36,16 @@ export function renderConsultations(filter = '') {
                 ${filtered.length ? renderList(filtered, c => `
                   <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                     <td class="px-4 py-3 text-sm font-mono">${c.id}</td>
-                    <td class="px-4 py-3 text-sm font-medium">${c.patient}</td>
-                    <td class="px-4 py-3 text-sm">${c.doctor}</td>
-                    <td class="px-4 py-3 text-sm text-slate-500">${c.date} ${c.time}</td>
+                    <td class="px-4 py-3 text-sm font-medium">${c.patient || c.patient_name}</td>
+                    <td class="px-4 py-3 text-sm">${c.doctor || c.doctor_name}</td>
+                    <td class="px-4 py-3 text-sm text-slate-500">${c.date || c.consultation_date} ${c.time || ''}</td>
                     <td class="px-4 py-3 text-sm">${c.diagnosis}</td>
-                    <td class="px-4 py-3 text-sm text-slate-500">${c.followUp}</td>
+                    <td class="px-4 py-3 text-sm text-slate-500">${c.followUp || c.follow_up_date || 'N/A'}</td>
                     <td class="px-4 py-3 text-sm">${badge(c.status)}</td>
                     <td class="px-4 py-3 text-sm">
                       <div class="flex gap-1">
-                        <button data-action="view-consultation" data-id="${c.id}" class="px-2 py-1 text-xs rounded border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">View</button>
+                        <button data-action="view-consultation" data-id="${c.id}" class="px-2 py-1 text-xs rounded border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">👁️ View</button>
+                        <button data-action="delete-consultation" data-id="${c.id}" class="px-2 py-1 text-xs rounded bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 border border-red-200 dark:border-red-800">🗑️ Delete</button>
                       </div>
                     </td>
                   </tr>
@@ -68,11 +62,12 @@ export function renderConsultations(filter = '') {
 // ─── Detail Modal ────────────────────────────────────────────────────────────
 
 export function showConsultationDetail(id) {
-  const c = CONSULTATIONS.find(item => item.id === id);
+    const consultations = DATA.consultations || [];
+  const c = consultations.find(item => item.id == id);
   if (!c) return;
 
   openModal(
-    `Consultation ${c.id} — ${c.patient}`,
+    `Consultation ${c.id} — ${c.patient || c.patient_name}`,
     `
       <div class="space-y-4">
         <div class="grid grid-cols-2 gap-3">
@@ -97,28 +92,61 @@ export function showConsultationDetail(id) {
 }
 
 // ─── New Consultation Modal ──────────────────────────────────────────────────
-
 export function showNewConsultation() {
+  const today = new Date().toISOString().split('T')[0];
+
   openModal(
     'New Consultation',
     `
       <form class="space-y-4" onsubmit="return false">
-        <div><label class="block text-sm font-medium mb-1">Patient</label>
-          <select class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
+        <div>
+          <label class="block text-sm font-medium mb-1">Patient <span class="text-red-500">*</span></label>
+          <select id="consult-patient" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none" required>
+            <option value="">Select Patient</option>
             ${DATA.patients.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
-          </select></div>
-        <div><label class="block text-sm font-medium mb-1">Doctor</label>
-          <select class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
-            ${DATA.doctors.map(d => `<option>${d.name}</option>`).join('')}
-          </select></div>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-sm font-medium mb-1">Date</label><input type="date" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
-          <div><label class="block text-sm font-medium mb-1">Time</label><input type="time" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
+          </select>
         </div>
-        <div><label class="block text-sm font-medium mb-1">Diagnosis</label><input type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
-        <div><label class="block text-sm font-medium mb-1">Notes</label><textarea rows="3" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none resize-none"></textarea></div>
-        <div><label class="block text-sm font-medium mb-1">Prescription</label><input type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
-        <div><label class="block text-sm font-medium mb-1">Follow-up Date</label><input type="date" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none"></div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-1">Doctor <span class="text-red-500">*</span></label>
+          <input type="text" id="consult-doctor" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none" placeholder="Dr. Name" required>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium mb-1">Date</label>
+            <input type="date" id="consult-date" value="${today}" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Time</label>
+            <input type="time" id="consult-time" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-1">Diagnosis</label>
+          <input type="text" id="consult-diagnosis" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none" placeholder="e.g., Hypertension">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-1">Symptoms</label>
+          <textarea id="consult-symptoms" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none resize-none" placeholder="Patient symptoms..."></textarea>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-1">Notes</label>
+          <textarea id="consult-notes" rows="3" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none resize-none" placeholder="Doctor notes..."></textarea>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-1">Prescription</label>
+          <input type="text" id="consult-prescription" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none" placeholder="e.g., Paracetamol 500mg">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-1">Follow-up Date</label>
+          <input type="date" id="consult-followup" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-gov-500 focus:outline-none">
+        </div>
       </form>
     `,
     `<button data-action="close-modal" class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">Cancel</button>

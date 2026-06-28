@@ -17,6 +17,7 @@ import { showServiceRequestDetail, showNewServiceRequest } from './renderers/was
 import { showCaseDetail as showSurvCaseDetail, showReportCaseModal as showSurvReportModal } from './renderers/surveillance/caseReports.js';
 import { showManageAlert } from './renderers/surveillance/outbreakDetection.js';
 let navigateTo, switchRole, renderView, renderNotificationPanel, closeAllDropdowns;
+
 export function setCoreFunctions(functions) {
   navigateTo = functions.navigateTo;
   switchRole = functions.switchRole;
@@ -164,15 +165,719 @@ const status = document.getElementById('edit-user-status').value;
     'submit-wastewater': () => showToast('Service request submitted!', 'success'),
     'register-patient': () => { import('./renderers/HealthServices/patients.js').then(m => m.showRegisterPatient()); },
 'view-patient-detail': (target) => showPatientDetail(target.dataset.id),
-'confirm-register-patient': () => { closeModal();  showToast({ type: 'success', title: 'Success', message: 'Patient registered successfully' }); },
+'confirm-register-patient': async (target) => {
+    console.log('=== REGISTER PATIENT CLICKED ===');
+    
+    try {
+        // Collect all form data
+        const formData = {
+            full_name: document.getElementById('reg-fullname')?.value || '',
+            birth_date: document.getElementById('reg-dob')?.value || '',
+            gender: document.getElementById('reg-gender')?.value || '',
+            blood_type: document.getElementById('reg-bloodtype')?.value || '',
+            weight: parseFloat(document.getElementById('reg-weight')?.value) || null,
+            height: parseFloat(document.getElementById('reg-height')?.value) || null,
+            head_circumference: parseFloat(document.getElementById('reg-head-circ')?.value) || null,
+            triage: document.getElementById('reg-triage')?.value || 'Low',
+            condition: document.getElementById('reg-conditions')?.value || 'Stable',
+            address: document.getElementById('reg-address')?.value || '',
+            contact_number: document.getElementById('reg-contact')?.value || '',
+            emergency_contact: document.getElementById('reg-emergency')?.value || '',
+            emergency_phone: document.getElementById('reg-emergency-phone')?.value || '',
+            measurement_date: document.getElementById('reg-measurement-date')?.value || null
+        };
+        
+        console.log('📤 Form Data collected:', formData);
+        
+        // Validate required fields
+        if (!formData.full_name || !formData.birth_date) {
+            console.log('❌ Validation failed: Missing required fields');
+            showToast({ 
+                type: 'error', 
+                title: 'Validation Error', 
+                message: 'Please fill in all required fields (Name and Date of Birth)' 
+            });
+            return;
+        }
+        
+        // Check if child and weight/height are provided
+        const age = calculateAgeFromBirthDate(formData.birth_date);
+        console.log('👶 Calculated age:', age);
+        if (age !== null && age <= 5) {
+            if (!formData.weight || !formData.height) {
+                console.log('❌ Child validation failed: Weight/height missing');
+                showToast({ 
+                    type: 'error', 
+                    title: 'Validation Error', 
+                    message: 'Weight and height are required for children under 5 years' 
+                });
+                return;
+            }
+        }
+        
+        console.log('✅ Validation passed, sending to API...');
+        
+        // Show loading state
+        const confirmBtn = document.querySelector('[data-action="confirm-register-patient"]');
+        if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Saving...';
+        }
+        
+        // Send to API
+        const apiUrl = 'api/patients/create.php';
+        console.log('🌐 API URL:', apiUrl);
+        console.log('📦 JSON Payload:', JSON.stringify(formData, null, 2));
+        
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        console.log('📥 Response status:', response.status);
+        console.log('📥 Response status text:', response.statusText);
+        
+        // Get response text first (to see if it's valid JSON)
+        const responseText = await response.text();
+        console.log('📄 Raw response:', responseText);
+        
+        let result;
+        try {
+            result = JSON.parse(responseText);
+            console.log('✅ Parsed result:', result);
+        } catch (parseError) {
+            console.error('❌ Failed to parse JSON:', parseError);
+            console.error('Raw response was:', responseText);
+            showToast({ 
+                type: 'error', 
+                title: 'Server Error', 
+                message: 'Invalid response from server. Check console for details.' 
+            });
+            closeModal();
+            return;
+        }
+        
+        // Close modal
+        closeModal();
+        
+                if (result.success) {
+            console.log('✅ Patient registered successfully!');
+            
+            // ✅ Reload patients from API first
+            try {
+                console.log('🔄 Reloading patients data from API...');
+                const patientsResponse = await fetch('api/patients/get.php');
+                const patientsData = await patientsResponse.json();
+                
+                if (patientsData.success) {
+                    DATA.patients = patientsData.patients;
+                    console.log(`✅ Patients reloaded: ${DATA.patients.length} records`);
+                }
+            } catch (error) {
+                console.error('Failed to reload patients:', error);
+            }
+            
+            showToast({ 
+                type: 'success', 
+                title: 'Success', 
+                message: `Patient "${formData.full_name}" registered successfully` 
+            });
+            
+            // Close modal and refresh view
+            closeModal();
+            if (typeof renderView === 'function') {
+                console.log('🔄 Refreshing view...');
+                renderView();
+            }
+            
+        } else {
+            console.log('❌ Registration failed:', result.message || result.error);
+            showToast({ 
+                type: 'error', 
+                title: 'Registration Failed', 
+                message: result.message || result.error || 'Failed to register patient' 
+            });
+        }
+    } catch (error) {
+        console.error('❌ Fatal error in registration:', error);
+        console.error('Error stack:', error.stack);
+        closeModal();
+        showToast({ 
+            type: 'error', 
+            title: 'Error', 
+            message: 'Network error or server issue: ' + error.message 
+        });
+    } finally {
+        // Reset button state
+        const confirmBtn = document.querySelector('[data-action="confirm-register-patient"]');
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Register Patient';
+        }
+    }
+},
 'edit-patient': () => { closeModal(); showToast('Patient updated successfully', 'success'); },
 'view-document': () => showToast('Document preview (demo)', 'info'),
-'upload-document': () => showToast('Upload available in backend version', 'info'),
-'new-consultation': () => showNewConsultation(),
+'upload-document': (target) => {
+    const patientId = target.dataset.patientId || target.dataset.id;
+    
+    if (!patientId) {
+        showToast({ type: 'error', title: 'Error', message: 'Patient ID not found' });
+        return;
+    }
+    
+    // Create file input
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.pdf,.jpg,.jpeg,.png,.gif,.webp';
+    fileInput.style.display = 'none';
+    document.body.appendChild(fileInput);
+    
+    fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        
+        // Remove the input
+        document.body.removeChild(fileInput);
+        
+        if (!file) {
+            showToast({ type: 'warning', title: 'No File', message: 'Please select a file to upload' });
+            return;
+        }
+        
+        // Validate file size (10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            showToast({ type: 'error', title: 'Error', message: 'File too large (max 10MB)' });
+            return;
+        }
+        
+        // Ask for document type
+        const docType = prompt('Select document type:', 'Lab Result');
+        if (!docType) return; // User cancelled
+        
+        // Validate document type
+        const validTypes = ['Lab Result', 'Imaging', 'Prescription', 'Other'];
+        const finalType = validTypes.includes(docType) ? docType : 'Other';
+        
+        // Create form data
+        const formData = new FormData();
+        formData.append('document', file);
+        formData.append('patient_id', patientId);
+        formData.append('document_type', finalType);
+        
+        // Show loading toast
+        showToast({ type: 'info', title: 'Uploading', message: `Uploading ${file.name}...` });
+        
+        try {
+            const response = await fetch('api/patients/uploadDocument.php', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast({ 
+                    type: 'success', 
+                    title: 'Success', 
+                    message: `${file.name} uploaded successfully` 
+                });
+                
+                // Reload documents in the modal
+                if (typeof window.loadDocumentsInModal === 'function') {
+                    window.loadDocumentsInModal(patientId);
+                }
+            } else {
+                showToast({ 
+                    type: 'error', 
+                    title: 'Upload Failed', 
+                    message: data.message || 'Failed to upload document' 
+                });
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            showToast({ 
+                type: 'error', 
+                title: 'Error', 
+                message: 'Network error. Please try again.' 
+            });
+        }
+    };
+    
+    // Trigger file selection
+    fileInput.click();
+},
+'delete-patient': (target) => {
+    const patientId = target.dataset.id;
+    const patientName = target.dataset.name;
+    
+    // Show confirmation modal
+    openModal(
+        'Confirm Delete Patient',
+        `
+        <div class="text-center py-4">
+            <div class="flex justify-center mb-4">
+                <div class="h-16 w-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                    <svg class="h-8 w-8 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-2">Delete Patient Record</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-1">Are you sure you want to permanently delete this patient?</p>
+            <p class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">"${patientName}"</p>
+            <p class="text-sm font-mono text-slate-500 mb-4">${patientId}</p>
+            <div class="bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2 mb-4">
+                <p class="text-xs text-red-600 dark:text-red-400">
+                    ⚠️ This action cannot be undone. All patient data, documents, and records will be permanently deleted.
+                </p>
+            </div>
+        </div>
+        `,
+        `<button data-action="close-modal" class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">
+            Cancel
+        </button>
+        <button data-action="confirm-delete-patient" data-id="${patientId}" class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">
+            Delete Permanently
+        </button>`
+    );
+},
+'confirm-delete-patient': async (target) => {
+    const patientId = target.dataset.id;
+    
+    try {
+        const response = await fetch('api/patients/delete.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ patient_id: patientId })
+        });
+        
+        const data = await response.json();
+        closeModal();
+        
+        if (data.success) {
+            // Reload patients from API
+            try {
+                const patientsResponse = await fetch('api/patients/get.php');
+                const patientsData = await patientsResponse.json();
+                if (patientsData.success) {
+                    DATA.patients = patientsData.patients;
+                }
+            } catch (e) {
+                console.error('Failed to reload patients:', e);
+            }
+            
+            showToast({ 
+                type: 'success', 
+                title: 'Deleted', 
+                message: 'Patient record deleted successfully' 
+            });
+            
+            renderView();
+        } else {
+            showToast({ 
+                type: 'error', 
+                title: 'Error', 
+                message: data.message || 'Failed to delete patient' 
+            });
+        }
+    } catch (error) {
+        closeModal();
+        showToast({ 
+            type: 'error', 
+            title: 'Error', 
+            message: 'Failed to delete patient: ' + error.message 
+        });
+    }
+},
+'view-document': (target) => {  // ✅ KEEP THIS
+    const docPath = target.dataset.path;
+    if (docPath) {
+        window.open(docPath, '_blank');
+    } else {
+        showToast({ type: 'info', title: 'Demo', message: 'Document preview not available' });
+    }
+},
+'delete-document': (target) => {
+    const docId = target.dataset.id;
+    const patientId = target.dataset.patientId;
+    const docName = target.dataset.name || 'this document';
+    
+    // Show confirmation modal
+    openModal(
+        'Confirm Delete Document',
+        `
+        <div class="text-center py-4">
+            <div class="flex justify-center mb-4">
+                <div class="h-16 w-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                    <svg class="h-8 w-8 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-2">Delete Document</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-1">Are you sure you want to delete this document?</p>
+            <p class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">"${docName}"</p>
+            <p class="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
+                ⚠️ This action cannot be undone. The file will be permanently deleted.
+            </p>
+        </div>
+        `,
+        `<button data-action="close-modal" class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">
+            Cancel
+        </button>
+        <button data-action="confirm-delete-document" data-id="${docId}" data-patient-id="${patientId}" class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">
+            Delete Permanently
+        </button>`
+    );
+},
+'confirm-delete-document': async (target) => {
+    const docId = target.dataset.id;
+    const patientId = target.dataset.patientId;
+    
+    try {
+        const response = await fetch('api/patients/deleteDocument.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ document_id: docId })
+        });
+        
+        const data = await response.json();
+        closeModal();
+        
+        if (data.success) {
+            showToast({ type: 'success', title: 'Deleted', message: 'Document deleted successfully' });
+            
+            // Reload documents in the modal
+            if (typeof window.loadDocumentsInModal === 'function') {
+                setTimeout(() => window.loadDocumentsInModal(patientId), 300);
+            }
+        } else {
+            showToast({ type: 'error', title: 'Error', message: data.message || 'Failed to delete document' });
+        }
+    } catch (error) {
+        closeModal();
+        showToast({ type: 'error', title: 'Error', message: 'Failed to delete document' });
+    }
+},
+'confirm-consultation': async () => {
+    const patientId = document.getElementById('consult-patient')?.value || '';
+    const doctor = document.getElementById('consult-doctor')?.value || '';
+    const date = document.getElementById('consult-date')?.value || '';
+    const time = document.getElementById('consult-time')?.value || '';
+    const diagnosis = document.getElementById('consult-diagnosis')?.value || '';
+    const symptoms = document.getElementById('consult-symptoms')?.value || '';
+    const notes = document.getElementById('consult-notes')?.value || '';
+    const prescription = document.getElementById('consult-prescription')?.value || '';
+    const followUp = document.getElementById('consult-followup')?.value || null;
+    
+    if (!patientId || !doctor) {
+        showToast({ type: 'error', title: 'Validation', message: 'Patient and Doctor are required' });
+        return;
+    }
+    
+    const formData = {
+        patient_id: patientId,
+        doctor_name: doctor,
+        consultation_date: date,
+        consultation_time: time,
+        diagnosis: diagnosis,
+        symptoms: symptoms,
+        notes: notes,
+        prescription: prescription,
+        follow_up_date: followUp
+    };
+    
+    try {
+        const response = await fetch('api/consultations/create.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        closeModal();
+        
+        if (data.success) {
+            // Reload consultations
+            const consultResponse = await fetch('api/consultations/get.php');
+            const consultData = await consultResponse.json();
+            if (consultData.success) {
+                DATA.consultations = consultData.consultations;
+            }
+            
+            showToast({ type: 'success', title: 'Success', message: 'Consultation saved' });
+            renderView();
+        } else {
+            showToast({ type: 'error', title: 'Error', message: data.message });
+        }
+    } catch (error) {
+        closeModal();
+        showToast({ type: 'error', title: 'Error', message: 'Failed to save consultation' });
+    }
+},
+'delete-consultation': (target) => {
+    const id = target.dataset.id;
+    openModal(
+        'Confirm Delete',
+        `
+        <div class="text-center py-4">
+            <p class="text-red-500 mb-2">⚠️ Are you sure you want to delete this consultation?</p>
+            <p class="text-sm text-slate-500">This action cannot be undone.</p>
+        </div>
+        `,
+        `<button data-action="close-modal" class="px-4 py-2 rounded-lg border">Cancel</button>
+         <button data-action="confirm-delete-consultation" data-id="${id}" class="px-4 py-2 rounded-lg bg-red-600 text-white">Delete</button>`
+    );
+},
+'confirm-delete-consultation': async (target) => {
+    const id = target.dataset.id;
+    
+    try {
+        const response = await fetch('api/consultations/delete.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ consultation_id: id })
+        });
+        
+        const data = await response.json();
+        closeModal();
+        
+        if (data.success) {
+            const consultResponse = await fetch('api/consultations/get.php');
+            const consultData = await consultResponse.json();
+            if (consultData.success) {
+                DATA.consultations = consultData.consultations;
+            }
+            
+            showToast({ type: 'success', title: 'Deleted', message: 'Consultation deleted' });
+            renderView();
+        } else {
+            showToast({ type: 'error', title: 'Error', message: data.message });
+        }
+    } catch (error) {
+        closeModal();
+        showToast({ type: 'error', title: 'Error', message: 'Delete failed' });
+    }
+},
 'view-consultation': (target) => showConsultationDetail(target.dataset.id),
-'confirm-consultation': () => { closeModal(); showToast('Consultation saved successfully', 'success'); },
 'add-record': () => {import('./renderers/HealthServices/medicalRecords.js').then(m => m.showAddRecord());},
-'confirm-add-record': () => { closeModal(); showToast({ type: 'success', title: 'Success', message: 'Medical record added' }); },
+'confirm-add-record': async () => {
+    const patientId = document.getElementById('record-patient')?.value || '';
+    const recordType = document.getElementById('record-type')?.value || 'Lab Result';
+    const title = document.getElementById('record-title')?.value || '';
+    const date = document.getElementById('record-date')?.value || '';
+    const doctor = document.getElementById('record-doctor')?.value || '';
+    const summary = document.getElementById('record-summary')?.value || '';
+    
+    if (!patientId || !title) {
+        showToast({ type: 'error', title: 'Validation', message: 'Patient and Title are required' });
+        return;
+    }
+    
+    const formData = {
+        patient_id: patientId,
+        record_type: recordType,
+        title: title,
+        record_date: date,
+        doctor_name: doctor,
+        summary: summary
+    };
+    
+    try {
+        const response = await fetch('api/medicalRecords/create.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        closeModal();
+        
+        if (data.success) {
+            // Reload records
+            const recordsResponse = await fetch('api/medicalRecords/get.php');
+            const recordsData = await recordsResponse.json();
+            if (recordsData.success) {
+                DATA.medicalRecords = recordsData.records;
+            }
+            
+            showToast({ type: 'success', title: 'Success', message: 'Medical record added' });
+            renderView();
+        } else {
+            showToast({ type: 'error', title: 'Error', message: data.message });
+        }
+    } catch (error) {
+        closeModal();
+        showToast({ type: 'error', title: 'Error', message: 'Failed to save record' });
+    }
+},
+'delete-record': (target) => {
+    const id = target.dataset.id;
+    
+    openModal(
+        'Confirm Delete',
+        `
+        <div class="text-center py-4">
+            <div class="flex justify-center mb-4">
+                <div class="h-16 w-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                    <svg class="h-8 w-8 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-2">Delete Medical Record</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-1">Are you sure you want to delete this record?</p>
+            <p class="text-sm font-mono text-slate-500 mb-4">${id}</p>
+            <p class="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
+                ⚠️ This action cannot be undone.
+            </p>
+        </div>
+        `,
+        `<button data-action="close-modal" class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">
+            Cancel
+        </button>
+        <button data-action="confirm-delete-record" data-id="${id}" class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">
+            Delete Permanently
+        </button>`
+    );
+},
+'confirm-delete-record': async (target) => {
+    const id = target.dataset.id;
+    
+    try {
+        const response = await fetch('api/medicalRecords/delete.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ record_id: id })
+        });
+        
+        const data = await response.json();
+        closeModal();
+        
+        if (data.success) {
+            const recordsResponse = await fetch('api/medicalRecords/get.php');
+            const recordsData = await recordsResponse.json();
+            if (recordsData.success) {
+                DATA.medicalRecords = recordsData.records;
+            }
+            
+            showToast({ type: 'success', title: 'Deleted', message: 'Medical record deleted' });
+            renderView();
+        } else {
+            showToast({ type: 'error', title: 'Error', message: data.message });
+        }
+    } catch (error) {
+        closeModal();
+        showToast({ type: 'error', title: 'Error', message: 'Delete failed' });
+    }
+},
+'confirm-application': async () => {
+    const applicant = document.getElementById('app-applicant')?.value || '';
+    const type = document.getElementById('app-type')?.value || '';
+    const address = document.getElementById('app-address')?.value || '';
+    const contactPerson = document.getElementById('app-contact-person')?.value || '';
+    const contactNumber = document.getElementById('app-contact-number')?.value || '';
+    
+    if (!applicant) {
+        showToast({ type: 'error', title: 'Validation', message: 'Applicant name is required' });
+        return;
+    }
+    
+    const formData = {
+        applicant_name: applicant,
+        business_type: type,
+        address: address,
+        contact_person: contactPerson,
+        contact_number: contactNumber
+    };
+    
+    try {
+        const response = await fetch('api/applications/create.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        closeModal();
+        
+        if (data.success) {
+            const appResponse = await fetch('api/applications/get.php');
+            const appData = await appResponse.json();
+            if (appData.success) {
+                DATA.applications = appData.applications;
+            }
+            
+            showToast({ type: 'success', title: 'Success', message: 'Application submitted' });
+            renderView();
+        } else {
+            showToast({ type: 'error', title: 'Error', message: data.message });
+        }
+    } catch (error) {
+        closeModal();
+        showToast({ type: 'error', title: 'Error', message: 'Failed to submit application' });
+    }
+},
+
+'delete-application': (target) => {
+    const id = target.dataset.id;
+    
+    openModal(
+        'Confirm Delete',
+        `
+        <div class="text-center py-4">
+            <div class="flex justify-center mb-4">
+                <div class="h-16 w-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                    <svg class="h-8 w-8 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-2">Delete Application</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Are you sure you want to delete this application?</p>
+            <p class="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
+                ⚠️ This action cannot be undone.
+            </p>
+        </div>
+        `,
+        `<button data-action="close-modal" class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600">Cancel</button>
+         <button data-action="confirm-delete-application" data-id="${id}" class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Delete</button>`
+    );
+},
+
+'confirm-delete-application': async (target) => {
+    const id = target.dataset.id;
+    
+    try {
+        const response = await fetch('api/applications/delete.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ application_id: id })
+        });
+        
+        const data = await response.json();
+        closeModal();
+        
+        if (data.success) {
+            const appResponse = await fetch('api/applications/get.php');
+            const appData = await appResponse.json();
+            if (appData.success) {
+                DATA.applications = appData.applications;
+            }
+            
+            showToast({ type: 'success', title: 'Deleted', message: 'Application deleted' });
+            renderView();
+        } else {
+            showToast({ type: 'error', title: 'Error', message: data.message });
+        }
+    } catch (error) {
+        closeModal();
+        showToast({ type: 'error', title: 'Error', message: 'Delete failed' });
+    }
+},
 'view-record': (target) => showRecordDetail(target.dataset.id),
 'download-record': () => showToast('Download started (demo)', 'success'),
 'download-report': (target) => {
@@ -253,13 +958,236 @@ const status = document.getElementById('edit-user-status').value;
 'close-modal': () => closeModal(),
     'add-user': () => showAddUserModal(),
     'view-application': (target) => showApplicationDetail(target.dataset.id),
-'approve-application': () => { closeModal(); showToast('Application approved', 'success'); },
-'reject-application': () => { closeModal(); showToast('Application rejected', 'error'); },
+'approve-application': async () => {
+    const modalTitle = document.querySelector('#modal-title')?.textContent || '';
+    const appId = modalTitle.match(/APP-\d+/)?.[0] || '';
+    if (!appId) return;
+    
+    try {
+        const response = await fetch('api/applications/update.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ application_id: appId, status: 'Approved' })
+        });
+        const data = await response.json();
+        closeModal();
+        if (data.success) {
+            const appResponse = await fetch('api/applications/get.php');
+            const appData = await appResponse.json();
+            if (appData.success) DATA.applications = appData.applications;
+            showToast({ type: 'success', title: 'Approved', message: 'Application approved' });
+            renderView();
+        }
+    } catch (error) {
+        closeModal();
+        showToast({ type: 'error', title: 'Error', message: 'Update failed' });
+    }
+},
+'reject-application': async () => {
+    const modalTitle = document.querySelector('#modal-title')?.textContent || '';
+    const appId = modalTitle.match(/APP-\d+/)?.[0] || '';
+    if (!appId) return;
+    
+    try {
+        const response = await fetch('api/applications/update.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ application_id: appId, status: 'Rejected' })
+        });
+        const data = await response.json();
+        closeModal();
+        if (data.success) {
+            const appResponse = await fetch('api/applications/get.php');
+            const appData = await appResponse.json();
+            if (appData.success) DATA.applications = appData.applications;
+            showToast({ type: 'warning', title: 'Rejected', message: 'Application rejected' });
+            renderView();
+        }
+    } catch (error) {
+        closeModal();
+        showToast({ type: 'error', title: 'Error', message: 'Update failed' });
+    }
+},
 'request-docs': () => showToast('Missing document request sent to applicant', 'warning'),
 'forward-inspection': () => { closeModal(); showToast('Application forwarded to inspection team', 'success'); },
-'new-application': () => showToast('New application form (demo)', 'info'),
-'new-application': () => showNewApplication(),
-'confirm-application': () => { closeModal(); showToast('Application submitted successfully', 'success'); },
+'new-application': () => {
+    import('./renderers/sanitationPermits/applications.js')
+        .then(m => {
+            console.log('Module loaded:', m);
+            m.showNewApplication();
+        })
+        .catch(err => console.error('Import failed:', err));
+},
+'confirm-application': async () => {
+    const applicant = document.getElementById('app-applicant')?.value || '';
+    const type = document.getElementById('app-type')?.value || '';
+    const address = document.getElementById('app-address')?.value || '';
+    const contactPerson = document.getElementById('app-contact-person')?.value || '';
+    const contactNumber = document.getElementById('app-contact-number')?.value || '';
+    
+    if (!applicant) {
+        showToast({ type: 'error', title: 'Validation', message: 'Applicant name is required' });
+        return;
+    }
+    
+    const submitBtn = document.querySelector('[data-action="confirm-application"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+    }
+    
+    try {
+        // Step 1: Create application first
+        const response = await fetch('api/applications/create.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                applicant_name: applicant,
+                business_type: type,
+                address: address,
+                contact_person: contactPerson,
+                contact_number: contactNumber
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const appId = data.application_id; // e.g., APP-005
+            
+            // Step 2: Upload pending files with correct ID
+            const pendingFiles = window._pendingAppFiles || [];
+            for (const file of pendingFiles) {
+                const formData = new FormData();
+                formData.append('document', file);
+                formData.append('application_id', appId);
+                formData.append('document_type', file.docType || 'Other');
+                
+                await fetch('api/applications/uploadDocument.php', {
+                    method: 'POST',
+                    body: formData
+                });
+            }
+            
+            // Clear pending files
+            window._pendingAppFiles = [];
+            
+            closeModal();
+            
+            // Reload
+            const appResponse = await fetch('api/applications/get.php');
+            const appData = await appResponse.json();
+            if (appData.success) DATA.applications = appData.applications;
+            
+            showToast({ type: 'success', title: 'Success', message: 'Application submitted with ' + pendingFiles.length + ' files' });
+            renderView();
+        } else {
+            showToast({ type: 'error', title: 'Error', message: data.message });
+        }
+    } catch (error) {
+        showToast({ type: 'error', title: 'Error', message: 'Failed to submit' });
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Application';
+        }
+    }
+},
+'upload-application-docs': (target) => {
+    if (!window._pendingAppFiles) window._pendingAppFiles = [];
+    
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.pdf,.jpg,.jpeg,.png';
+    fileInput.style.display = 'none';
+    document.body.appendChild(fileInput);
+    
+    fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        document.body.removeChild(fileInput);
+        
+        if (!file) return;
+        
+        if (file.size > 5 * 1024 * 1024) {
+            showToast({ type: 'error', title: 'Error', message: 'File too large (max 5MB)' });
+            return;
+        }
+        
+        const docType = prompt('Document type:', 'Business Registration');
+        if (!docType) return;
+        
+        // Store file temporarily (don't upload yet!)
+        file.docType = docType;
+        window._pendingAppFiles.push(file);
+        
+        const container = document.getElementById('app-uploaded-files');
+        if (container) {
+            const fileEl = document.createElement('div');
+            fileEl.className = 'flex items-center justify-between p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg text-xs';
+            fileEl.innerHTML = `
+                <span class="text-yellow-700">⏳ ${file.name} (${docType}) - Will upload on submit</span>
+                <span class="text-slate-400">${(file.size / 1024).toFixed(1)} KB</span>
+            `;
+            container.appendChild(fileEl);
+        }
+    };
+    
+    fileInput.click();
+},
+'delete-app-document': (target) => {
+    const docId = target.dataset.id;
+    const appId = target.dataset.appId;
+    
+    openModal(
+        'Confirm Delete Document',
+        `
+        <div class="text-center py-4">
+            <div class="flex justify-center mb-4">
+                <div class="h-16 w-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                    <svg class="h-8 w-8 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-2">Delete Document</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Are you sure you want to delete this document?</p>
+            <p class="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
+                ⚠️ This action cannot be undone.
+            </p>
+        </div>
+        `,
+        `<button data-action="close-modal" class="px-4 py-2 rounded-lg border">Cancel</button>
+         <button data-action="confirm-delete-app-document" data-id="${docId}" data-app-id="${appId}" class="px-4 py-2 rounded-lg bg-red-600 text-white">Delete</button>`
+    );
+},
+'confirm-delete-app-document': async (target) => {
+    const docId = target.dataset.id;
+    const appId = target.dataset.appId;
+    
+    try {
+        const response = await fetch('api/applications/deleteDocument.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ document_id: docId })
+        });
+        
+        const data = await response.json();
+        closeModal();
+        
+        if (data.success) {
+            showToast({ type: 'success', title: 'Deleted', message: 'Document deleted' });
+            // Reload documents
+            if (typeof loadApplicationDocuments === 'function') {
+                setTimeout(() => loadApplicationDocuments(appId), 300);
+            }
+        } else {
+            showToast({ type: 'error', title: 'Error', message: data.message });
+        }
+    } catch (error) {
+        closeModal();
+        showToast({ type: 'error', title: 'Error', message: 'Delete failed' });
+    }
+},
 'view-inspection': (target) => showInspectionDetail(target.dataset.id),
 'pass-inspection': () => { closeModal(); showToast('Inspection marked as passed', 'success'); },
 'fail-inspection': () => { closeModal(); showToast('Inspection marked as failed', 'error'); },
@@ -308,6 +1236,20 @@ const status = document.getElementById('edit-user-status').value;
   
  if (actions[action]) actions[action](target);
 }
+
+// Helper function to calculate age from birth date
+function calculateAgeFromBirthDate(birthDate) {
+    if (!birthDate) return null;
+    const birth = new Date(birthDate);
+    const now = new Date();
+    let age = now.getFullYear() - birth.getFullYear();
+    const m = now.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+        age--;
+    }
+    return age;
+}
+
 
 function showAddUserModal() {
   openModal(
