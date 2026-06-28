@@ -316,7 +316,6 @@
   ====================================================================== -->
   <div id="toast-container" class="fixed bottom-4 right-4 z-[70] flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
 
-<<<<<<< HEAD
   <!-- =====================================================================
        AI CHAT FLOATING BUTTON
   ====================================================================== -->
@@ -339,7 +338,6 @@
 </body>
 
 </html>
-=======
   <!-- AI Chat Floating Button -->
   <button id="ai-chat-toggle-btn" class="fixed bottom-6 right-6 z-[60] w-14 h-14 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-500 text-white shadow-xl flex items-center justify-center hover:shadow-2xl focus:outline-none transition-all duration-300" title="Ask AI Assistant" aria-label="Open AI Chat">
     <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
@@ -349,4 +347,3 @@
 
   <script type="module" src="js/app.js"></script>
 </html>
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8

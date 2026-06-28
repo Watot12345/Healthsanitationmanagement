@@ -58,13 +58,10 @@ export function openChat() {
 
         <!-- Messages -->
         <div id="ai-chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 scroll-smooth">
-<<<<<<< HEAD
             <div class="flex items-start gap-2.5 ai-msg-ai ">
                 <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center shrink-0 mt-0.5 ml-2">
-=======
             <div class="flex items-start gap-2.5 ai-msg-ai">
                 <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center shrink-0 mt-0.5">
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
                     <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z"/>
                     </svg>

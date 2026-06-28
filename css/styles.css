@@ -1404,8 +1404,6 @@
   animation: breathing 4s ease-in-out infinite;
 }
 
-<<<<<<< HEAD
-=======
 .ai-chat-avatar {
   box-shadow: 0 0 0 1px var(--ai-glass-border);
   background: rgba(255, 255, 255, 0.05);
@@ -1413,7 +1411,6 @@
 }
 
 /* Rotating Gradient Ring */
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
 .avatar-ring {
   background: linear-gradient(135deg, var(--ai-primary), var(--ai-secondary), #1e3a5f, var(--ai-primary));
   background-size: 300% 300%;
@@ -2295,11 +2292,9 @@ label.font-medium {
     padding-right: 0 !important;
 }
 
-<<<<<<< HEAD
 .collapsed .nav-children-container {
     display: none !important;
 }
-=======
 /* Ensure consistent dark mode for all new elements */
 .dark .ai-score-badge {
   border-color: rgba(255, 255, 255, 0.05);
@@ -2422,4 +2417,3 @@ label.font-medium {
     bottom: 5rem;
   }
 }
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8

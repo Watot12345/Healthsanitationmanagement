@@ -11,11 +11,7 @@ import { showToast } from './utils/toast.js';
 import { openModal, closeModal } from './utils/modal.js';
 import { initComplianceFilters, loadComplianceData } from './renderers/compliance.js';
 
-<<<<<<< HEAD
 import { renderSidebar, toggleExpanded } from './ui/sidebar.js';
-=======
-import { renderSidebar } from './ui/sidebar.js';
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
 import { toggleChat } from './ui/aiChat.js';
 import { updateHeader } from './ui/header.js';
 import { renderNotificationPanel } from './ui/notification.js';
@@ -62,13 +58,6 @@ export function registerCalendarInstance(id, instance) {
     calendarInstances.set(id, instance);
 }
 
-// FIX: Removed patchSidebarChevrons() entirely.
-// sidebar.js already assigns class="nav-chevron" to the trailing chevron SVG
-// inside every [data-toggle] button template, so a JS patch pass is redundant.
-// The old function also contained a regex with broken operator precedence that
-// could accidentally tag module-icon SVGs as chevrons, hiding them when the
-// sidebar collapses.
-
 // Render view
 export function renderView() {
     const renderer = VIEW_RENDERERS[state.view];
@@ -94,7 +83,6 @@ export function renderView() {
 
     updateHeader();
     renderSidebar();
-    // FIX: patchSidebarChevrons() calls removed from here
 }
 
 // Initialize view-specific features after render
@@ -130,7 +118,7 @@ function initCalendarIfNeeded() {
         setTimeout(() => initMappingClustering(), 150);
     }
 
-    if (state.view === 'compliance') {
+    if (state.view !== 'compliance') {
         if (window._complianceRefresh) {
             clearInterval(window._complianceRefresh);
             window._complianceRefresh = null;
@@ -272,7 +260,18 @@ export function performGlobalSearch(query) {
 }
 
 const searchIds = ['user-search', 'log-search', 'apt-search', 'permit-search', 'ww-search', 'surv-search', 'patient-search', 'consultation-search', 'record-search'];
+
 // Search handling
+function handleSearchInput(e) {
+    const id = e.target.id;
+    const searchIds = ['user-search', 'log-search', 'apt-search', 'permit-search', 'ww-search', 'surv-search', 'patient-search', 'consultation-search', 'record-search', 'application-search'];
+    if (searchIds.includes(id)) {
+        state.searchFilters[id] = e.target.value;
+        renderViewPreserveScroll();
+    }
+}
+
+// API Loading functions
 async function loadConsultations() {
     try {
         const response = await fetch('api/consultations/get.php');
@@ -284,6 +283,7 @@ async function loadConsultations() {
         console.error('Error loading consultations:', e);
     }
 }
+
 async function loadApplications() {
     try {
         const response = await fetch('api/applications/get.php');
@@ -295,14 +295,7 @@ async function loadApplications() {
         console.error('Error loading applications:', e);
     }
 }
-function handleSearchInput(e) {
-    const id = e.target.id;
-    const searchIds = ['user-search', 'log-search', 'apt-search', 'permit-search', 'ww-search', 'surv-search', 'patient-search', 'consultation-search', 'record-search', 'application-search'];
-    if (searchIds.includes(id)) {
-        state.searchFilters[id] = e.target.value;
-        renderViewPreserveScroll();
-    }
-}
+
 async function loadMedicalRecords() {
     try {
         const response = await fetch('api/medicalRecords/get.php');
@@ -313,10 +306,10 @@ async function loadMedicalRecords() {
         }
     } catch (e) {
         console.error('Error loading medical records:', e);
-        // Set empty array as fallback
         DATA.medicalRecords = [];
     }
 }
+
 async function loadDashboardData() {
     try {
         const response = await fetch('api/admin/adminStats.php');
@@ -329,6 +322,7 @@ async function loadDashboardData() {
         // Keep static defaults from data.js
     }
 }
+
 async function checkAuth() {
     try {
         console.log('Step 1: Fetching checkRole.php');
@@ -371,6 +365,7 @@ async function loadSystemStatus() {
         }
     } catch (e) { }
 }
+
 async function loadRecentActivity() {
     try {
         const response = await fetch('api/admin/recentActivity.php');
@@ -389,6 +384,7 @@ async function loadRecentActivity() {
         }
     } catch (e) { }
 }
+
 async function loadRecentUpdates() {
     try {
         const response = await fetch('api/admin/recentUpdates.php');
@@ -400,6 +396,7 @@ async function loadRecentUpdates() {
         }
     } catch (e) { }
 }
+
 async function loadUsers() {
     try {
         const response = await fetch('api/admin/getUsers.php');
@@ -409,6 +406,7 @@ async function loadUsers() {
         }
     } catch (e) { }
 }
+
 async function loadLogs() {
     try {
         const response = await fetch('api/admin/getLogs.php');
@@ -420,6 +418,32 @@ async function loadLogs() {
         }
     } catch (e) { }
 }
+
+async function loadPatients() {
+    try {
+        console.log('Fetching patients from API...');
+        const response = await fetch('api/patients/get.php');
+        
+        if (!response.ok) {
+            console.error('Failed to fetch patients:', response.status);
+            return;
+        }
+        
+        const data = await response.json();
+        console.log('Patients data received:', data);
+        
+        if (data.success) {
+            DATA.patients = data.patients;
+            console.log(`Loaded ${DATA.patients.length} patients`);
+        } else {
+            console.error('API error:', data.message);
+        }
+    } catch (e) {
+        console.error('Error loading patients:', e);
+    }
+}
+
+// AI Insights
 let insightsLoading = false;
 let insightsRefreshTimer = null;
 let lastAnalyzedTime = null;
@@ -488,78 +512,16 @@ function animateAvatar(state) {
     }
 }
 
-function normalizeInsightPayload(data) {
-    if (!data || typeof data !== 'object') return null;
-
-    if (Array.isArray(data)) {
-        return { insights: data };
-    }
-
-    if (data.insights && Array.isArray(data.insights)) {
-        return data;
-    }
-
-    const legacyShape = data.operational || data.risk || data.action;
-    if (legacyShape) {
-        const cards = [];
-        const sections = [
-            { key: 'operational', category: 'Operational' },
-            { key: 'risk', category: 'Risk' },
-            { key: 'action', category: 'Action' }
-        ];
-
-        sections.forEach(({ key, category }) => {
-            const item = data[key];
-            if (!item) return;
-
-            const severity = item.level || item.priority || item.severity || 'Medium';
-            const trend = item.trend || (severity === 'High' || severity === 'Critical' ? 'Increasing' : 'Stable');
-            const description = item.text || item.description || '';
-            const reason = item.reason || 'This insight came from the analytics API.';
-            const recommendation = item.recommendation || `Review ${item.title || key} promptly.`;
-
-            cards.push({
-                title: item.title || `${category} Update`,
-                icon: item.icon || 'fa-lightbulb',
-                category,
-                severity,
-                trend,
-                description,
-                reason,
-                recommendation
-            });
-        });
-
-        return { ...data, insights: cards };
-    }
-
-    return data;
-}
-
-
-function getPriorityBadge(priority) {
-    const base = 'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider';
-    if (priority === 'High') return `${base} bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400`;
-    if (priority === 'Medium') return `${base} bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400`;
-    return `${base} bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400`;
-}
 function renderChartInsightCards(insights) {
     console.log('renderChartInsightCards called with:', insights);
     if (!Array.isArray(insights)) {
         console.log('insights is not an array');
         return;
     }
-<<<<<<< HEAD
 
     insights.forEach(item => {
         console.log('Processing insight item:', item);
         const chartId = item.chart;
-=======
-    
-    insights.forEach(item => {
-        console.log('Processing insight item:', item);
-        const chartId = item.chart; // e.g., "service_requests", "disease_surveillance"
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
         const containerMap = {
             'service_requests': 'ai-card-trendChart',
             'disease_surveillance': 'ai-card-diseaseTrendChart',
@@ -571,561 +533,110 @@ function renderChartInsightCards(insights) {
         console.log('Looking for container:', containerId);
         const container = document.getElementById(containerId);
         console.log('Container found:', container);
-<<<<<<< HEAD
-
-=======
-        
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
         if (container && item.title !== 'No significant insight') {
             container.innerHTML = renderSingleInsightCard(item);
             console.log('Rendered insight card in:', containerId);
         }
     });
 }
-function renderAISnapshot(data) {
-    const snapshot = document.getElementById('ai-snapshot');
-    if (!snapshot) return;
-<<<<<<< HEAD
 
-=======
-    
-    // Better data extraction with proper fallbacks
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-    const snapshotData = {
-        status: data.overall_risk || data.status || 'Normal',
-        headline: data.overall_risk ? `${data.overall_risk} Risk Level` : (data.headline || 'System Status'),
-        summary: data.executive_summary || data.summary || 'No summary available',
-        priority: data.priority || (data.overall_risk === 'Critical' || data.overall_risk === 'High' ? 'High' : 'Medium'),
-        confidence: data.confidence_score || data.confidence || 0,
-        lastUpdated: data.last_updated || data.lastUpdated || new Date().toLocaleString(),
-        monitoringSince: data.monitoring_since || data.monitoringSince || '2 hours',
-        riskTrend: data.risk_trend || data.riskTrend || 'Stable',
-        topFinding: data.top_finding || data.topFinding || 'No critical findings detected',
-        nextAction: data.next_action || data.nextAction || 'Continue routine monitoring'
-    };
-<<<<<<< HEAD
-
-    const statusConfig = {
-        'Normal': {
-            dot: 'bg-emerald-400',
-            border: 'border-emerald-400/30',
-=======
-    
-    const statusConfig = {
-        'Normal': { 
-            dot: 'bg-emerald-400', 
-            border: 'border-emerald-400/30', 
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-            bg: 'from-emerald-50/60 via-white/80 to-emerald-50/30 dark:from-emerald-950/30 dark:via-slate-900/50 dark:to-emerald-950/10',
-            badge: 'bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 backdrop-blur-sm',
-            glow: 'shadow-emerald-500/10',
-            pulse: 'ring-emerald-400/30',
-            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
-        },
-<<<<<<< HEAD
-        'Attention': {
-            dot: 'bg-amber-400',
-            border: 'border-amber-400/30',
-=======
-        'Attention': { 
-            dot: 'bg-amber-400', 
-            border: 'border-amber-400/30', 
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-            bg: 'from-amber-50/60 via-white/80 to-amber-50/30 dark:from-amber-950/30 dark:via-slate-900/50 dark:to-amber-950/10',
-            badge: 'bg-amber-100/80 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 backdrop-blur-sm',
-            glow: 'shadow-amber-500/10',
-            pulse: 'ring-amber-400/30',
-            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>`,
-        },
-<<<<<<< HEAD
-        'Warning': {
-            dot: 'bg-orange-400',
-            border: 'border-orange-400/30',
-=======
-        'Warning': { 
-            dot: 'bg-orange-400', 
-            border: 'border-orange-400/30', 
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-            bg: 'from-orange-50/60 via-white/80 to-orange-50/30 dark:from-orange-950/30 dark:via-slate-900/50 dark:to-orange-950/10',
-            badge: 'bg-orange-100/80 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 backdrop-blur-sm',
-            glow: 'shadow-orange-500/10',
-            pulse: 'ring-orange-400/30',
-            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>`,
-        },
-<<<<<<< HEAD
-        'Critical': {
-            dot: 'bg-rose-400',
-            border: 'border-rose-400/30',
-=======
-        'Critical': { 
-            dot: 'bg-rose-400', 
-            border: 'border-rose-400/30', 
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-            bg: 'from-rose-50/60 via-white/80 to-rose-50/30 dark:from-rose-950/30 dark:via-slate-900/50 dark:to-rose-950/10',
-            badge: 'bg-rose-100/80 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 backdrop-blur-sm',
-            glow: 'shadow-rose-500/10',
-            pulse: 'ring-rose-400/30',
-            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
-        }
-    };
-<<<<<<< HEAD
-
-    const normalizedStatus = snapshotData.status.charAt(0).toUpperCase() + snapshotData.status.slice(1).toLowerCase();
-    const config = statusConfig[normalizedStatus] || statusConfig['Normal'];
-    const confidenceWidth = Math.min(100, Math.max(0, snapshotData.confidence));
-
-=======
-    
-    // Normalize status for case-insensitive matching
-    const normalizedStatus = snapshotData.status.charAt(0).toUpperCase() + snapshotData.status.slice(1).toLowerCase();
-    const config = statusConfig[normalizedStatus] || statusConfig['Normal'];
-    const confidenceWidth = Math.min(100, Math.max(0, snapshotData.confidence));
-    
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-    const priorityColors = {
-        'High': 'text-rose-600 dark:text-rose-400',
-        'Medium': 'text-amber-600 dark:text-amber-400',
-        'Low': 'text-emerald-600 dark:text-emerald-400'
-    };
-<<<<<<< HEAD
-
-=======
-    
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-    const trendIcons = {
-        'Stable': `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/></svg>`,
-        'Improving': `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>`,
-        'Worsening': `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>`
-    };
-<<<<<<< HEAD
-
-=======
-    
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-    const trendColor = {
-        'Stable': 'text-slate-500 dark:text-slate-400',
-        'Improving': 'text-emerald-600 dark:text-emerald-400',
-        'Worsening': 'text-rose-600 dark:text-rose-400'
-    };
-
-<<<<<<< HEAD
-    let summaryText = snapshotData.summary;
-    if (summaryText === 'No summary available' || !summaryText) {
-        const statusEmoji = snapshotData.status === 'Normal' ? '✅' :
-            snapshotData.status === 'Critical' ? '🚨' : 'ℹ️';
-=======
-    // Generate a dynamic summary if none provided
-    let summaryText = snapshotData.summary;
-    if (summaryText === 'No summary available' || !summaryText) {
-        // Try to generate a contextual summary
-        const statusEmoji = snapshotData.status === 'Normal' ? '✅' : 
-                           snapshotData.status === 'Critical' ? '🚨' : 'ℹ️';
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-        summaryText = `${statusEmoji} System is ${snapshotData.status.toLowerCase()} with ${snapshotData.confidence}% confidence`;
-    }
-
-    snapshot.innerHTML = `
-        <div class="ai-snapshot-card relative overflow-hidden rounded-2xl border ${config.border} bg-gradient-to-br ${config.bg} backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-500 group ${config.glow}">
-<<<<<<< HEAD
-            <div class="absolute -top-24 -right-24 w-64 h-64 rounded-full opacity-[0.08] blur-3xl ${config.dot.replace('bg-', 'bg-')} animate-pulse-slow"></div>
-            <div class="absolute -bottom-16 -left-16 w-48 h-48 rounded-full opacity-[0.05] blur-2xl ${config.dot.replace('bg-', 'bg-')} animate-pulse-slower"></div>
-            
-=======
-            <!-- Ambient glow - AI breathing effect -->
-            <div class="absolute -top-24 -right-24 w-64 h-64 rounded-full opacity-[0.08] blur-3xl ${config.dot.replace('bg-', 'bg-')} animate-pulse-slow"></div>
-            <div class="absolute -bottom-16 -left-16 w-48 h-48 rounded-full opacity-[0.05] blur-2xl ${config.dot.replace('bg-', 'bg-')} animate-pulse-slower"></div>
-            
-            <!-- Scanning line shimmer -->
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-            <div class="absolute inset-0 pointer-events-none overflow-hidden">
-                <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-                    <div class="absolute -inset-full w-[200%] h-[200%] bg-gradient-to-r from-transparent via-white/5 to-transparent rotate-12 translate-y-[-100%] group-hover:translate-y-[100%] transition-transform duration-1000 ease-out"></div>
-                </div>
-            </div>
-            
-            <div class="relative p-5 md:p-6">
-<<<<<<< HEAD
-=======
-                <!-- Header -->
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-                <div class="flex items-start justify-between mb-3">
-                    <div class="flex items-center gap-3 min-w-0">
-                        <div class="flex-shrink-0 w-10 h-10 rounded-xl ${config.badge} flex items-center justify-center shadow-sm relative">
-                            ${config.icon}
-<<<<<<< HEAD
-=======
-                            <!-- Live pulse dot -->
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-                            <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ${config.dot} ring-2 ring-white dark:ring-slate-800 animate-ping"></span>
-                            <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ${config.dot} ring-2 ring-white dark:ring-slate-800"></span>
-                        </div>
-                        <div class="min-w-0">
-                            <h3 class="font-bold text-base md:text-lg text-slate-800 dark:text-slate-100 tracking-tight truncate">${snapshotData.headline}</h3>
-                            <div class="flex items-center gap-2 mt-0.5">
-                                <span class="w-1.5 h-1.5 rounded-full ${config.dot} animate-pulse"></span>
-                                <span class="text-xs font-medium text-slate-500 dark:text-slate-400">AI Monitoring · Live</span>
-                                <span class="text-[10px] text-slate-400 dark:text-slate-500 hidden sm:inline">• ${snapshotData.monitoringSince}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <span class="px-3 py-1 rounded-full text-xs font-semibold ${config.badge} shadow-sm border border-current/10 whitespace-nowrap ml-2">
-                        ${snapshotData.status}
-                    </span>
-                </div>
-                
-<<<<<<< HEAD
-=======
-                <!-- Summary + Top Finding -->
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-                <div class="space-y-1.5 mb-4">
-                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                        ${summaryText}
-                    </p>
-                    <div class="flex items-start gap-2 text-xs text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-800/30 rounded-lg px-3 py-2 border border-slate-200/50 dark:border-slate-700/50">
-                        <span class="font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">🔍 Top finding:</span>
-                        <span class="text-slate-600 dark:text-slate-400">${snapshotData.topFinding}</span>
-                    </div>
-                </div>
-                
-<<<<<<< HEAD
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-200/60 dark:border-slate-700/60">
-=======
-                <!-- Stats grid -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-200/60 dark:border-slate-700/60">
-                    <!-- Priority -->
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-                    <div class="flex items-center gap-1.5">
-                        <svg class="w-3.5 h-3.5 ${priorityColors[snapshotData.priority] || 'text-slate-400'}" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z"/>
-                        </svg>
-                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">${snapshotData.priority} Priority</span>
-                    </div>
-                    
-<<<<<<< HEAD
-=======
-                    <!-- Risk Trend -->
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-                    <div class="flex items-center gap-1.5">
-                        ${trendIcons[snapshotData.riskTrend] || trendIcons['Stable']}
-                        <span class="text-xs font-medium ${trendColor[snapshotData.riskTrend] || 'text-slate-500'}">${snapshotData.riskTrend}</span>
-                    </div>
-                    
-<<<<<<< HEAD
-=======
-                    <!-- Confidence with bar -->
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-                    <div class="col-span-2 flex items-center gap-2">
-                        <div class="flex-1 h-1.5 rounded-full bg-slate-200/60 dark:bg-slate-700/60 overflow-hidden">
-                            <div class="h-full rounded-full bg-gradient-to-r ${config.dot} transition-all duration-700 ease-out" style="width:${confidenceWidth}%"></div>
-                        </div>
-                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 min-w-[2.5rem] text-right">${snapshotData.confidence}%</span>
-                    </div>
-                </div>
-                
-<<<<<<< HEAD
-=======
-                <!-- Action row + interactions -->
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-                <div class="flex flex-wrap items-center justify-between gap-2 mt-3 pt-3 border-t border-slate-200/40 dark:border-slate-700/40">
-                    <div class="flex items-center gap-2 text-xs">
-                        <span class="text-slate-400 dark:text-slate-500">Next action:</span>
-                        <span class="font-medium text-slate-700 dark:text-slate-300">${snapshotData.nextAction}</span>
-                    </div>
-                    
-                    <div class="flex items-center gap-1">
-<<<<<<< HEAD
-=======
-                        <!-- AI Timeline button -->
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-                        <button onclick="alert('AI Timeline: showing recent changes and monitoring history')" 
-                                class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors" 
-                                title="View AI Timeline">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                        </button>
-                        
-<<<<<<< HEAD
-=======
-                        <!-- Explain button -->
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-                        <button onclick="alert('Why this recommendation?\\n\\nBased on recent sanitation reports and health indicators, the AI recommends this action to maintain municipal health standards.')" 
-                                class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors" 
-                                title="Explain recommendation">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                        </button>
-                        
-<<<<<<< HEAD
-=======
-                        <!-- Refresh button -->
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-                        <button onclick="refreshInsights()" 
-                                class="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 dark:hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors group/refresh" 
-                                title="Refresh insights">
-                            <svg class="w-4 h-4 group-hover/refresh:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                
-<<<<<<< HEAD
-=======
-                <!-- Data freshness -->
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-                <div class="flex items-center gap-1.5 mt-2 text-[10px] text-slate-400 dark:text-slate-500">
-                    <span>🟢</span>
-                    <span>Updated ${snapshotData.lastUpdated}</span>
-                    <span class="hidden sm:inline">• Monitoring since ${snapshotData.monitoringSince}</span>
-                </div>
-            </div>
-        </div>
-    `;
-<<<<<<< HEAD
-
-=======
-    
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-    snapshot.classList.remove('hidden');
-}
-
-function refreshInsights() {
-    if (insightsLoading) return;
-<<<<<<< HEAD
-
-    const btn = document.querySelector('.group/refresh svg');
-    if (btn) btn.classList.add('animate-spin');
-
-=======
-    
-    // Animate the refresh button
-    const btn = document.querySelector('.group/refresh svg');
-    if (btn) btn.classList.add('animate-spin');
-    
-    // Clear cache and reload
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
-    fetch('api/analytics/ai-snapshot.php', { cache: 'no-store' })
-        .then(() => {
-            setTimeout(() => {
-                if (btn) btn.classList.remove('animate-spin');
-            }, 500);
-        });
-<<<<<<< HEAD
-
-    loadInsights();
-}
-
-function renderSingleInsightCard(item) {
-    const badgeConfig = {
-        'Trending Up': {
-            border: 'border-emerald-400/40',
-            dot: 'bg-emerald-400',
-=======
-    
-    loadInsights();
-}
-
-async function loadPatients() {
-    try {
-        console.log('Fetching patients from API...');
-        const response = await fetch('api/patients/get.php');
-        
-        if (!response.ok) {
-            console.error('Failed to fetch patients:', response.status);
-            return;
-        }
-        
-        const data = await response.json();
-        console.log('Patients data received:', data);
-        
-        if (data.success) {
-            DATA.patients = data.patients; // Update the global DATA object
-            console.log(`Loaded ${DATA.patients.length} patients`);
-        } else {
-            console.error('API error:', data.message);
-        }
-    } catch (e) {
-        console.error('Error loading patients:', e);
-    }
-}
 function renderSingleInsightCard(item) {
     const badgeConfig = {
         'Trending Up': { 
             border: 'border-emerald-400/40', 
             dot: 'bg-emerald-400', 
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
             icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>`,
             gradient: 'from-emerald-50/40 via-white/60 to-emerald-50/20 dark:from-emerald-950/20 dark:via-slate-900/40 dark:to-emerald-950/10',
             badgeClass: 'bg-emerald-100/70 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
         },
-<<<<<<< HEAD
-        'Trending Down': {
-            border: 'border-rose-400/40',
-            dot: 'bg-rose-400',
-=======
         'Trending Down': { 
             border: 'border-rose-400/40', 
             dot: 'bg-rose-400', 
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
             icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17l5-5m0 0l-5-5m5 5H6"/></svg>`,
             gradient: 'from-rose-50/40 via-white/60 to-rose-50/20 dark:from-rose-950/20 dark:via-slate-900/40 dark:to-rose-950/10',
             badgeClass: 'bg-rose-100/70 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300'
         },
-<<<<<<< HEAD
-        'Stable': {
-            border: 'border-blue-400/40',
-            dot: 'bg-blue-400',
-=======
         'Stable': { 
             border: 'border-blue-400/40', 
             dot: 'bg-blue-400', 
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
             icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/></svg>`,
             gradient: 'from-blue-50/40 via-white/60 to-blue-50/20 dark:from-blue-950/20 dark:via-slate-900/40 dark:to-blue-950/10',
             badgeClass: 'bg-blue-100/70 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
         },
-<<<<<<< HEAD
-        'Needs Attention': {
-            border: 'border-amber-400/40',
-            dot: 'bg-amber-400',
-=======
         'Needs Attention': { 
             border: 'border-amber-400/40', 
             dot: 'bg-amber-400', 
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
             icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>`,
             gradient: 'from-amber-50/40 via-white/60 to-amber-50/20 dark:from-amber-950/20 dark:via-slate-900/40 dark:to-amber-950/10',
             badgeClass: 'bg-amber-100/70 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
         },
-<<<<<<< HEAD
-        'Good Performance': {
-            border: 'border-emerald-400/40',
-            dot: 'bg-emerald-400',
-=======
         'Good Performance': { 
             border: 'border-emerald-400/40', 
             dot: 'bg-emerald-400', 
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
             icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
             gradient: 'from-emerald-50/40 via-white/60 to-emerald-50/20 dark:from-emerald-950/20 dark:via-slate-900/40 dark:to-emerald-950/10',
             badgeClass: 'bg-emerald-100/70 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
         },
-<<<<<<< HEAD
-        'Trend': {
-            border: 'border-emerald-400/40',
-            dot: 'bg-emerald-400',
-=======
         'Trend': { 
             border: 'border-emerald-400/40', 
             dot: 'bg-emerald-400', 
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
             icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>`,
             gradient: 'from-emerald-50/40 via-white/60 to-emerald-50/20 dark:from-emerald-950/20 dark:via-slate-900/40 dark:to-emerald-950/10',
             badgeClass: 'bg-emerald-100/70 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
         },
-<<<<<<< HEAD
-        'Risk': {
-            border: 'border-rose-400/40',
-            dot: 'bg-rose-400',
-=======
         'Risk': { 
             border: 'border-rose-400/40', 
             dot: 'bg-rose-400', 
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
             icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
             gradient: 'from-rose-50/40 via-white/60 to-rose-50/20 dark:from-rose-950/20 dark:via-slate-900/40 dark:to-rose-950/10',
             badgeClass: 'bg-rose-100/70 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300'
         },
-<<<<<<< HEAD
-        'Anomaly': {
-            border: 'border-amber-400/40',
-            dot: 'bg-amber-400',
-=======
         'Anomaly': { 
             border: 'border-amber-400/40', 
             dot: 'bg-amber-400', 
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
             icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>`,
             gradient: 'from-amber-50/40 via-white/60 to-amber-50/20 dark:from-amber-950/20 dark:via-slate-900/40 dark:to-amber-950/10',
             badgeClass: 'bg-amber-100/70 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
         },
-<<<<<<< HEAD
-        'Forecast': {
-            border: 'border-blue-400/40',
-            dot: 'bg-blue-400',
-=======
         'Forecast': { 
             border: 'border-blue-400/40', 
             dot: 'bg-blue-400', 
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
             icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`,
             gradient: 'from-blue-50/40 via-white/60 to-blue-50/20 dark:from-blue-950/20 dark:via-slate-900/40 dark:to-blue-950/10',
             badgeClass: 'bg-blue-100/70 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
         },
-<<<<<<< HEAD
-        'Opportunity': {
-            border: 'border-emerald-400/40',
-            dot: 'bg-emerald-400',
-=======
         'Opportunity': { 
             border: 'border-emerald-400/40', 
             dot: 'bg-emerald-400', 
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
             icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>`,
             gradient: 'from-emerald-50/40 via-white/60 to-emerald-50/20 dark:from-emerald-950/20 dark:via-slate-900/40 dark:to-emerald-950/10',
             badgeClass: 'bg-emerald-100/70 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
         },
     };
-<<<<<<< HEAD
 
-    const config = badgeConfig[item.badge] || {
-        border: 'border-slate-400/40',
-        dot: 'bg-slate-400',
-=======
-    
     const config = badgeConfig[item.badge] || { 
         border: 'border-slate-400/40', 
         dot: 'bg-slate-400', 
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
         icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
         gradient: 'from-slate-50/40 via-white/60 to-slate-50/20 dark:from-slate-800/20 dark:via-slate-900/40 dark:to-slate-800/10',
         badgeClass: 'bg-slate-100/70 text-slate-700 dark:bg-slate-700/30 dark:text-slate-300'
     };
-<<<<<<< HEAD
 
     const confidenceWidth = Math.min(100, Math.max(0, item.confidence || 0));
-
-=======
     
-    const confidenceWidth = Math.min(100, Math.max(0, item.confidence || 0));
-    
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
     const getConfidenceColor = (value) => {
         if (value >= 80) return 'bg-emerald-400';
         if (value >= 60) return 'bg-blue-400';
         if (value >= 40) return 'bg-amber-400';
         return 'bg-rose-400';
     };
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
     const confidenceColor = getConfidenceColor(confidenceWidth);
 
     return `
         <div class="ai-mini-card group relative overflow-hidden rounded-xl border ${config.border} bg-gradient-to-br ${config.gradient} backdrop-blur-sm p-4 shadow-sm hover:shadow-lg transition-all duration-400 hover:-translate-y-1 cursor-default">
-<<<<<<< HEAD
             <div class="absolute -top-10 -right-10 w-24 h-24 rounded-full opacity-[0.06] blur-2xl ${config.dot.replace('bg-', 'bg-')} group-hover:opacity-[0.12] transition-opacity duration-500"></div>
             
-=======
-            <!-- Subtle ambient glow -->
-            <div class="absolute -top-10 -right-10 w-24 h-24 rounded-full opacity-[0.06] blur-2xl ${config.dot.replace('bg-', 'bg-')} group-hover:opacity-[0.12] transition-opacity duration-500"></div>
-            
-            <!-- Scanning shimmer on hover -->
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
             <div class="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
                 <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
                     <div class="absolute -inset-full w-[200%] h-[200%] bg-gradient-to-r from-transparent via-white/5 to-transparent -rotate-12 translate-y-[-100%] group-hover:translate-y-[100%] transition-transform duration-1000 ease-out"></div>
@@ -1133,10 +644,6 @@ function renderSingleInsightCard(item) {
             </div>
             
             <div class="relative">
-<<<<<<< HEAD
-=======
-                <!-- Header with icon and badge -->
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
                 <div class="flex items-start justify-between mb-2.5">
                     <div class="flex items-center gap-2.5 min-w-0">
                         <div class="flex-shrink-0 w-8 h-8 rounded-lg ${config.badgeClass} flex items-center justify-center shadow-sm">
@@ -1149,15 +656,8 @@ function renderSingleInsightCard(item) {
                     </span>
                 </div>
                 
-<<<<<<< HEAD
                 <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-2.5">${item.insight}</p>
                 
-=======
-                <!-- Insight text -->
-                <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-2.5">${item.insight}</p>
-                
-                <!-- Recommendation with arrow -->
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
                 <div class="flex items-center gap-1.5 text-xs font-medium text-blue-600 dark:text-cyan-400 mb-3 group-hover:text-blue-700 dark:group-hover:text-cyan-300 transition-colors">
                     <svg class="w-3.5 h-3.5 flex-shrink-0 group-hover:translate-x-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
@@ -1165,10 +665,6 @@ function renderSingleInsightCard(item) {
                     <span class="truncate">${item.recommendation}</span>
                 </div>
                 
-<<<<<<< HEAD
-=======
-                <!-- Confidence bar with label -->
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
                 <div class="flex items-center gap-2">
                     <div class="flex-1 h-1.5 rounded-full bg-slate-200/60 dark:bg-slate-700/60 overflow-hidden">
                         <div class="h-full rounded-full bg-gradient-to-r ${confidenceColor} transition-all duration-700 ease-out" style="width:${confidenceWidth}%"></div>
@@ -1176,10 +672,6 @@ function renderSingleInsightCard(item) {
                     <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 min-w-[2.2rem] text-right">${confidenceWidth}%</span>
                 </div>
                 
-<<<<<<< HEAD
-=======
-                <!-- Interactive footer -->
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
                 <div class="flex items-center justify-end gap-1 mt-2 pt-2 border-t border-slate-200/40 dark:border-slate-700/40">
                     <button onclick="alert('View details for: ${item.title}')" 
                             class="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors flex items-center gap-1 group/btn">
@@ -1197,6 +689,216 @@ function renderSingleInsightCard(item) {
             </div>
         </div>
     `;
+}
+
+function renderAISnapshot(data) {
+    const snapshot = document.getElementById('ai-snapshot');
+    if (!snapshot) return;
+    
+    const snapshotData = {
+        status: data.overall_risk || data.status || 'Normal',
+        headline: data.overall_risk ? `${data.overall_risk} Risk Level` : (data.headline || 'System Status'),
+        summary: data.executive_summary || data.summary || 'No summary available',
+        priority: data.priority || (data.overall_risk === 'Critical' || data.overall_risk === 'High' ? 'High' : 'Medium'),
+        confidence: data.confidence_score || data.confidence || 0,
+        lastUpdated: data.last_updated || data.lastUpdated || new Date().toLocaleString(),
+        monitoringSince: data.monitoring_since || data.monitoringSince || '2 hours',
+        riskTrend: data.risk_trend || data.riskTrend || 'Stable',
+        topFinding: data.top_finding || data.topFinding || 'No critical findings detected',
+        nextAction: data.next_action || data.nextAction || 'Continue routine monitoring'
+    };
+
+    const statusConfig = {
+        'Normal': {
+            dot: 'bg-emerald-400',
+            border: 'border-emerald-400/30',
+            bg: 'from-emerald-50/60 via-white/80 to-emerald-50/30 dark:from-emerald-950/30 dark:via-slate-900/50 dark:to-emerald-950/10',
+            badge: 'bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 backdrop-blur-sm',
+            glow: 'shadow-emerald-500/10',
+            pulse: 'ring-emerald-400/30',
+            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+        },
+        'Attention': {
+            dot: 'bg-amber-400',
+            border: 'border-amber-400/30',
+            bg: 'from-amber-50/60 via-white/80 to-amber-50/30 dark:from-amber-950/30 dark:via-slate-900/50 dark:to-amber-950/10',
+            badge: 'bg-amber-100/80 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 backdrop-blur-sm',
+            glow: 'shadow-amber-500/10',
+            pulse: 'ring-amber-400/30',
+            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>`,
+        },
+        'Warning': {
+            dot: 'bg-orange-400',
+            border: 'border-orange-400/30',
+            bg: 'from-orange-50/60 via-white/80 to-orange-50/30 dark:from-orange-950/30 dark:via-slate-900/50 dark:to-orange-950/10',
+            badge: 'bg-orange-100/80 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 backdrop-blur-sm',
+            glow: 'shadow-orange-500/10',
+            pulse: 'ring-orange-400/30',
+            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>`,
+        },
+        'Critical': { 
+            dot: 'bg-rose-400', 
+            border: 'border-rose-400/30', 
+            bg: 'from-rose-50/60 via-white/80 to-rose-50/30 dark:from-rose-950/30 dark:via-slate-900/50 dark:to-rose-950/10',
+            badge: 'bg-rose-100/80 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 backdrop-blur-sm',
+            glow: 'shadow-rose-500/10',
+            pulse: 'ring-rose-400/30',
+            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+        }
+    };
+
+    const normalizedStatus = snapshotData.status.charAt(0).toUpperCase() + snapshotData.status.slice(1).toLowerCase();
+    const config = statusConfig[normalizedStatus] || statusConfig['Normal'];
+    const confidenceWidth = Math.min(100, Math.max(0, snapshotData.confidence));
+    
+    const priorityColors = {
+        'High': 'text-rose-600 dark:text-rose-400',
+        'Medium': 'text-amber-600 dark:text-amber-400',
+        'Low': 'text-emerald-600 dark:text-emerald-400'
+    };
+    
+    const trendIcons = {
+        'Stable': `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/></svg>`,
+        'Improving': `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>`,
+        'Worsening': `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>`
+    };
+    
+    const trendColor = {
+        'Stable': 'text-slate-500 dark:text-slate-400',
+        'Improving': 'text-emerald-600 dark:text-emerald-400',
+        'Worsening': 'text-rose-600 dark:text-rose-400'
+    };
+
+    let summaryText = snapshotData.summary;
+    if (summaryText === 'No summary available' || !summaryText) {
+        const statusEmoji = snapshotData.status === 'Normal' ? '✅' :
+            snapshotData.status === 'Critical' ? '🚨' : 'ℹ️';
+        summaryText = `${statusEmoji} System is ${snapshotData.status.toLowerCase()} with ${snapshotData.confidence}% confidence`;
+    }
+
+    snapshot.innerHTML = `
+        <div class="ai-snapshot-card relative overflow-hidden rounded-2xl border ${config.border} bg-gradient-to-br ${config.bg} backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-500 group ${config.glow}">
+            <div class="absolute -top-24 -right-24 w-64 h-64 rounded-full opacity-[0.08] blur-3xl ${config.dot.replace('bg-', 'bg-')} animate-pulse-slow"></div>
+            <div class="absolute -bottom-16 -left-16 w-48 h-48 rounded-full opacity-[0.05] blur-2xl ${config.dot.replace('bg-', 'bg-')} animate-pulse-slower"></div>
+            
+            <div class="absolute inset-0 pointer-events-none overflow-hidden">
+                <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                    <div class="absolute -inset-full w-[200%] h-[200%] bg-gradient-to-r from-transparent via-white/5 to-transparent rotate-12 translate-y-[-100%] group-hover:translate-y-[100%] transition-transform duration-1000 ease-out"></div>
+                </div>
+            </div>
+            
+            <div class="relative p-5 md:p-6">
+                <div class="flex items-start justify-between mb-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="flex-shrink-0 w-10 h-10 rounded-xl ${config.badge} flex items-center justify-center shadow-sm relative">
+                            ${config.icon}
+                            <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ${config.dot} ring-2 ring-white dark:ring-slate-800 animate-ping"></span>
+                            <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ${config.dot} ring-2 ring-white dark:ring-slate-800"></span>
+                        </div>
+                        <div class="min-w-0">
+                            <h3 class="font-bold text-base md:text-lg text-slate-800 dark:text-slate-100 tracking-tight truncate">${snapshotData.headline}</h3>
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <span class="w-1.5 h-1.5 rounded-full ${config.dot} animate-pulse"></span>
+                                <span class="text-xs font-medium text-slate-500 dark:text-slate-400">AI Monitoring · Live</span>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-500 hidden sm:inline">• ${snapshotData.monitoringSince}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold ${config.badge} shadow-sm border border-current/10 whitespace-nowrap ml-2">
+                        ${snapshotData.status}
+                    </span>
+                </div>
+                
+                <div class="space-y-1.5 mb-4">
+                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                        ${summaryText}
+                    </p>
+                    <div class="flex items-start gap-2 text-xs text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-800/30 rounded-lg px-3 py-2 border border-slate-200/50 dark:border-slate-700/50">
+                        <span class="font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">🔍 Top finding:</span>
+                        <span class="text-slate-600 dark:text-slate-400">${snapshotData.topFinding}</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-200/60 dark:border-slate-700/60">
+                    <div class="flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 ${priorityColors[snapshotData.priority] || 'text-slate-400'}" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z"/>
+                        </svg>
+                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">${snapshotData.priority} Priority</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-1.5">
+                        ${trendIcons[snapshotData.riskTrend] || trendIcons['Stable']}
+                        <span class="text-xs font-medium ${trendColor[snapshotData.riskTrend] || 'text-slate-500'}">${snapshotData.riskTrend}</span>
+                    </div>
+                    
+                    <div class="col-span-2 flex items-center gap-2">
+                        <div class="flex-1 h-1.5 rounded-full bg-slate-200/60 dark:bg-slate-700/60 overflow-hidden">
+                            <div class="h-full rounded-full bg-gradient-to-r ${config.dot} transition-all duration-700 ease-out" style="width:${confidenceWidth}%"></div>
+                        </div>
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 min-w-[2.5rem] text-right">${snapshotData.confidence}%</span>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap items-center justify-between gap-2 mt-3 pt-3 border-t border-slate-200/40 dark:border-slate-700/40">
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="text-slate-400 dark:text-slate-500">Next action:</span>
+                        <span class="font-medium text-slate-700 dark:text-slate-300">${snapshotData.nextAction}</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-1">
+                        <button onclick="alert('AI Timeline: showing recent changes and monitoring history')" 
+                                class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors" 
+                                title="View AI Timeline">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </button>
+                        
+                        <button onclick="alert('Why this recommendation?\\n\\nBased on recent sanitation reports and health indicators, the AI recommends this action to maintain municipal health standards.')" 
+                                class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors" 
+                                title="Explain recommendation">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </button>
+                        
+                        <button onclick="refreshInsights()" 
+                                class="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 dark:hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors group/refresh" 
+                                title="Refresh insights">
+                            <svg class="w-4 h-4 group-hover/refresh:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-1.5 mt-2 text-[10px] text-slate-400 dark:text-slate-500">
+                    <span>🟢</span>
+                    <span>Updated ${snapshotData.lastUpdated}</span>
+                    <span class="hidden sm:inline">• Monitoring since ${snapshotData.monitoringSince}</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    snapshot.classList.remove('hidden');
+}
+
+function refreshInsights() {
+    if (insightsLoading) return;
+
+    const btn = document.querySelector('.group/refresh svg');
+    if (btn) btn.classList.add('animate-spin');
+    
+    fetch('api/analytics/ai-snapshot.php', { cache: 'no-store' })
+        .then(() => {
+            setTimeout(() => {
+                if (btn) btn.classList.remove('animate-spin');
+            }, 500);
+        });
+
+    loadInsights();
 }
 
 function updateLastAnalyzedFooter() {
@@ -1220,14 +922,6 @@ function updateLastAnalyzedFooter() {
 function setupAutoRefresh() {
     if (insightsRefreshTimer) clearTimeout(insightsRefreshTimer);
     insightsRefreshTimer = setTimeout(() => loadInsights(), 300000);
-}
-
-
-async function reloadCurrentView() {
-    await loadDashboardData();
-    await loadUsers();
-    await loadLogs();
-    renderView();
 }
 
 async function loadInsights() {
@@ -1259,14 +953,6 @@ async function loadInsights() {
 
         if (data?.status === 'success' && data.insights) {
             console.log('Rendering snapshot + chart cards');
-            console.log('data.insights structure:', Object.keys(data.insights));
-            console.log('data.insights.snapshot:', data.insights.snapshot);
-            console.log('data.insights.insights:', data.insights.insights);
-<<<<<<< HEAD
-
-=======
-            
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
             renderAISnapshot(data.insights);
             if (data.insights.insights) renderChartInsightCards(data.insights.insights);
             lastAnalyzedTime = new Date();
@@ -1302,7 +988,6 @@ async function loadInsights() {
 }
 
 
-<<<<<<< HEAD
 // ============================================================
 // SETTINGS MODAL
 // ============================================================
@@ -1433,11 +1118,7 @@ function openSettingsModal() {
 
 // Initialize app
 function initApp() {
-=======
-// Initialize app
-function initApp() {
     // Add custom animations once
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
     if (!document.getElementById('ai-animation-styles')) {
         const style = document.createElement('style');
         style.id = 'ai-animation-styles';
@@ -1458,10 +1139,7 @@ function initApp() {
         document.head.appendChild(style);
     }
 
-<<<<<<< HEAD
-=======
     // Set core functions for actions.js to avoid circular dependencies
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
     setCoreFunctions({
         navigateTo,
         renderView,
@@ -1483,13 +1161,6 @@ function initApp() {
     if (iconSun) iconSun.classList.toggle('hidden', !state.darkMode);
     if (iconMoon) iconMoon.classList.toggle('hidden', state.darkMode);
 
-<<<<<<< HEAD
-    document.getElementById('dark-mode-toggle').addEventListener('click', toggleDarkMode);
-
-    const chatBtn = document.getElementById('ai-chat-toggle-btn');
-    if (chatBtn) chatBtn.addEventListener('click', toggleChat);
-
-=======
     // Dark mode toggle
     document.getElementById('dark-mode-toggle').addEventListener('click', toggleDarkMode);
     
@@ -1498,7 +1169,6 @@ function initApp() {
     if (chatBtn) chatBtn.addEventListener('click', toggleChat);
     
     // Sidebar
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
     document.getElementById('menu-toggle').addEventListener('click', toggleSidebar);
 
     const collapseBtn = document.getElementById('sidebar-collapse-btn');
@@ -1769,10 +1439,7 @@ function initApp() {
         if (e.target.closest('[data-action="close-modal"]')) closeModal();
     });
 
-<<<<<<< HEAD
-=======
     // Global click handler
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
     document.addEventListener('click', (e) => {
         const settingsBtn = e.target.closest('[data-action="profile-settings"]');
         if (settingsBtn) {
@@ -1828,14 +1495,8 @@ function initApp() {
     document.getElementById('main-content').addEventListener('input', handleSearchInput);
     document.getElementById('main-content').addEventListener('change', handleSearchInput);
 
-<<<<<<< HEAD
-    renderNotificationPanel();
-
-=======
-    // Initial render
     renderNotificationPanel();
     
->>>>>>> e734cde451377a162ff7eb7686dfa112a9f6ece8
     checkAuth().then(async () => {
         await loadDashboardData();
         await loadSystemStatus();
@@ -1843,10 +1504,10 @@ function initApp() {
         await loadRecentUpdates();
         await loadUsers();
         await loadLogs();
-         await loadPatients();
-         await loadConsultations();
-         await loadMedicalRecords();
-         await loadApplications();
+        await loadPatients();
+        await loadConsultations();
+        await loadMedicalRecords();
+        await loadApplications();
         renderView();
     });
 }
