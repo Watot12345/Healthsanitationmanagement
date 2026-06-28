@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Jun 27, 2026 at 05:36 AM
+-- Generation Time: Jun 28, 2026 at 08:32 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -76,27 +76,8 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `module`, `
 CREATE TABLE `ai_insights_cache` (
   `id` int(11) NOT NULL,
   `insights` text NOT NULL,
-  `generated_at` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `ai_insights_cache`
---
-
-INSERT INTO `ai_insights_cache` (`id`, `insights`, `generated_at`) VALUES
-(2, '{\"operational\":{\"title\":\"Permit Processing\",\"icon\":\"\\ud83d\\udcd1\",\"text\":\"Three sanitation permits are pending review, requiring prompt attention for operational efficiency.\"},\"risk\":{\"title\":\"Influenza Prevalence\",\"icon\":\"\\ud83e\\udda0\",\"level\":\"High\",\"text\":\"Influenza is the most reported disease with 28 cases, signaling a significant community health focus.\"},\"action\":{\"title\":\"Disease Alert Resolution\",\"icon\":\"\\ud83d\\udea8\",\"priority\":\"High\",\"text\":\"Resolve the two active disease alerts to mitigate potential public health impacts.\"}}', '2026-06-26 17:54:20');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `ai_report_cache`
---
-
-CREATE TABLE `ai_report_cache` (
-  `id` int(11) NOT NULL,
-  `cache_key` varchar(32) DEFAULT NULL,
-  `report_text` text DEFAULT NULL,
-  `generated_at` datetime DEFAULT NULL
+  `generated_at` datetime NOT NULL,
+  `data_hash` varchar(32) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -115,14 +96,6 @@ CREATE TABLE `ai_tasks` (
   `notes` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `ai_tasks`
---
-
-INSERT INTO `ai_tasks` (`id`, `title`, `module`, `priority`, `status`, `created_by`, `notes`, `created_at`) VALUES
-(1, 'Schedule a site inspection', 'inspection', 'HIGH', 'pending', 'Test User', 'Testing AI task persistence', '2026-06-26 11:19:54'),
-(2, 'Notify the assigned inspector', 'inspection', 'HIGH', 'pending', 'Test User', 'Testing AI task persistence', '2026-06-26 11:19:54');
 
 -- --------------------------------------------------------
 
@@ -149,6 +122,59 @@ INSERT INTO `alerts` (`id`, `disease`, `barangay`, `cases`, `threshold`, `level`
 (1, 'Dengue', 'San Jose', 12, 10, 'warning', 'Active', '2026-06-21 16:00:00'),
 (2, 'Influenza', 'Multiple', 28, 15, 'outbreak', 'Active', '2026-06-19 16:00:00'),
 (3, 'Food Poisoning', 'Poblacion', 3, 5, 'normal', 'Monitoring', '2026-06-20 16:00:00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `applications`
+--
+
+CREATE TABLE `applications` (
+  `id` int(11) NOT NULL,
+  `applicant_name` varchar(100) NOT NULL,
+  `business_type` varchar(50) NOT NULL,
+  `address` text DEFAULT NULL,
+  `contact_person` varchar(100) DEFAULT NULL,
+  `contact_number` varchar(20) DEFAULT NULL,
+  `status` enum('Pending','Approved','Rejected') DEFAULT 'Pending',
+  `submission_date` date DEFAULT curdate(),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `applications`
+--
+
+INSERT INTO `applications` (`id`, `applicant_name`, `business_type`, `address`, `contact_person`, `contact_number`, `status`, `submission_date`, `created_at`, `updated_at`) VALUES
+(1, 'asffsafa', 'Food Establishment', 'sdfasdf', 'rgeergee', '34534', 'Pending', '2026-06-29', '2026-06-28 17:42:20', '2026-06-28 17:42:20'),
+(5, 'asdffa', 'Food Establishment', 'asf', 'asfff', '1232523', 'Pending', '2026-06-29', '2026-06-28 17:57:47', '2026-06-28 17:57:47');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `application_documents`
+--
+
+CREATE TABLE `application_documents` (
+  `id` int(11) NOT NULL,
+  `application_id` varchar(20) NOT NULL,
+  `document_name` varchar(255) NOT NULL,
+  `document_type` varchar(50) NOT NULL,
+  `file_path` varchar(500) NOT NULL,
+  `file_size` int(11) DEFAULT NULL,
+  `upload_date` date DEFAULT curdate(),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `application_documents`
+--
+
+INSERT INTO `application_documents` (`id`, `application_id`, `document_name`, `document_type`, `file_path`, `file_size`, `upload_date`, `created_at`) VALUES
+(1, 'APP-001', 'Screenshot 2026-06-24 at 11-40-01 Health & Sanitation Management System.png', 'Business Registration', 'uploads/applications/new/20260628_195140_6a415f2c8437f.png', 221113, '2026-06-29', '2026-06-28 17:51:40'),
+(2, 'new', 'Screenshot 2026-06-24 at 11-40-01 Health & Sanitation Management System.png', 'Business Registration', 'uploads/applications/new/20260628_195621_6a416045d7638.png', 221113, '2026-06-29', '2026-06-28 17:56:21'),
+(3, 'APP-005', 'Screenshot 2026-06-24 at 11-40-01 Health & Sanitation Management System.png', 'Business Registration', 'uploads/applications/APP-005/20260628_195747_6a41609b7651b.png', 221113, '2026-06-29', '2026-06-28 17:57:47');
 
 -- --------------------------------------------------------
 
@@ -185,6 +211,87 @@ INSERT INTO `appointments` (`id`, `patient_id`, `patient_name`, `service`, `appo
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `bmi_history`
+--
+
+CREATE TABLE `bmi_history` (
+  `id` int(11) NOT NULL,
+  `patient_id` int(11) NOT NULL,
+  `record_date` date NOT NULL,
+  `weight` decimal(5,2) NOT NULL,
+  `height` decimal(5,2) NOT NULL,
+  `bmi` decimal(4,1) NOT NULL,
+  `bmi_category` varchar(50) NOT NULL,
+  `recorded_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `bmi_history`
+--
+
+INSERT INTO `bmi_history` (`id`, `patient_id`, `record_date`, `weight`, `height`, `bmi`, `bmi_category`, `recorded_by`, `created_at`) VALUES
+(2, 5, '2026-06-28', 12.00, 85.00, 16.6, 'Underweight', NULL, '2026-06-28 15:13:35'),
+(3, 6, '2026-06-28', 12.00, 85.00, 16.6, 'Underweight', NULL, '2026-06-28 15:13:35'),
+(4, 7, '2026-06-28', 65.00, 182.00, 19.6, 'Normal', NULL, '2026-06-28 15:31:46');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `consultations`
+--
+
+CREATE TABLE `consultations` (
+  `id` int(11) NOT NULL,
+  `patient_id` varchar(20) NOT NULL,
+  `doctor_name` varchar(100) NOT NULL,
+  `consultation_date` date NOT NULL,
+  `consultation_time` time DEFAULT NULL,
+  `diagnosis` varchar(255) DEFAULT NULL,
+  `symptoms` text DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `prescription` text DEFAULT NULL,
+  `follow_up_date` date DEFAULT NULL,
+  `status` enum('Pending','Completed','Cancelled') DEFAULT 'Pending',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `consultations`
+--
+
+INSERT INTO `consultations` (`id`, `patient_id`, `doctor_name`, `consultation_date`, `consultation_time`, `diagnosis`, `symptoms`, `notes`, `prescription`, `follow_up_date`, `status`, `created_at`, `updated_at`) VALUES
+(1, 'PAT-2026-0003', 'josh', '2026-06-28', '23:03:00', 'highblood', 'reddines', 'all goods', 'lozartan', '2026-07-01', 'Pending', '2026-06-28 16:48:30', '2026-06-28 16:48:30'),
+(2, 'PAT-2026-0002', 'josh', '2026-06-28', '01:34:00', 'hyper', 'cold', 'noasf', 'parahugko', '2026-07-01', 'Pending', '2026-06-28 16:54:56', '2026-06-28 16:54:56');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `growth_records`
+--
+
+CREATE TABLE `growth_records` (
+  `id` int(11) NOT NULL,
+  `patient_id` int(11) NOT NULL,
+  `record_date` date NOT NULL,
+  `age_months` int(11) NOT NULL COMMENT 'Age in months at time of measurement',
+  `weight` decimal(5,2) DEFAULT NULL,
+  `height` decimal(5,2) DEFAULT NULL,
+  `head_circumference` decimal(5,2) DEFAULT NULL,
+  `bmi` decimal(4,1) DEFAULT NULL,
+  `bmi_percentile` int(11) DEFAULT NULL COMMENT 'BMI percentile based on WHO standards',
+  `weight_percentile` int(11) DEFAULT NULL,
+  `height_percentile` int(11) DEFAULT NULL,
+  `nutritional_status` varchar(50) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `recorded_by` int(11) DEFAULT NULL COMMENT 'User ID who recorded',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `login_attempts`
 --
 
@@ -199,6 +306,32 @@ CREATE TABLE `login_attempts` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `medical_records`
+--
+
+CREATE TABLE `medical_records` (
+  `id` int(11) NOT NULL,
+  `patient_id` varchar(20) NOT NULL,
+  `record_type` enum('Lab Result','Imaging','Prescription','Doctor Note') NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `record_date` date NOT NULL,
+  `doctor_name` varchar(100) DEFAULT NULL,
+  `summary` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `medical_records`
+--
+
+INSERT INTO `medical_records` (`id`, `patient_id`, `record_type`, `title`, `record_date`, `doctor_name`, `summary`, `created_at`, `updated_at`) VALUES
+(2, 'PAT-2026-0003', 'Lab Result', 'cbc', '2026-06-28', 'josh', 'all good', '2026-06-28 17:07:55', '2026-06-28 17:07:55'),
+(3, 'PAT-2026-0002', 'Imaging', 'xray', '2026-06-28', 'kupal', 'all good', '2026-06-28 17:08:20', '2026-06-28 17:08:20');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `password_resets`
 --
 
@@ -209,6 +342,77 @@ CREATE TABLE `password_resets` (
   `expires_at` datetime DEFAULT NULL,
   `used` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patients`
+--
+
+CREATE TABLE `patients` (
+  `id` int(11) NOT NULL,
+  `patient_id` varchar(20) NOT NULL COMMENT 'Format: PAT-YYYY-XXXX',
+  `full_name` varchar(100) NOT NULL,
+  `birth_date` date NOT NULL,
+  `age` int(11) DEFAULT NULL COMMENT 'Calculated in PHP',
+  `gender` enum('Male','Female','Other','Prefer not to say') DEFAULT 'Prefer not to say',
+  `blood_type` varchar(5) DEFAULT NULL COMMENT 'A+, A-, B+, B-, AB+, AB-, O+, O-',
+  `weight` decimal(5,2) DEFAULT NULL COMMENT 'Weight in kilograms',
+  `height` decimal(5,2) DEFAULT NULL COMMENT 'Height in centimeters',
+  `head_circumference` decimal(5,2) DEFAULT NULL COMMENT 'Head circumference in cm (for children under 2)',
+  `bmi` decimal(4,1) DEFAULT NULL COMMENT 'Body Mass Index',
+  `bmi_category` varchar(50) DEFAULT NULL COMMENT 'Underweight, Normal, Overweight, Obese Class I, II, III',
+  `is_child` tinyint(1) DEFAULT 0 COMMENT 'TRUE if patient is ≤ 5 years old',
+  `needs_growth_tracking` tinyint(1) DEFAULT 0 COMMENT 'TRUE for children requiring growth monitoring',
+  `triage` enum('Low','Medium','High','Critical') DEFAULT 'Low',
+  `condition` varchar(255) DEFAULT 'Stable' COMMENT 'Current medical condition',
+  `allergies` text DEFAULT NULL,
+  `existing_conditions` text DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `contact_number` varchar(20) DEFAULT NULL,
+  `emergency_contact` varchar(100) DEFAULT NULL,
+  `emergency_phone` varchar(20) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `last_visit` date DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `patients`
+--
+
+INSERT INTO `patients` (`id`, `patient_id`, `full_name`, `birth_date`, `age`, `gender`, `blood_type`, `weight`, `height`, `head_circumference`, `bmi`, `bmi_category`, `is_child`, `needs_growth_tracking`, `triage`, `condition`, `allergies`, `existing_conditions`, `address`, `contact_number`, `emergency_contact`, `emergency_phone`, `created_at`, `updated_at`, `last_visit`, `created_by`) VALUES
+(5, 'PAT-2026-0001', 'sdgsdg', '2005-03-14', 21, 'Male', 'A+', 12.00, 85.00, 26.00, 16.6, 'Underweight', 0, 0, 'Low', 'fever', NULL, NULL, 'ffsfs', '32442', 'sdfsdgfs', '4234', '2026-06-28 15:13:35', '2026-06-28 15:13:35', '2026-06-28', 1),
+(6, 'PAT-2026-0002', 'sdgsdg', '2005-03-14', 21, 'Male', 'A+', 12.00, 85.00, 26.00, 16.6, 'Underweight', 0, 0, 'Low', 'fever', NULL, NULL, 'ffsfs', '32442', 'sdfsdgfs', '4234', '2026-06-28 15:13:35', '2026-06-28 15:13:35', '2026-06-28', 1),
+(7, 'PAT-2026-0003', 'Joshua Sierra', '2005-03-14', 21, 'Male', 'O+', 65.00, 182.00, NULL, 19.6, 'Normal', 0, 0, 'Low', 'fever', NULL, NULL, 'san jose', '09368587433', 'Maricel', '09368587433', '2026-06-28 15:31:46', '2026-06-28 15:31:46', '2026-06-28', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patient_documents`
+--
+
+CREATE TABLE `patient_documents` (
+  `id` int(11) NOT NULL,
+  `patient_id` varchar(20) NOT NULL,
+  `document_name` varchar(255) NOT NULL,
+  `document_type` enum('Lab Result','Imaging','Prescription','Other') NOT NULL,
+  `file_path` varchar(500) NOT NULL,
+  `file_category` enum('pdf','image') NOT NULL DEFAULT 'pdf',
+  `file_size` int(11) DEFAULT NULL,
+  `upload_date` date NOT NULL,
+  `notes` text DEFAULT NULL,
+  `uploaded_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `patient_documents`
+--
+
+INSERT INTO `patient_documents` (`id`, `patient_id`, `document_name`, `document_type`, `file_path`, `file_category`, `file_size`, `upload_date`, `notes`, `uploaded_by`, `created_at`) VALUES
+(1, 'PAT-2026-0003', 'Screenshot 2026-06-24 at 11-40-38 Health & Sanitation Management System.png', 'Lab Result', 'uploads/patients/PAT-2026-0003/images/20260628_180037_5251cc5a.png', 'image', 221359, '2026-06-29', '', NULL, '2026-06-28 16:00:37');
 
 -- --------------------------------------------------------
 
@@ -312,8 +516,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `role`, `full_name`, `department`, `is_active`, `last_login`, `created_at`) VALUES
-(1, 'admin', 'admin@123', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5OEv/veCF4ki', 'admin', 'System Administrator', 'IT Department', 1, '2026-06-26 21:27:43', '2026-06-22 05:38:55'),
-(2, 'staff@123', 'staff@123', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5OEv/veCF4ki', 'staff', 'staff', 'HR', 1, '2026-06-26 19:43:30', '2026-06-25 13:14:39'),
+(1, 'admin', 'admin@123', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5OEv/veCF4ki', 'admin', 'System Administrator', 'IT Department', 1, '2026-06-29 00:48:51', '2026-06-22 05:38:55'),
+(2, 'staff@123', 'staff@123', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5OEv/veCF4ki', 'staff', 'staff', 'HR', 1, '2026-06-29 00:44:28', '2026-06-25 13:14:39'),
 (3, 'user', 'user@123', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5OEv/veCF4ki', 'user', 'user@123', 'NONE', 1, '2026-06-25 21:39:48', '2026-06-25 13:15:35'),
 (4, 'dr.elena', 'elena.santos@municipal.gov', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5O...', 'staff', 'Dr. Elena Santos', 'Health Center', 1, NULL, '2026-06-25 19:40:10'),
 (5, 'dr.miguel', 'miguel.reyes@municipal.gov', '$2y$10$jKHpp5IpdTHG6L6Wz3iiFuzdjV5tUQFAm868tzkLx5O...', 'staff', 'Dr. Miguel Reyes', 'Health Center', 1, NULL, '2026-06-25 19:40:10'),
@@ -359,7 +563,10 @@ INSERT INTO `user_sessions` (`id`, `user_id`, `token`, `expires_at`, `created_at
 (19, 1, '944bcba2344e4c993d148134ffb23283540eb572e732b38e392feb64b4978c5c', '2026-06-27 03:02:48', '2026-06-26 09:02:48'),
 (20, 2, '688f0a2c8407b7381fc2ab2d3e492c5e8549ade1286a7e84f200acb58d81026d', '2026-06-27 05:43:30', '2026-06-26 11:43:30'),
 (21, 1, 'ec827cb4777b37551bd1b2c8ceed501655ee860e5e9a3ec71ca84642e1fc51ac', '2026-06-27 05:56:08', '2026-06-26 11:56:08'),
-(22, 1, '23e15a6f42f11f08c82fc3a69000fc0653963d88f278652e427168e19e747fa6', '2026-06-27 07:27:43', '2026-06-26 13:27:43');
+(22, 1, '23e15a6f42f11f08c82fc3a69000fc0653963d88f278652e427168e19e747fa6', '2026-06-27 07:27:43', '2026-06-26 13:27:43'),
+(23, 1, '1e415a0bf3a2bd196419ed7b0a1a8571b9116937295825730538b213de9f365c', '2026-06-29 08:44:31', '2026-06-28 14:44:31'),
+(24, 2, '0f755dc9118f9cf2b1bb1fc548b65e7429f110fd898293c6434093dab49e49b0', '2026-06-29 10:44:28', '2026-06-28 16:44:28'),
+(25, 1, '0d5a0fa866200b74020c36dddebc2c2ad8bd75e4ed3b1f089cab167c48d6ab83', '2026-06-29 10:48:51', '2026-06-28 16:48:51');
 
 -- --------------------------------------------------------
 
@@ -417,6 +624,26 @@ INSERT INTO `wastewater_requests` (`id`, `requester`, `address`, `type`, `status
 (2, 'ABC Hotel', '456 Mabini Ave., Poblacion', 'Wastewater Inspection', 'Approved', 'Critical', '2026-06-20 16:00:00'),
 (3, 'Carlos Lim', '789 Bonifacio Rd., Riverside', 'Septic Installation', 'Completed', 'Medium', '2026-06-21 16:00:00');
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `who_growth_standards`
+--
+
+CREATE TABLE `who_growth_standards` (
+  `id` int(11) NOT NULL,
+  `sex` enum('Male','Female') NOT NULL,
+  `age_months` int(11) NOT NULL COMMENT 'Age in months (0-60)',
+  `parameter` enum('weight','height','bmi','head_circumference') NOT NULL,
+  `sd3neg` decimal(6,2) DEFAULT NULL COMMENT '-3 Standard Deviations',
+  `sd2neg` decimal(6,2) DEFAULT NULL COMMENT '-2 Standard Deviations',
+  `sd1neg` decimal(6,2) DEFAULT NULL COMMENT '-1 Standard Deviation',
+  `median` decimal(6,2) DEFAULT NULL COMMENT 'Median (50th percentile)',
+  `sd1` decimal(6,2) DEFAULT NULL COMMENT '+1 Standard Deviation',
+  `sd2` decimal(6,2) DEFAULT NULL COMMENT '+2 Standard Deviations',
+  `sd3` decimal(6,2) DEFAULT NULL COMMENT '+3 Standard Deviations'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 --
 -- Indexes for dumped tables
 --
@@ -442,12 +669,6 @@ ALTER TABLE `ai_insights_cache`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `ai_report_cache`
---
-ALTER TABLE `ai_report_cache`
-  ADD PRIMARY KEY (`id`);
-
---
 -- Indexes for table `ai_tasks`
 --
 ALTER TABLE `ai_tasks`
@@ -460,10 +681,51 @@ ALTER TABLE `alerts`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `applications`
+--
+ALTER TABLE `applications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_date` (`submission_date`);
+
+--
+-- Indexes for table `application_documents`
+--
+ALTER TABLE `application_documents`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_application` (`application_id`);
+
+--
 -- Indexes for table `appointments`
 --
 ALTER TABLE `appointments`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `bmi_history`
+--
+ALTER TABLE `bmi_history`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `recorded_by` (`recorded_by`),
+  ADD KEY `idx_patient_bmi` (`patient_id`,`record_date`);
+
+--
+-- Indexes for table `consultations`
+--
+ALTER TABLE `consultations`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_patient` (`patient_id`),
+  ADD KEY `idx_date` (`consultation_date`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `growth_records`
+--
+ALTER TABLE `growth_records`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `recorded_by` (`recorded_by`),
+  ADD KEY `idx_patient_date` (`patient_id`,`record_date`),
+  ADD KEY `idx_record_date` (`record_date`);
 
 --
 -- Indexes for table `login_attempts`
@@ -473,12 +735,43 @@ ALTER TABLE `login_attempts`
   ADD KEY `user_id` (`user_id`);
 
 --
+-- Indexes for table `medical_records`
+--
+ALTER TABLE `medical_records`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_patient` (`patient_id`),
+  ADD KEY `idx_date` (`record_date`),
+  ADD KEY `idx_type` (`record_type`);
+
+--
 -- Indexes for table `password_resets`
 --
 ALTER TABLE `password_resets`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `token` (`token`),
   ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `patients`
+--
+ALTER TABLE `patients`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `patient_id` (`patient_id`),
+  ADD KEY `idx_patient_id` (`patient_id`),
+  ADD KEY `idx_name` (`full_name`),
+  ADD KEY `idx_birth_date` (`birth_date`),
+  ADD KEY `idx_is_child` (`is_child`),
+  ADD KEY `idx_triage` (`triage`),
+  ADD KEY `idx_last_visit` (`last_visit`);
+
+--
+-- Indexes for table `patient_documents`
+--
+ALTER TABLE `patient_documents`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_patient` (`patient_id`),
+  ADD KEY `idx_category` (`file_category`),
+  ADD KEY `fk_uploaded_by` (`uploaded_by`);
 
 --
 -- Indexes for table `permits`
@@ -525,6 +818,14 @@ ALTER TABLE `wastewater_requests`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `who_growth_standards`
+--
+ALTER TABLE `who_growth_standards`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_growth_standard` (`sex`,`age_months`,`parameter`),
+  ADD KEY `idx_age_sex` (`age_months`,`sex`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -544,12 +845,6 @@ ALTER TABLE `activity_logs`
 -- AUTO_INCREMENT for table `ai_insights_cache`
 --
 ALTER TABLE `ai_insights_cache`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT for table `ai_report_cache`
---
-ALTER TABLE `ai_report_cache`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -565,10 +860,40 @@ ALTER TABLE `alerts`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT for table `applications`
+--
+ALTER TABLE `applications`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `application_documents`
+--
+ALTER TABLE `application_documents`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT for table `appointments`
 --
 ALTER TABLE `appointments`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `bmi_history`
+--
+ALTER TABLE `bmi_history`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `consultations`
+--
+ALTER TABLE `consultations`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `growth_records`
+--
+ALTER TABLE `growth_records`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `login_attempts`
@@ -577,10 +902,28 @@ ALTER TABLE `login_attempts`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `medical_records`
+--
+ALTER TABLE `medical_records`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT for table `password_resets`
 --
 ALTER TABLE `password_resets`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `patients`
+--
+ALTER TABLE `patients`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `patient_documents`
+--
+ALTER TABLE `patient_documents`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `permits`
@@ -610,7 +953,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `user_sessions`
 --
 ALTER TABLE `user_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `violations`
@@ -625,6 +968,12 @@ ALTER TABLE `wastewater_requests`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT for table `who_growth_standards`
+--
+ALTER TABLE `who_growth_standards`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- Constraints for dumped tables
 --
 
@@ -635,16 +984,49 @@ ALTER TABLE `active_sessions`
   ADD CONSTRAINT `active_sessions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 
 --
+-- Constraints for table `bmi_history`
+--
+ALTER TABLE `bmi_history`
+  ADD CONSTRAINT `bmi_history_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `bmi_history_ibfk_2` FOREIGN KEY (`recorded_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `consultations`
+--
+ALTER TABLE `consultations`
+  ADD CONSTRAINT `consultations_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `growth_records`
+--
+ALTER TABLE `growth_records`
+  ADD CONSTRAINT `growth_records_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `growth_records_ibfk_2` FOREIGN KEY (`recorded_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
 -- Constraints for table `login_attempts`
 --
 ALTER TABLE `login_attempts`
   ADD CONSTRAINT `login_attempts_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 
 --
+-- Constraints for table `medical_records`
+--
+ALTER TABLE `medical_records`
+  ADD CONSTRAINT `medical_records_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `password_resets`
 --
 ALTER TABLE `password_resets`
   ADD CONSTRAINT `password_resets_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `patient_documents`
+--
+ALTER TABLE `patient_documents`
+  ADD CONSTRAINT `fk_patient_doc` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_uploaded_by` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
