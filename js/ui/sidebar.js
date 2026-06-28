@@ -1,5 +1,3 @@
-// added modules for admin panel --- children UI/UX
-
 import { icon } from '../utils/icons.js';
 import { state } from '../state.js';
 import { DATA } from '../data.js';
@@ -25,7 +23,7 @@ function renderActivityFeed() {
 }
 
 export function renderSidebar() {
-const nav = NAV[state.role];
+  const nav = NAV[state.role];
   const navEl = document.getElementById('sidebar-nav');
   if (!navEl) return;
   
@@ -35,11 +33,11 @@ const nav = NAV[state.role];
     let prefix = '';
 
     if (item.divider) {
-      prefix += '<div class="border-t border-slate-200 dark:border-slate-700 my-4"></div>';
+      prefix += '<div class="nav-divider border-t border-slate-200 dark:border-slate-700 my-4"></div>';
     }
 
     if (item.section && item.section !== lastSection) {
-      prefix += `<p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 px-1">${item.section}</p>`;
+      prefix += `<p class="nav-section-title text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 px-1 transition-opacity">${item.section}</p>`;
       lastSection = item.section;
     }
 
@@ -47,38 +45,57 @@ const nav = NAV[state.role];
       const isOpen = expanded.has(item.id);
       const chevron = isOpen ? 'rotate-90' : '';
 
+      // GROUP TOGGLE BUTTON
       return prefix + `
-        <button type="button" data-toggle="${item.id}" class="nav-item w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-          <span class="flex items-center gap-3">
-            ${icon(item.icon, 'h-5 w-5 shrink-0')}
-            <span>${item.label}</span>
-          </span>
-          <svg class="h-4 w-4 shrink-0 transition-transform ${chevron}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <button type="button" data-toggle="${item.id}" class="nav-item w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+          <div class="nav-content flex items-center gap-3 overflow-hidden">
+            <div class="nav-icon flex items-center justify-center shrink-0 w-6 h-6">
+              ${icon(item.icon, 'h-5 w-5 shrink-0')}
+            </div>
+            <span class="nav-label truncate whitespace-nowrap">${item.label}</span>
+          </div>
+          <svg class="nav-chevron h-4 w-4 shrink-0 transition-transform ${chevron}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/>
           </svg>
         </button>
-        <div class="${isOpen ? '' : 'hidden'} ml-4 space-y-1 mt-1 mb-2">
+        <div class="nav-children-container ${isOpen ? '' : 'hidden'} ml-4 space-y-1 mt-1 mb-2">
           ${item.children.map(child => `
-            <button type="button" data-nav="${child.id}" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors ${state.view === child.id ? 'active' : ''}">
-              ${icon(child.icon, 'h-4 w-4 shrink-0')}
-              <span>${child.label}</span>
+            <button type="button" data-nav="${child.id}" class="nav-item w-full flex items-center px-3 py-2 rounded-lg text-sm text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors ${state.view === child.id ? 'active' : ''}">
+              <div class="nav-content flex items-center gap-3 overflow-hidden">
+                <div class="nav-icon flex items-center justify-center shrink-0 w-6 h-6">
+                  ${icon(child.icon, 'h-4 w-4 shrink-0')}
+                </div>
+                <span class="nav-label truncate whitespace-nowrap">${child.label}</span>
+              </div>
             </button>
           `).join('')}
         </div>
       `;
     }
 
+    // PLAIN NAV ITEM
     return prefix + `
-      <button type="button" data-nav="${item.id}" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors ${state.view === item.id ? 'active' : ''}">
-        ${icon(item.icon, 'h-5 w-5 shrink-0')}
-        <span>${item.label}</span>
+      <button type="button" data-nav="${item.id}" class="nav-item w-full flex items-center px-3 py-2.5 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors ${state.view === item.id ? 'active' : ''}">
+        <div class="nav-content flex items-center gap-3 overflow-hidden">
+          <div class="nav-icon flex items-center justify-center shrink-0 w-6 h-6">
+            ${icon(item.icon, 'h-5 w-5 shrink-0')}
+          </div>
+          <span class="nav-label truncate whitespace-nowrap">${item.label}</span>
+        </div>
       </button>
     `;
   }).join('');
 
   const meta = ROLE_META[state.role];
-  document.getElementById('role-label').textContent = meta.label;
-  document.getElementById('current-user-name').textContent = meta.userName;
-  document.getElementById('current-user-role').textContent = meta.userRole;
+  
+  const roleLabelEl = document.getElementById('role-label');
+  if (roleLabelEl) roleLabelEl.textContent = meta.label;
+  
+  const userNameEl = document.getElementById('current-user-name');
+  if (userNameEl) userNameEl.textContent = meta.userName;
+  
+  const userRoleEl = document.getElementById('current-user-role');
+  if (userRoleEl) userRoleEl.textContent = meta.userRole;
+  
   renderActivityFeed();
 }
