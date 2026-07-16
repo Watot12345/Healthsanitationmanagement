@@ -259,16 +259,84 @@ export function performGlobalSearch(query) {
     state.openDropdown = 'search';
 }
 
-const searchIds = ['user-search', 'log-search', 'apt-search', 'permit-search', 'ww-search', 'surv-search', 'patient-search', 'consultation-search', 'record-search'];
+const searchIds = ['user-search', 'log-search', 'apt-search', 'permit-search', 'ww-search', 'surv-search', 'patient-search', 'consultation-search', 'record-search', 'application-search', 'septic-search', 'schedule-search', 'service-request-search'];
 
 // Search handling
 function handleSearchInput(e) {
     const id = e.target.id;
-    const searchIds = ['user-search', 'log-search', 'apt-search', 'permit-search', 'ww-search', 'surv-search', 'patient-search', 'consultation-search', 'record-search', 'application-search'];
+    const searchIds = ['user-search', 'log-search', 'apt-search', 'permit-search', 'ww-search', 'surv-search', 'patient-search', 'consultation-search', 'record-search', 'application-search', 'septic-search', 'schedule-search', 'service-request-search'];
     if (searchIds.includes(id)) {
         state.searchFilters[id] = e.target.value;
         renderViewPreserveScroll();
     }
+}
+
+async function sendMessage() {
+    if (isSending) return;
+
+    const input = document.getElementById('ai-chat-input');
+    const messages = document.getElementById('ai-chat-messages');
+    if (!input || !messages) return;
+
+    const question = input.value.trim();
+    if (!question) return;
+
+    input.value = '';
+    isSending = true;
+
+    const sendBtn = document.getElementById('ai-chat-send');
+    if (sendBtn) sendBtn.disabled = true;
+
+    appendMessage('user', question);
+    chatHistory.push({ role: 'user', text: question });
+
+    const typingId = showTypingIndicator(messages);
+
+    try {
+        const response = await fetch('api/ai/chat.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question }),
+            credentials: 'same-origin' // ✅ ADD THIS - sends session cookie
+        });
+
+        removeTypingIndicator(typingId);
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.status === 'success' && data.answer) {
+            appendMessage('ai', data.answer);
+            chatHistory.push({ role: 'ai', text: data.answer });
+        } else {
+            appendMessage('ai', data.message || "I'm sorry, I couldn't process that question.");
+        }
+    } catch (e) {
+        removeTypingIndicator(typingId);
+        console.error('Chat error:', e);
+        appendMessage('ai', "I'm having trouble connecting right now. Please try again in a moment.");
+    } finally {
+        isSending = false;
+        if (sendBtn) sendBtn.disabled = false;
+        input.focus();
+    }
+}
+
+async function loadServiceRequests() {
+    const res = await fetch('api/serviceRequests/get.php');
+    const data = await res.json();
+    if (data.success) DATA.serviceRequests = data.requests;
+}
+
+async function loadSepticMaintenance() {
+    try {
+        const response = await fetch('api/septic/get.php');
+        const data = await response.json();
+        if (data.success) DATA.septicMaintenance = data.records;
+    } catch (e) { console.error('Error:', e); }
 }
 
 // API Loading functions
@@ -340,17 +408,47 @@ async function checkAuth() {
         console.log('Step 4: Data received:', data);
 
         state.role = data.role;
+        state.userName = data.userName;
         console.log('Step 5: Role set to:', state.role);
 
+        // Update profile dropdown
         const profileName = document.getElementById('profile-name');
-        console.log('Step 6: Profile element found:', profileName);
         if (profileName) {
             profileName.textContent = data.userName;
-            console.log('Step 7: Profile updated to:', data.userName);
         }
-
         document.getElementById('profile-email').textContent = data.email;
         document.getElementById('profile-avatar').textContent = data.userName.charAt(0);
+
+        // ✅ Update sidebar user info
+        const sidebarUserName = document.getElementById('current-user-name');
+        if (sidebarUserName) sidebarUserName.textContent = data.userName;
+        
+        const sidebarUserRole = document.getElementById('current-user-role');
+        if (sidebarUserRole) {
+            const roles = { 'admin': 'Administrator', 'staff': 'Staff', 'user': 'User' };
+            sidebarUserRole.textContent = roles[data.role] || 'User';
+        }
+
+        // ✅ Update the page header role badge
+        const roleBadge = document.getElementById('role-badge');
+        if (roleBadge) {
+            const labels = { admin: 'Admin', staff: 'Staff', user: 'User' };
+            const classes = { 
+                admin: 'role-badge role-badge-admin', 
+                staff: 'role-badge role-badge-staff', 
+                user: 'role-badge role-badge-user' 
+            };
+            roleBadge.textContent = labels[data.role] || 'User';
+            roleBadge.className = classes[data.role] || 'role-badge role-badge-user';
+        }
+        
+        // ✅ Update the role label in sidebar
+        const roleLabel = document.getElementById('role-label');
+        if (roleLabel) {
+            const panelLabels = { admin: 'Admin Panel', staff: 'Staff Panel', user: 'User Portal' };
+            roleLabel.textContent = panelLabels[data.role] || 'User Portal';
+        }
+        
     } catch (error) {
         console.error('ERROR:', error);
     }
@@ -1497,6 +1595,7 @@ function initApp() {
     renderNotificationPanel();
     
     checkAuth().then(async () => {
+         state.view = NAV[state.role]?.[0]?.id || 'dashboard';
         await loadDashboardData();
         await loadSystemStatus();
         await loadRecentActivity();
@@ -1507,6 +1606,8 @@ function initApp() {
         await loadConsultations();
         await loadMedicalRecords();
         await loadApplications();
+        await loadSepticMaintenance();
+        await loadServiceRequests();
         renderView();
     });
 }

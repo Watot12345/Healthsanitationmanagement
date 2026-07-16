@@ -264,7 +264,7 @@
                         Connecting residents and health administrators to support sanitary licensing audits, localized disease monitoring, and integrated immunization records.
                     </p>
                     <div class="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
-                        <a href="views/login.html" class="ripple-btn bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl font-bold transition-all text-base text-center shadow-md hover:shadow-lg flex items-center justify-center">
+                        <a href="views/login.php" class="ripple-btn bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl font-bold transition-all text-base text-center shadow-md hover:shadow-lg flex items-center justify-center">
                             Request Public Services
                             <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </a>
@@ -891,7 +891,7 @@
                         </span>
                         <h3 class="text-2xl font-extrabold text-gov-900 mt-2">Active Surveillance & Disease Alert Controls</h3>
                     </div>
-                    <a href="views/login.html" class="ripple-btn mt-4 md:mt-0 bg-rose-700 hover:bg-rose-800 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow transition-colors">
+                    <a href="views/login.php" class="ripple-btn mt-4 md:mt-0 bg-rose-700 hover:bg-rose-800 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow transition-colors">
                         File Emergency Report
                     </a>
                 </div>
@@ -1080,9 +1080,9 @@
                 <div>
                     <h3 class="text-white font-bold text-sm mb-4 uppercase tracking-wider">Public Subsystems</h3>
                     <ul class="space-y-2 text-xs">
-                        <li><a href="views/login.html" class="hover:text-white transition-colors">Sanitation Applications</a></li>
-                        <li><a href="views/login.html" class="hover:text-white transition-colors">Immunization Logs</a></li>
-                        <li><a href="views/login.html" class="hover:text-white transition-colors">Sewage Drainage Booking</a></li>
+                        <li><a href="views/login.php" class="hover:text-white transition-colors">Sanitation Applications</a></li>
+                        <li><a href="views/login.php" class="hover:text-white transition-colors">Immunization Logs</a></li>
+                        <li><a href="views/login.php" class="hover:text-white transition-colors">Sewage Drainage Booking</a></li>
                     </ul>
                 </div>
                 <div>

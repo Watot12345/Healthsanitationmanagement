@@ -10,12 +10,14 @@ export const DATA = {
   appointments: [],
   patients: [],
   permits: [],
-  notifications: [],  // ← Add this
+  notifications: [],  
   kpis: null,
   systemStatus: null,
   recentUpdates: [],
   medicalRecords: [],
   applications: [],
+  septicMaintenance: [],  
+  serviceRequests: [],
 };
   
   export function getCalendarEvents() {

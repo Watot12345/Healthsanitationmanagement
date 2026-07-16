@@ -69,28 +69,18 @@
       </button>
     </div>
 
-    <div class="flex-1 overflow-y-auto overflow-x-hidden px-3 py-3">
-      <p id="role-label" class="sidebar-text text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 px-1 whitespace-nowrap">Admin Panel</p>
-      <nav id="sidebar-nav" class="space-y-0.5"></nav>
-      <div class="sidebar-text mt-5 pt-4 border-t border-slate-200/60 dark:border-slate-700/40">
-        <div class="flex items-center justify-between mb-2 px-1">
-          <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 whitespace-nowrap">Recent Activity</p>
-          <button type="button" data-action="view-all-activity" class="text-xs font-medium text-gov-600 dark:text-gov-300 hover:underline whitespace-nowrap">View all</button>
-        </div>
-        <div id="activity-feed" class="space-y-1 max-h-48 overflow-y-auto pr-1"></div>
-      </div>
+   <div class="flex-1 overflow-y-auto overflow-x-hidden px-3 py-3">
+  <p id="role-label" class="sidebar-text text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 px-1 whitespace-nowrap">Admin Panel</p>
+  <nav id="sidebar-nav" class="space-y-0.5"></nav>
+  <div class="sidebar-text mt-5 pt-4 border-t border-slate-200/60 dark:border-slate-700/40">
+    <div class="flex items-center justify-between mb-2 px-1">
+      <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 whitespace-nowrap">Recent Activity</p>
+      <button type="button" data-action="view-all-activity" class="text-xs font-medium text-gov-600 dark:text-gov-300 hover:underline whitespace-nowrap">View all</button>
     </div>
+    <div id="activity-feed" class="space-y-1 pr-1"></div>
+  </div>
+</div>
 
-    <div class="px-3 py-3 border-t border-slate-200/60 dark:border-slate-700/40 shrink-0">
-      <div class="glass-card rounded-xl p-3 flex items-center gap-3 min-w-0">
-        <div class="h-8 w-8 shrink-0 rounded-lg bg-gradient-to-br from-gov-600 to-gov-800 text-white flex items-center justify-center text-sm font-bold shadow-md">M</div>
-        <div class="sidebar-text overflow-hidden min-w-0">
-          <p class="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">Logged in as</p>
-          <p id="current-user-name" class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">Maria Santos</p>
-          <p id="current-user-role" class="text-xs text-gov-600 dark:text-gov-300 whitespace-nowrap">Administrator</p>
-        </div>
-      </div>
-    </div>
   </aside>
 
   <div id="sidebar-tooltip" class="sidebar-tooltip" aria-hidden="true"></div>

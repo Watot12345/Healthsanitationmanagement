@@ -1208,19 +1208,293 @@ const status = document.getElementById('edit-user-status').value;
 'view-septic': (target) => showSepticDetail(target.dataset.id),
 'edit-septic': () => { closeModal(); showToast('Record updated', 'success'); },
 'schedule-septic': (target) => showScheduleSeptic(target.dataset.id),
-'confirm-register-septic': () => { closeModal(); showToast('Septic system registered', 'success'); },
-'confirm-schedule-septic': () => { closeModal(); showToast('Maintenance scheduled', 'success'); },
+'confirm-register-septic': async () => {
+    const owner = document.getElementById('septic-owner')?.value || '';
+    const address = document.getElementById('septic-address')?.value || '';
+    const type = document.getElementById('septic-type')?.value || '';
+    const zone = document.getElementById('septic-zone')?.value || '';
+    const capacity = document.getElementById('septic-capacity')?.value || null;
+    const priority = document.getElementById('septic-priority')?.value || 'Medium';
+    const installDate = document.getElementById('septic-install')?.value || null;
+    const household = document.getElementById('septic-household')?.value || null;
+    
+    if (!owner) { showToast({ type: 'error', message: 'Owner is required' }); return; }
+    
+    try {
+        const response = await fetch('api/septic/create.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                owner_name: owner, address, tank_type: type,
+                zone, priority,
+                capacity, install_date: installDate, household_size: household
+            })
+        });
+        const data = await response.json();
+        closeModal();
+        if (data.success) {
+            const res = await fetch('api/septic/get.php');
+            const d = await res.json();
+            if (d.success) DATA.septicMaintenance = d.records;
+            showToast({ type: 'success', message: 'Septic system registered' });
+            renderView();
+        }
+    } catch (e) { closeModal(); showToast({ type: 'error', message: 'Failed' }); }
+},
+
+'confirm-schedule-septic': async (target) => {
+    const systemId = target.dataset.id;
+    const serviceType = document.getElementById('sched-service-type')?.value || 'Desludging';
+    const scheduledDate = document.getElementById('sched-date')?.value || '';
+    const technician = document.getElementById('sched-tech')?.value || '';
+    
+    if (!systemId) { closeModal(); showToast({ type: 'error', message: 'System ID not found' }); return; }
+    if (!scheduledDate) { showToast({ type: 'error', message: 'Date is required' }); return; }
+    
+    try {
+        await fetch('api/septic/update.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: systemId, next_schedule: scheduledDate,
+                scheduled_date: scheduledDate, service_type: serviceType,
+                technician, status: 'Scheduled'
+            })
+        });
+        
+        closeModal();
+        const res = await fetch('api/septic/get.php');
+        const d = await res.json();
+        if (d.success) DATA.septicMaintenance = d.records;
+        showToast({ type: 'success', message: 'Maintenance scheduled' });
+        renderView();
+    } catch (e) { closeModal(); showToast({ type: 'error', message: 'Failed' }); }
+},
+
 'create-schedule': () => showCreateSchedule(),
+
+'confirm-create-schedule': async () => {
+    const owner = document.getElementById('maint-owner')?.value || '';
+    const address = document.getElementById('maint-address')?.value || '';
+    const type = document.getElementById('maint-type')?.value || '';
+    const zone = document.getElementById('maint-zone')?.value || '';
+    const date = document.getElementById('maint-date')?.value || '';
+    const priority = document.getElementById('maint-priority')?.value || 'Medium';
+    const tech = document.getElementById('maint-tech')?.value || '';
+    
+    if (!owner) { showToast({ type: 'error', message: 'Owner is required' }); return; }
+    
+    try {
+        const response = await fetch('api/septic/create.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                owner_name: owner, address, tank_type: 'Concrete Septic Tank',
+                scheduled_date: date, service_type: type,
+                technician: tech, zone, priority
+            })
+        });
+        const data = await response.json();
+        closeModal();
+        if (data.success) {
+            const res = await fetch('api/septic/get.php');
+            const d = await res.json();
+            if (d.success) DATA.septicMaintenance = d.records;
+            showToast({ type: 'success', message: 'Schedule created' });
+            renderView();
+        }
+    } catch (e) { closeModal(); showToast({ type: 'error', message: 'Failed' }); }
+},
+
 'reschedule-maintenance': (target) => showReschedule(target.dataset.id),
-'confirm-create-schedule': () => { closeModal(); showToast('Schedule created', 'success'); },
-'confirm-reschedule': () => { closeModal(); showToast('Schedule updated', 'success'); },
+
+'confirm-reschedule': async (target) => {
+    const id = target.dataset.id;
+    const newDate = document.getElementById('reschedule-date')?.value || '';
+    const reason = document.getElementById('reschedule-reason')?.value || '';
+    
+    if (!newDate) { showToast({ type: 'error', message: 'New date is required' }); return; }
+    
+    try {
+        await fetch('api/septic/update.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, scheduled_date: newDate, next_schedule: newDate, notes: reason })
+        });
+        closeModal();
+        const res = await fetch('api/septic/get.php');
+        const d = await res.json();
+        if (d.success) DATA.septicMaintenance = d.records;
+        showToast({ type: 'success', message: 'Schedule updated' });
+        renderView();
+    } catch (e) { closeModal(); showToast({ type: 'error', message: 'Failed' }); }
+},
+
+'delete-septic': (target) => {
+    const id = target.dataset.id;
+    openModal('Confirm Delete',
+        `<div class="text-center py-4">
+            <div class="flex justify-center mb-4"><div class="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center">
+                <svg class="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg></div></div>
+            <h3 class="text-lg font-semibold mb-2">Delete Record</h3>
+            <p class="text-sm text-slate-500 mb-4">Delete ${id}? This cannot be undone.</p>
+        </div>`,
+        `<button data-action="close-modal" class="px-4 py-2 rounded-lg border">Cancel</button>
+         <button data-action="confirm-delete-septic" data-id="${id}" class="px-4 py-2 rounded-lg bg-red-600 text-white">Delete</button>`
+    );
+},
+
+'confirm-delete-septic': async (target) => {
+    const id = target.dataset.id;
+    try {
+        const response = await fetch('api/septic/delete.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        });
+        const data = await response.json();
+        closeModal();
+        if (data.success) {
+            const res = await fetch('api/septic/get.php');
+            const d = await res.json();
+            if (d.success) DATA.septicMaintenance = d.records;
+            showToast({ type: 'success', message: 'Deleted' });
+            renderView();
+        }
+    } catch (e) { closeModal(); showToast({ type: 'error', message: 'Failed' }); }
+},
+
+'delete-schedule': (target) => {
+    // Same as delete-septic since it's the same table
+    const id = target.dataset.id;
+    openModal('Confirm Delete',
+        `<div class="text-center py-4">
+            <div class="flex justify-center mb-4"><div class="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center">
+                <svg class="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg></div></div>
+            <h3 class="text-lg font-semibold mb-2">Delete Schedule</h3>
+            <p class="text-sm text-slate-500 mb-4">Delete ${id}? This cannot be undone.</p>
+        </div>`,
+        `<button data-action="close-modal" class="px-4 py-2 rounded-lg border">Cancel</button>
+         <button data-action="confirm-delete-septic" data-id="${id}" class="px-4 py-2 rounded-lg bg-red-600 text-white">Delete</button>`
+    );
+},
+
 'new-service-request': () => showNewServiceRequest(),
 'view-service-request': (target) => showServiceRequestDetail(target.dataset.id),
-'approve-service-request': () => { closeModal(); showToast('Request approved', 'success'); },
-'reject-service-request': () => { closeModal(); showToast('Request rejected', 'error'); },
-'complete-service-request': () => { closeModal(); showToast('Marked as completed', 'success'); },
+'confirm-service-request': async () => {
+    const name = document.getElementById('sr-requester')?.value || '';
+    
+    if (!name) { 
+        showToast({ type: 'error', title: 'Error', message: 'Requester name required' }); 
+        return; 
+    }
+    
+    const formData = {
+        requester_name: name,
+        address: document.getElementById('sr-address')?.value || '',
+        service_type: document.getElementById('sr-type')?.value || 'Desludging',
+        priority: document.getElementById('sr-priority')?.value || 'Medium',
+        notes: document.getElementById('sr-notes')?.value || ''
+    };
+    
+    console.log('📤 Sending:', formData);
+    
+    try {
+        const res = await fetch('api/serviceRequests/create.php', {
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        
+        console.log('📥 Status:', res.status);
+        
+        const text = await res.text();
+        console.log('📄 Response:', text);
+        
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            console.error('❌ Invalid JSON:', text);
+            showToast({ type: 'error', title: 'Error', message: 'Server returned invalid response' });
+            return;
+        }
+        
+        if (data.success) {
+            closeModal();
+            const r = await fetch('api/serviceRequests/get.php');
+            const d = await r.json();
+            if (d.success) DATA.serviceRequests = d.requests;
+            
+            showToast({ type: 'success', title: 'Success', message: 'Request submitted' });
+            renderView();
+        } else {
+            showToast({ type: 'error', title: 'Failed', message: data.message || 'Unknown error' });
+        }
+    } catch (e) { 
+        console.error('❌ Error:', e);
+        showToast({ type: 'error', title: 'Error', message: e.message }); 
+    }
+},
+
+'approve-service-request': async (target) => {
+    const id = target.dataset.id;
+    await fetch('api/serviceRequests/update.php', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: 'Approved' })
+    });
+    const r = await fetch('api/serviceRequests/get.php');
+    const d = await r.json();
+    if (d.success) DATA.serviceRequests = d.requests;
+    showToast({ type: 'success', message: 'Approved' });
+    renderView();
+},
+
+'reject-service-request': async (target) => {
+    const id = target.dataset.id;
+    await fetch('api/serviceRequests/update.php', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: 'Rejected' })
+    });
+    const r = await fetch('api/serviceRequests/get.php');
+    const d = await r.json();
+    if (d.success) DATA.serviceRequests = d.requests;
+    showToast({ type: 'warning', message: 'Rejected' });
+    renderView();
+},
+
+'complete-service-request': async (target) => {
+    const id = target.dataset.id;
+    await fetch('api/serviceRequests/update.php', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: 'Completed', completed_date: new Date().toISOString().split('T')[0] })
+    });
+    const r = await fetch('api/serviceRequests/get.php');
+    const d = await r.json();
+    if (d.success) DATA.serviceRequests = d.requests;
+    showToast({ type: 'success', message: 'Completed' });
+    renderView();
+},
+
+'delete-service-request': async (target) => {
+    const id = target.dataset.id;
+    if (!confirm('Delete this request?')) return;
+    await fetch('api/serviceRequests/delete.php', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+    });
+    const r = await fetch('api/serviceRequests/get.php');
+    const d = await r.json();
+    if (d.success) DATA.serviceRequests = d.requests;
+    showToast({ type: 'success', message: 'Deleted' });
+    renderView();
+},
+
 'assign-schedule': () => showToast('Assign to schedule (demo)', 'info'),
-'confirm-service-request': () => { closeModal(); showToast('Request submitted', 'success'); },
 'report-case': () => showSurvReportModal(),
 'view-case': (target) => showSurvCaseDetail(target.dataset.id),
 'confirm-case': () => { closeModal(); showToast('Case confirmed', 'success'); },

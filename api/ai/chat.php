@@ -1,5 +1,8 @@
 <?php
 session_start();
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 require_once __DIR__ . '/../../config/database.php';
 
 header('Content-Type: application/json');
@@ -24,6 +27,7 @@ if (empty($question)) {
 $config = require __DIR__ . '/../../config/env.php';
 $apiKey = trim($config['gemini_key'] ?? '');
 
+// ✅ API Key check HERE
 if ($apiKey === '' || $apiKey === 'PUT_YOUR_GEMINI_API_KEY_HERE') {
     http_response_code(500);
     echo json_encode([
@@ -180,7 +184,7 @@ RULES:
 5. When relevant, suggest what action the user should take.
 CONTEXT;
 
-    // ─── CALL GEMINI API WITH THE QUESTION + CONTEXT ─────────
+    // ─── CALL GEMINI API ─────────
     $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" . $apiKey;
     
     $prompt = $systemContext . "\n\n---\nUser Question: " . $question . "\n\nAnswer concisely based on the data above.";
@@ -206,9 +210,15 @@ CONTEXT;
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
+    // ✅ Error check AFTER curl call with detailed message
     if ($response === false || $httpCode >= 400) {
+        $errorMsg = 'AI service is temporarily unavailable.';
+        if ($response) {
+            $errorData = json_decode($response, true);
+            $errorMsg = $errorData['error']['message'] ?? $errorMsg;
+        }
         http_response_code(500);
-        echo json_encode(['status' => 'error', 'message' => 'AI service is temporarily unavailable.']);
+        echo json_encode(['status' => 'error', 'message' => $errorMsg]);
         exit;
     }
 
@@ -232,5 +242,5 @@ CONTEXT;
 
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => 'An error occurred.']);
+    echo json_encode(['status' => 'error', 'message' => 'Error: ' . $e->getMessage()]);
 }

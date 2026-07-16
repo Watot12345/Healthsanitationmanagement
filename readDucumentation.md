@@ -1,3 +1,11 @@
+
+// FURTHER CHANGES TO THE PROJECT
+-Forgot password not done
+-AI Chat Still Error further fix if api key usage reload again
+-AI chat assistant should be using tagalog language
+-Mobile app version of the project
+-Health surveilance not done yet
+
 Main target of this Project is Optimization less loading, add skeleton loading Make it re usable
 
 🔴 Critical — Do These First (Biggest Speed Gains)
@@ -47,6 +55,8 @@ Preload critical fonts and assets — Add <link rel="preload"> for your main fon
 Remove unused CSS and JavaScript — Delete old libraries, unused Bootstrap components, and dead code from your pages
 
 Add a loading spinner or progress bar — A small NProgress bar at the top of the page gives instant visual feedback that something is happening
+   
+Make emoji to font awesome
 
 🔵 Ongoing — Monitor & Maintain
 Check error logs weekly — Look for slow requests, 500 errors, and long response times to catch problems before users complain
